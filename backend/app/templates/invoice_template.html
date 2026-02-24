@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice {{ invoice_number }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .company-name { font-size: 24px; font-weight: bold; color: #333; }
+        .invoice-title { font-size: 20px; color: #666; margin-top: 10px; }
+        .details { margin: 20px 0; }
+        .details table { width: 100%; border-collapse: collapse; }
+        .details td { padding: 8px; }
+        .details .label { font-weight: bold; width: 150px; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .items-table th { background: #4CAF50; color: white; padding: 10px; text-align: left; }
+        .items-table td { border: 1px solid #ddd; padding: 8px; }
+        .items-table tr:nth-child(even) { background: #f9f9f9; }
+        .total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 20px; }
+        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">Peaknizer Logistics</div>
+        <div class="invoice-title">{{ invoice_type | upper }} INVOICE</div>
+        <div>Invoice #: {{ invoice_number }}</div>
+    </div>
+
+    <div class="details">
+        <table>
+            <tr><td class="label">Customer:</td><td>{{ customer_name }}</td></tr>
+            <tr><td class="label">Customer Code:</td><td>{{ customer_code }}</td></tr>
+            <tr><td class="label">Issue Date:</td><td>{{ issue_date }}</td></tr>
+            <tr><td class="label">Due Date:</td><td>{{ due_date }}</td></tr>
+            <tr><td class="label">Status:</td><td>{{ status }}</td></tr>
+        </table>
+    </div>
+
+    {% if invoice_type == 'shipping' %}
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Tracking Number</th>
+                <th>Order Number</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Label Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row.tracking_number }}</td>
+                <td>{{ row.order_number }}</td>
+                <td>{{ row.end_customer_name }}</td>
+                <td>{{ row.date }}</td>
+                <td>${{ "{{ '%.2f'|format(row.label_cost) }}" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Rate</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Preparation Fee ({{ quantity }} items)</td>
+                <td>{{ quantity }}</td>
+                <td>${{ "{{ '%.2f'|format(rate) }}" }}</td>
+                <td>${{ "{{ '%.2f'|format(total_amount) }}" }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    <div class="total">
+        Total Amount: ${{ "{{ '%.2f'|format(total_amount) }}" }}
+    </div>
+
+    <div class="footer">
+        <p>Peaknizer Logistics  3PL Warehouse Services</p>
+        <p>This is a computer generated invoice. No signature required.</p>
+    </div>
+</body>
+</html>

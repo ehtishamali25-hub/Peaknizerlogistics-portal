@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Shipping Invoice {{ invoice_number }}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        
+        /* Top Section - Company Info */
+        .company-info {
+            margin-bottom: 30px;
+        }
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 5px;
+        }
+        .company-address {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .company-contact {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Invoice Number - Centered */
+        .invoice-number {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 28px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #000;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        /* Customer Details Section */
+        .customer-details {
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .customer-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-width: 400px;
+        }
+        .customer-label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        /* Table Section */
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            font-size: 14px;
+        }
+        .invoice-table th {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        .invoice-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .invoice-table td:last-child,
+        .invoice-table td:nth-last-child(2) {
+            text-align: right;
+        }
+        
+        /* Payment Section */
+        .payment-section {
+            display: flex;
+            justify-content: flex-end;
+            margin: 20px 0;
+        }
+        .payment-box {
+            width: 250px;
+            border: 1px solid #ddd;
+            padding: 15px;
+        }
+        .payment-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .balance-due {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+            border-top: 2px solid #333;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        
+        /* Terms and Conditions */
+        .terms-section {
+            margin: 30px 0 20px 0;
+            font-size: 10px;
+            color: #666;
+            line-height: 1.5;
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+        }
+        .terms-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+        
+        /* Bank Details - Top Left */
+        .bank-details {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #444;
+            line-height: 1.5;
+            border-top: 2px solid #333;
+            padding-top: 15px;
+        }
+        .bank-name {
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        /* Page Info - Top Right */
+        .page-info {
+            text-align: right;
+            font-size: 10px;
+            color: #999;
+            margin-top: 10px;
+        }
+        
+        /* Layout helpers */
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        .float-left {
+            float: left;
+        }
+        .float-right {
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Page Info - Top Right -->
+        <div class="page-info">
+            Page 1 of 1
+        </div>
+        
+        <!-- Bank Details - Top Left (Moved to top) -->
+        <div class="bank-details">
+            <span class="bank-name">Qompany LLC</span><br>
+            Bank: Bank of America<br>
+            Routing Number: 051000017<br>
+            Account Number: 435061161139
+        </div>
+        
+        <!-- Company Info Block -->
+        <div class="company-info">
+            <div class="company-name">Peaknizer Logistics</div>
+            <div class="company-address">
+                2503D N Harrison St,<br>
+                Arlington, VA 22207
+            </div>
+            <div class="company-contact">
+                Phone: +1 (571) 293-0721<br>
+                Email: contact@peaknizerlogistics.com<br>
+                Website: peaknizerlogistics.com
+            </div>
+        </div>
+        
+        <!-- Invoice Number -->
+        <div class="invoice-number">
+            Invoice #: {{ invoice_number }}
+        </div>
+        
+        <!-- Customer Details -->
+        <div class="customer-details">
+            <div class="customer-details-grid">
+                <div><span class="customer-label">Customer:</span> {{ customer_name }}</div>
+                <div><span class="customer-label">Customer Code:</span> {{ customer_code }}</div>
+                <div><span class="customer-label">Issue Date:</span> {{ issue_date }}</div>
+                <div><span class="customer-label">Due Date:</span> {{ due_date }}</div>
+                <div><span class="customer-label">Status:</span> {{ status }}</div>
+            </div>
+        </div>
+        
+        <!-- Invoice Table -->
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>QTY</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Shipping Charges</td>
+                    <td>{{ quantity }}</td>
+                    <td>—</td>
+                    <td>${{ "%.2f"|format(total_amount) }}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- Payment and Balance Section -->
+        <div class="payment-section">
+            <div class="payment-box">
+                <div class="payment-title">PAYMENT</div>
+                <div class="balance-due">
+                    Balance Due: USD {{ "%.2f"|format(total_amount) }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Terms and Conditions -->
+        <div class="terms-section">
+            <div class="terms-title">TERMS & CONDITIONS</div>
+            • All sales are final.<br>
+            • No cancellations, returns, or exchanges.<br>
+            • Damage claims must be made with the carrier.<br>
+            • Company is not responsible after shipment.<br>
+            • No returns without consent.<br>
+            • Customer bears bank/payment charges.
+        </div>
+        
+    </div>
+</body>
+</html>
