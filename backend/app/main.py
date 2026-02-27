@@ -10,7 +10,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://peaknizer-frontend.onrender.com"],
+    allow_origins=["http://localhost:5173", "https://peaknizer-frontend.onrender.com", "https://www.peaknizerlogistics.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

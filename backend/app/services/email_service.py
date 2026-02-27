@@ -238,13 +238,13 @@ class EmailService:
                     <div class="credentials-box">
                         <h3 style="margin-top: 0; color: #333;">Your Account Details:</h3>
                         <p><strong>Customer Code:</strong> {customer_code}</p>
-                        <p><strong>Login URL:</strong> <a href="http://localhost:5173/login">http://localhost:5173/login</a></p>
+                        <p><strong>Login URL:</strong> <a href="https://peaknizer-frontend.onrender.com/login">https://peaknizer-frontend.onrender.com/login</a></p>
                         <p><strong>Email:</strong> The email you registered with</p>
                         <p><strong>Password:</strong> The password you set during registration</p>
                     </div>
                     
                     <p style="text-align: center;">
-                        <a href="http://localhost:5173/login" class="login-btn">Access Your Portal</a>
+                        <a href="https://peaknizer-frontend.onrender.com/login" class="login-btn">Access Your Portal</a>
                     </p>
                     
                     <p><strong>With your new account you can:</strong></p>
