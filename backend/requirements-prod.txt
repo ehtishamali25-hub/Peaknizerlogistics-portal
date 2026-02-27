@@ -16,10 +16,9 @@ pydantic-settings
 # Excel Processing
 openpyxl
 
-# PDF Generation
+# PDF Generation (Working ones)
 reportlab
 xhtml2pdf
-weasyprint
 jinja2
 
 # Email
@@ -31,9 +30,9 @@ python-dateutil
 pytz
 typing-extensions
 
-# Database Migrations (if needed)
+# Database Migrations (optional)
 alembic
 
-# Background Tasks
+# Background Tasks (optional)
 redis
 rq
