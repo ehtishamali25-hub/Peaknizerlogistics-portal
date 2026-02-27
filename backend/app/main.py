@@ -26,11 +26,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173",
-        "https://peaknizerlogistics-portal-frontend.onrender.com",
-        "https://peaknizer-frontend.onrender.com",  # Add this too
-        "https://peaknizerlogistics.com",  # Your custom domain (when added)
-        "https://www.peaknizerlogistics.com"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
