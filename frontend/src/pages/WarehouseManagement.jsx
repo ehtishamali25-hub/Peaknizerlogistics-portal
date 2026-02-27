@@ -32,18 +32,27 @@ const WarehouseManagement = () => {
   };
 
   const showMessage = (type, text) => {
-    setMessage({ type, text });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  };
+      setMessage({ type, text });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    };
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Get current user from localStorage
+      const user = JSON.parse(localStorage.getItem('user'));
+      
+      // Prepare data with company_id
+      const warehouseData = {
+        ...formData,
+        company_id: user.company_id
+      };
+      
       if (editingWarehouse) {
-        await axiosInstance.put(`/warehouses/${editingWarehouse.id}`, formData);
+        await axiosInstance.put(`/warehouses/${editingWarehouse.id}`, warehouseData);
         showMessage('success', 'Warehouse updated successfully');
       } else {
-        await axiosInstance.post('/warehouses/', formData);
+        await axiosInstance.post('/warehouses/', warehouseData);
         showMessage('success', 'Warehouse added successfully');
       }
       setShowModal(false);
