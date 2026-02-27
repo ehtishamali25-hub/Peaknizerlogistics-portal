@@ -358,14 +358,16 @@ const OwnerInvoices = () => {
                       </div>
                       
                       <div className="mt-3 flex space-x-2">
-                        <a
-                          href={`http://localhost:8000${proof.file_url}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        
+                        <button
+                          onClick={() => downloadFile(
+                            proof.file_url,
+                            proof.file_url.split('/').pop()
+                          )}
                           className="text-blue-600 hover:text-blue-900 text-sm"
                         >
                           View File
-                        </a>
+                        </button>
                         {!proof.verified && (
                           <button
                             onClick={() => verifyProof(proof.id, true)}

@@ -76,10 +76,6 @@ const CustomerShippingInvoices = () => {
     }
   };
 
-  const downloadFile = (url, filename) => {
-    window.open(url, '_blank');
-  };
-
   if (loading) {
     return (
       <MainLayout>
@@ -89,7 +85,7 @@ const CustomerShippingInvoices = () => {
   }
 
   return (
-    
+    <MainLayout>
       <div className="max-w-7xl mx-auto">
         <BackButton />
         
@@ -138,34 +134,10 @@ const CustomerShippingInvoices = () => {
                       <div className="flex space-x-2">
                         {invoice.has_excel && (
                           <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              
-                              const token = localStorage.getItem('token');
-                              const url = `http://localhost:8000/api/v1/downloads/shipping-details/${invoice.shipping_detail_id}/excel`;
-                              const filename = `shipping_details_${invoice.invoice_number}.xlsx`;
-                              
-                              fetch(url, {
-                                headers: { 'Authorization': `Bearer ${token}` }
-                              })
-                              .then(response => {
-                                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                                return response.blob();
-                              })
-                              .then(blob => {
-                                const downloadUrl = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = downloadUrl;
-                                link.download = filename;
-                                link.click();
-                              })
-                              .catch(error => {
-                                console.error('Download failed:', error);
-                                alert('Download failed');
-                              });
-                            }}
+                            onClick={() => downloadFile(
+                              `/downloads/shipping-details/${invoice.shipping_detail_id}/excel`,
+                              `shipping_details_${invoice.invoice_number}.xlsx`
+                            )}
                             className="text-green-600 hover:text-green-900 text-sm font-medium px-2 py-1 border border-green-600 rounded"
                           >
                             Excel
@@ -173,46 +145,11 @@ const CustomerShippingInvoices = () => {
                         )}
                         {invoice.has_pdf && (
                           <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('Button clicked - starting download...');
-                              
-                              const token = localStorage.getItem('token');
-                              const url = `http://localhost:8000/api/v1/downloads/invoice/${invoice.id}`;
-                              const filename = `invoice_${invoice.invoice_number}.pdf`;
-                              
-                              console.log('Download URL:', url);
-                              console.log('Token exists:', !!token);
-                              
-                              fetch(url, {
-                                headers: {
-                                  'Authorization': `Bearer ${token}`
-                                }
-                              })
-                              .then(response => {
-                                console.log('Response status:', response.status);
-                                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                                return response.blob();
-                              })
-                              .then(blob => {
-                                console.log('Blob size:', blob.size);
-                                const downloadUrl = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = downloadUrl;
-                                link.download = filename;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(downloadUrl);
-                              })
-                              .catch(error => {
-                                console.error('Download failed:', error);
-                                alert('Download failed. Check console for details.');
-                              });
-                            }}
-                            className="text-blue-600 hover:text-blue-900 text-sm font-medium px-3 py-1 border border-blue-600 rounded"
+                            onClick={() => downloadFile(
+                              `/downloads/shipping-details/${invoice.shipping_detail_id}/pdf`,
+                              `shipping_details_${invoice.invoice_number}.pdf`
+                            )}
+                            className="text-red-600 hover:text-red-900 text-sm font-medium px-2 py-1 border border-red-600 rounded"
                           >
                             PDF
                           </button>
@@ -224,45 +161,10 @@ const CustomerShippingInvoices = () => {
                     </td>
                     <td className="px-4 py-3">
                       <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          console.log('Button clicked - starting download...');
-                          
-                          const token = localStorage.getItem('token');
-                          const url = `http://localhost:8000/api/v1/downloads/invoice/${invoice.id}`;
-                          const filename = `invoice_${invoice.invoice_number}.pdf`;
-                          
-                          console.log('Download URL:', url);
-                          console.log('Token exists:', !!token);
-                          
-                          fetch(url, {
-                            headers: {
-                              'Authorization': `Bearer ${token}`
-                            }
-                          })
-                          .then(response => {
-                            console.log('Response status:', response.status);
-                            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                            return response.blob();
-                          })
-                          .then(blob => {
-                            console.log('Blob size:', blob.size);
-                            const downloadUrl = window.URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = downloadUrl;
-                            link.download = filename;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            window.URL.revokeObjectURL(downloadUrl);
-                          })
-                          .catch(error => {
-                            console.error('Download failed:', error);
-                            alert('Download failed. Check console for details.');
-                          });
-                        }}
+                        onClick={() => downloadFile(
+                          `/downloads/invoice/${invoice.id}`,
+                          `invoice_${invoice.invoice_number}.pdf`
+                        )}
                         className="text-blue-600 hover:text-blue-900 text-sm font-medium px-3 py-1 border border-blue-600 rounded"
                       >
                         PDF
@@ -308,7 +210,7 @@ const CustomerShippingInvoices = () => {
           </div>
         )}
       </div>
-    
+    </MainLayout>
   );
 };
 

@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -63,7 +63,7 @@ const Login = () => {
     console.log('Sending registration data:', requestData);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/register-request', {
+      const response = await fetch(`${API_URL}/auth/register-request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
