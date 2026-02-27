@@ -16,9 +16,8 @@ pydantic-settings
 # Excel Processing
 openpyxl
 
-# PDF Generation (Working ones)
+# PDF Generation (Working)
 reportlab
-xhtml2pdf
 jinja2
 
 # Email
