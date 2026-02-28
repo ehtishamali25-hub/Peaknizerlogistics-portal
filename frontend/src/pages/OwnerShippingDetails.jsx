@@ -205,7 +205,7 @@ const OwnerShippingDetails = () => {
                       {sd.excel_file_url && (
                         <button
                           onClick={() => downloadFile(
-                            `/api/v1/downloads/shipping-details/${sd.id}/excel`,
+                            `/downloads/shipping-details/${sd.id}/excel`,
                             `shipping_details_${sd.id.substring(0, 8)}.xlsx`
                           )}
                           className="text-green-600 hover:text-green-900 flex items-center"
@@ -219,7 +219,7 @@ const OwnerShippingDetails = () => {
                       {sd.pdf_file_url && (
                         <button
                           onClick={() => downloadFile(
-                            `/api/v1/downloads/shipping-details/${sd.id}/pdf`,
+                            `/downloads/shipping-details/${sd.id}/pdf`,
                             `shipping_details_${sd.id.substring(0, 8)}.pdf`
                           )}
                           className="text-red-600 hover:text-red-900 flex items-center"

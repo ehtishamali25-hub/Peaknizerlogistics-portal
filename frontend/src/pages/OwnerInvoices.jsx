@@ -305,7 +305,7 @@ const OwnerInvoices = () => {
                       </td>
                       <td className="px-4 py-3 space-x-2">
                         <button
-                          onClick={() => downloadFile(`/api/v1/downloads/invoice/${invoice.id}`, `invoice_${invoice.invoice_number}.pdf` )}
+                          onClick={() => downloadFile(`downloads/invoice/${invoice.id}`, `invoice_${invoice.invoice_number}.pdf` )}
                           className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
                         >
                           PDF

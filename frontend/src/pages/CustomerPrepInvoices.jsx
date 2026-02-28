@@ -191,7 +191,7 @@ const CustomerPrepInvoices = () => {
                     <td className="px-4 py-3">
                       <button
                         onClick={() => downloadFile(
-                          downloadFile(`/downloads/invoice/${invoice.id}`, filename),
+                          `/downloads/invoice/${invoice.id}`,
                           `invoice_${invoice.invoice_number}.pdf`
                         )}
                         className="text-blue-600 hover:text-blue-900 text-sm font-medium px-3 py-1 border border-blue-600 rounded"
