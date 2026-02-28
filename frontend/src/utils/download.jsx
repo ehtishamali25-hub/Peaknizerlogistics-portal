@@ -1,13 +1,18 @@
-import axios from 'axios'; // Use axios directly, not the instance
+import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000';
+// Use environment variable with fallback to localhost
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const downloadFile = async (url, filename) => {
   try {
     // Make sure we're using the full backend URL
     let fullUrl = url;
     if (!url.startsWith('http')) {
-      fullUrl = `${API_BASE}${url}`;
+      // Remove any trailing slash from API_BASE
+      const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+      // Ensure url starts with slash
+      const path = url.startsWith('/') ? url : '/' + url;
+      fullUrl = `${base}${path}`;
     }
     
     console.log('Downloading from:', fullUrl);
@@ -15,7 +20,6 @@ export const downloadFile = async (url, filename) => {
     // Get token directly
     const token = localStorage.getItem('token');
     
-    // Use fetch instead of axiosInstance to avoid any baseURL conflicts
     const response = await fetch(fullUrl, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -33,7 +37,6 @@ export const downloadFile = async (url, filename) => {
       throw new Error('Downloaded file is empty');
     }
     
-    // Create blob link to download
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
