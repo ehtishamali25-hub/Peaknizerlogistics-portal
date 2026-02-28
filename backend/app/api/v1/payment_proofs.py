@@ -111,3 +111,34 @@ def verify_payment_proof(
     db.refresh(proof)
     
     return proof
+
+
+@router.get("/{proof_id}/download")
+def download_proof(
+    proof_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Download payment proof file"""
+    
+    proof = db.query(PaymentProof).filter(
+        PaymentProof.id == proof_id,
+        PaymentProof.company_id == current_user.company_id
+    ).first()
+    
+    if not proof:
+        raise HTTPException(status_code=404, detail="Proof not found")
+    
+    # Check if user has access
+    if current_user.role == 'customer' and proof.uploaded_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if not os.path.exists(proof.file_url):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    filename = os.path.basename(proof.file_url)
+    return FileResponse(
+        proof.file_url,
+        media_type='application/octet-stream',
+        filename=filename
+    )
