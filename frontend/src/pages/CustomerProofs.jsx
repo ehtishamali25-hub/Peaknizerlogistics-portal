@@ -122,7 +122,7 @@ const CustomerProofs = () => {
                       </span>
                       <button
                         onClick={() => downloadFile(
-                          proof.file_url,
+                          `/payment-proofs/${proof.id}/download`,
                           proof.file_url.split('/').pop()
                         )}
                         className="text-blue-600 hover:text-blue-900 text-sm font-medium"
