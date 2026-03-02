@@ -1,4 +1,7 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+﻿import mimetypes
+
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
@@ -113,6 +116,8 @@ def verify_payment_proof(
     return proof
 
 
+
+
 @router.get("/{proof_id}/download")
 def download_proof(
     proof_id: UUID,
@@ -136,9 +141,18 @@ def download_proof(
     if not os.path.exists(proof.file_url):
         raise HTTPException(status_code=404, detail="File not found")
     
+    # Get proper media type
+    media_type, _ = mimetypes.guess_type(proof.file_url)
+    if not media_type:
+        media_type = 'application/octet-stream'
+    
     filename = os.path.basename(proof.file_url)
+    
     return FileResponse(
-        proof.file_url,
-        media_type='application/octet-stream',
-        filename=filename
+        path=proof.file_url,
+        media_type=media_type,
+        filename=filename,
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
     )
