@@ -1,9 +1,10 @@
 ﻿from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
-
+from fastapi.responses import FileResponse
+from app.models.user import User
+import os
 from app.core.dependencies import get_db, get_current_user
 from app.models.invoice import Invoice
 from app.models.shipping_detail import ShippingDetail
@@ -14,8 +15,7 @@ from app.models.warehouse import Warehouse
 from app.schemas.invoice import InvoiceOut
 from app.schemas.shipping_detail import ShippingDetailOut
 from app.models.customer_warehouse import CustomerWarehouse  
-from app.models.payment_proof import PaymentProof
-from backend.app.models.user import User  
+from app.models.payment_proof import PaymentProof  
 
 router = APIRouter(prefix="/customer", tags=["Customer Portal"])
 
