@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 import os
 
-from app.core.dependencies import get_db, get_current_user, require_role
+from app.core.dependencies import get_db, get_current_user
 from app.models.invoice import Invoice
 from app.models.shipping_detail import ShippingDetail
 from app.models.user import User
@@ -15,10 +15,8 @@ router = APIRouter(prefix="/downloads", tags=["Downloads"])
 async def download_invoice_pdf(
     invoice_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # Changed from get_current_user
+    current_user: User = Depends(get_current_user)
 ):
-    """Download invoice PDF (owners and customers can download)"""
-    
     invoice = db.query(Invoice).filter(
         Invoice.id == invoice_id,
         Invoice.company_id == current_user.company_id
@@ -27,7 +25,6 @@ async def download_invoice_pdf(
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
-    # Check visibility for customers
     if current_user.role == 'customer':
         if not invoice.is_visible_to_customer:
             raise HTTPException(status_code=403, detail="Invoice not visible")
@@ -47,10 +44,8 @@ async def download_invoice_pdf(
 async def download_shipping_excel(
     shipping_detail_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # Changed from get_current_user
+    current_user: User = Depends(get_current_user)
 ):
-    """Download shipping details Excel (owners and customers can download)"""
-    
     shipping = db.query(ShippingDetail).filter(
         ShippingDetail.id == shipping_detail_id,
         ShippingDetail.company_id == current_user.company_id
@@ -59,7 +54,6 @@ async def download_shipping_excel(
     if not shipping:
         raise HTTPException(status_code=404, detail="Shipping details not found")
     
-    # Check visibility for customers
     if current_user.role == 'customer':
         if not shipping.is_visible_to_customer:
             raise HTTPException(status_code=403, detail="Shipping details not visible")
