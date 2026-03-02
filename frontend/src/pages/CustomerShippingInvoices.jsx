@@ -135,7 +135,7 @@ const CustomerShippingInvoices = () => {
                         {invoice.has_excel && (
                           <button
                             onClick={() => downloadFile(
-                              `/customer/downloads/shipping-details/${invoice.shipping_detail_id}/excel`,
+                              `/downloads/shipping-details/${invoice.shipping_detail_id}/excel`,
                               `shipping_details_${invoice.invoice_number}.xlsx`
                             )}
                             className="text-green-600 hover:text-green-900 text-sm font-medium px-2 py-1 border border-green-600 rounded"
@@ -146,7 +146,7 @@ const CustomerShippingInvoices = () => {
                         {invoice.has_pdf && (
                           <button
                             onClick={() => downloadFile(
-                              `/customer/downloads/shipping-details/${invoice.shipping_detail_id}/pdf`,
+                              `/downloads/shipping-details/${invoice.shipping_detail_id}/pdf`,
                               `shipping_details_${invoice.invoice_number}.pdf`
                             )}
                             className="text-red-600 hover:text-red-900 text-sm font-medium px-2 py-1 border border-red-600 rounded"
@@ -162,7 +162,7 @@ const CustomerShippingInvoices = () => {
                     <td className="px-4 py-3">
                       <button
                         onClick={() => downloadFile(
-                          `/customer/downloads/invoice/${invoice.id}`,
+                          `/downloads/invoice/${invoice.id}`,
                           `invoice_${invoice.invoice_number}.pdf`
                         )}
                         className="text-blue-600 hover:text-blue-900 text-sm font-medium px-3 py-1 border border-blue-600 rounded"
