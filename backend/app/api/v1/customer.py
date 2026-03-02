@@ -1,4 +1,5 @@
 ﻿from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
@@ -13,7 +14,8 @@ from app.models.warehouse import Warehouse
 from app.schemas.invoice import InvoiceOut
 from app.schemas.shipping_detail import ShippingDetailOut
 from app.models.customer_warehouse import CustomerWarehouse  
-from app.models.payment_proof import PaymentProof  
+from app.models.payment_proof import PaymentProof
+from backend.app.models.user import User  
 
 router = APIRouter(prefix="/customer", tags=["Customer Portal"])
 
@@ -216,6 +218,37 @@ def get_customer_shipping_invoices(
         result.append(invoice_data)
     
     return result
+
+@router.get("/downloads/invoice/{invoice_id}")
+def customer_download_invoice(
+    invoice_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Customer downloads their invoice PDF"""
+    
+    if current_user.role != 'customer':
+        raise HTTPException(status_code=403, detail="Customer access only")
+    
+    invoice = db.query(Invoice).filter(
+        Invoice.id == invoice_id,
+        Invoice.customer_id == current_user.customer_id,
+        Invoice.is_visible_to_customer == True
+    ).first()
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found or not visible")
+    
+    if not invoice.pdf_url or not os.path.exists(invoice.pdf_url):
+        raise HTTPException(status_code=404, detail="PDF file not found")
+    
+    filename = f"invoice_{invoice.invoice_number}.pdf"
+    
+    return FileResponse(
+        path=invoice.pdf_url,
+        media_type='application/pdf',
+        filename=filename
+    )
 
 @router.get("/inventory")
 def get_customer_inventory(
