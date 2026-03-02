@@ -58,6 +58,7 @@ const CustomerPrepInvoices = () => {
   };
 
   const downloadFile = async (url, filename) => {
+    console.log('downloadFile called with:', { url, filename });
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(url, {
@@ -163,10 +164,16 @@ const CustomerPrepInvoices = () => {
                       <div className="flex space-x-2">
                         {invoice.has_excel && (
                           <button
-                            onClick={() => downloadFile(
+                            onClick={() => {
+
+                            
+                              console.log('Button clicked for invoice:', invoice.id);
+                              console.log('Filename being passed:', `invoice_${invoice.invoice_number}.pdf`);
+                              console.log('URL being passed:', `/downloads/invoice/${invoice.id}`);
+                              downloadFile(
                               `/customer/downloads/shipping-details/${invoice.shipping_detail_id}/excel`,
                               `shipping_details_${invoice.invoice_number}.xlsx`
-                            )}
+                            )}}
                             className="text-green-600 hover:text-green-900 text-sm font-medium px-2 py-1 border border-green-600 rounded"
                           >
                             Excel
@@ -174,10 +181,15 @@ const CustomerPrepInvoices = () => {
                         )}
                         {invoice.has_pdf && (
                           <button
-                            onClick={() => downloadFile(
+                            onClick={() => {
+                               
+                              console.log('Button clicked for invoice:', invoice.id);
+                              console.log('Filename being passed:', `invoice_${invoice.invoice_number}.pdf`);
+                              console.log('URL being passed:', `/downloads/invoice/${invoice.id}`);
+                              downloadFile(
                               `/customer/downloads/shipping-details/${invoice.shipping_detail_id}/pdf`,
                               `shipping_details_${invoice.invoice_number}.pdf`
-                            )}
+                            )}}
                             className="text-red-600 hover:text-red-900 text-sm font-medium px-2 py-1 border border-red-600 rounded"
                           >
                             PDF
