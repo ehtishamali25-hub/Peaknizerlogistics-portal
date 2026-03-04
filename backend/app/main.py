@@ -4,10 +4,24 @@ from app.api.v1 import router as api_router
 from app.database.base import Base
 from app.database.session import engine
 from contextlib import asynccontextmanager
+import os
+
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+
+    # Ensure upload directories exist
+    UPLOAD_DIRS = [
+        "/opt/render/project/src/backend/uploads/excel",
+        "/opt/render/project/src/backend/uploads/invoices",
+        "/opt/render/project/src/backend/uploads/proofs"
+    ]
+
+    for dir_path in UPLOAD_DIRS:
+        os.makedirs(dir_path, exist_ok=True)
+        print(f"✅ Created directory: {dir_path}")
     # Startup: Create tables
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created/verified!")
