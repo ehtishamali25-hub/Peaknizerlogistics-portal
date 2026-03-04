@@ -19,6 +19,15 @@ export const downloadFile = async (url, filename) => {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
+    // ✅ NEW: Handle expired token
+    if (response.status === 401) {
+      alert('Your session expired. Please login again.');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+      return;
+    }
+    
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     
     const blob = await response.blob();
@@ -32,7 +41,6 @@ export const downloadFile = async (url, filename) => {
     document.body.appendChild(link);
     link.click();
     
-    // Delay revoke to ensure download starts
     setTimeout(() => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
