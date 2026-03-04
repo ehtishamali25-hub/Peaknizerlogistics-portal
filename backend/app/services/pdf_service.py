@@ -11,7 +11,7 @@ from openpyxl.styles import Font, PatternFill
 
 class PDFService:
 
-    OUTPUT_DIR = "uploads/invoices"
+    OUTPUT_DIR = "/opt/render/project/src/backend/uploads/invoices"
 
     def __init__(self):
         os.makedirs(self.OUTPUT_DIR, exist_ok=True)
