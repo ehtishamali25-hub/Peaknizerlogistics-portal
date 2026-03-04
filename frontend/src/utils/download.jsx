@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Use environment variable with fallback to localhost
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const downloadFile = async (url, filename) => {
@@ -19,32 +18,29 @@ export const downloadFile = async (url, filename) => {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
-    // ✅ NEW: Handle expired token
-    if (response.status === 401) {
-      alert('Your session expired. Please login again.');
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-      return;
-    }
-    
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     
     const blob = await response.blob();
     console.log('File size:', blob.size);
+    console.log('File type:', blob.type);
+    
     if (blob.size === 0) throw new Error('Downloaded file is empty');
     
+    // Create a download link
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
     link.download = filename;
+    
+    // Append to body, click, and remove
     document.body.appendChild(link);
     link.click();
     
+    // Clean up after a delay
     setTimeout(() => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
-    }, 100);
+    }, 1000);
     
     return true;
   } catch (error) {
