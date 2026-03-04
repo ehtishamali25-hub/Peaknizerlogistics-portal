@@ -17,7 +17,7 @@ from app.services.invoice_service import InvoiceService
 
 router = APIRouter(prefix="/batches", tags=["Batches"])
 
-UPLOAD_DIR = "uploads/excel"
+UPLOAD_DIR = "/opt/render/project/src/backend/uploads/excel"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload", response_model=ExcelBatchOut, status_code=status.HTTP_201_CREATED)
