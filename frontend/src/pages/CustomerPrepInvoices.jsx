@@ -164,16 +164,24 @@ const CustomerPrepInvoices = () => {
                       <div className="flex space-x-2">
                         {invoice.has_excel && (
                           <button
-                            onClick={() => {
-
-                            
-                              console.log('Button clicked for invoice:', invoice.id);
-                              console.log('Filename being passed:', `invoice_${invoice.invoice_number}.pdf`);
-                              console.log('URL being passed:', `/customer/downloads/shipping-details/${invoice.shipping_detail_id}/excel`);
-                              downloadFile(
-                              `/customer/downloads/shipping-details/${invoice.shipping_detail_id}/excel`,
-                              `shipping_details_${invoice.invoice_number}.xlsx`
-                            )}}
+                            onClick={async () => {
+                              const token = localStorage.getItem('token');
+                              const url = `https://peaknizerlogistics-portal-backend.onrender.com/api/v1/downloads/shipping-details/${invoice.shipping_detail_id}/excel`;
+                              const response = await fetch(url, {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                              });
+                              const blob = await response.blob();
+                              const blobUrl = window.URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = blobUrl;
+                              a.download = `shipping_details_${invoice.invoice_number}.xlsx`;
+                              document.body.appendChild(a);
+                              a.click();
+                              setTimeout(() => {
+                                document.body.removeChild(a);
+                                window.URL.revokeObjectURL(blobUrl);
+                              }, 5000);
+                            }}
                             className="text-green-600 hover:text-green-900 text-sm font-medium px-2 py-1 border border-green-600 rounded"
                           >
                             Excel
@@ -202,14 +210,16 @@ const CustomerPrepInvoices = () => {
                     </td>
                     <td className="px-4 py-3">
                       <button
-                        onClick={() => {
-                          console.log('Button clicked for invoice:', invoice.id);
-                          console.log('Filename being passed:', `invoice_${invoice.invoice_number}.pdf`);
-                          console.log('URL being passed:', `/customer/downloads/invoice/${invoice.id}`);
-                          downloadFile(
-                          `/customer/downloads/invoice/${invoice.id}`,
-                          `invoice_${invoice.invoice_number}.pdf`
-                        )}}
+                        onClick={async () => {
+                          const token = localStorage.getItem('token');
+                          const url = `https://peaknizerlogistics-portal-backend.onrender.com/api/v1/downloads/invoice/${invoice.id}`;
+                          const response = await fetch(url, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                          });
+                          const blob = await response.blob();
+                          const blobUrl = window.URL.createObjectURL(blob);
+                          window.open(blobUrl, '_blank');
+                        }}
                         className="text-blue-600 hover:text-blue-900 text-sm font-medium px-3 py-1 border border-blue-600 rounded"
                       >
                         PDF
