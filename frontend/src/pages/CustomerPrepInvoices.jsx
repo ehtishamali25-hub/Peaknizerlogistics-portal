@@ -180,20 +180,13 @@ const CustomerPrepInvoices = () => {
                           </button>
                         )}
                         {invoice.has_pdf && (
-                          <button
-                            onClick={() => {
-                               
-                              console.log('Button clicked for invoice:', invoice.id);
-                              console.log('Filename being passed:', `invoice_${invoice.invoice_number}.pdf`);
-                              console.log('URL being passed:', `/downloads/shipping-details/${invoice.shipping_detail_id}/pdf`);
-                              downloadFile(
-                              `/downloads/shipping-details/${invoice.shipping_detail_id}/pdf`,
-                              `shipping_details_${invoice.invoice_number}.pdf`
-                            )}}
-                            className="text-red-600 hover:text-red-900 text-sm font-medium px-2 py-1 border border-red-600 rounded"
+                          <a
+                            href={`https://peaknizerlogistics-portal-backend.onrender.com/api/v1/downloads/shipping-details/${shippingDetailId}/pdf`}
+                            download={`shipping_details_${invoice.invoice_number}.pdf`}
+                            className="text-blue-600 hover:text-blue-900 text-sm font-medium px-3 py-1 border border-blue-600 rounded"
                           >
                             PDF
-                          </button>
+                          </a>
                         )}
                         {!invoice.has_excel && !invoice.has_pdf && (
                           <span className="text-gray-400 text-sm">Not available</span>
@@ -201,19 +194,13 @@ const CustomerPrepInvoices = () => {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => {
-                          console.log('Button clicked for invoice:', invoice.id);
-                          console.log('Filename being passed:', `invoice_${invoice.invoice_number}.pdf`);
-                          console.log('URL being passed:', `/downloads/invoice/${invoice.id}`);
-                          downloadFile(
-                          `/downloads/invoice/${invoice.id}`,
-                          `invoice_${invoice.invoice_number}.pdf`
-                        )}}
+                      <a
+                        href={`https://peaknizerlogistics-portal-backend.onrender.com/api/v1/downloads/invoice/${invoice.id}`}
+                        download={`invoice_${invoice.invoice_number}.pdf`}
                         className="text-blue-600 hover:text-blue-900 text-sm font-medium px-3 py-1 border border-blue-600 rounded"
                       >
                         PDF
-                      </button>
+                      </a>
                     </td>
                     <td className="px-4 py-3">
                       {uploadingFor === invoice.id ? (
