@@ -14,6 +14,7 @@ class ExcelBatchRow(Base):
     label_cost = Column(DECIMAL(10,2), nullable=False)
     end_customer_name = Column(String(255), nullable=False)
     order_number = Column(String(255), nullable=False)
+    quantity = Column(Integer, nullable=False, default=1)
     date = Column(Date, nullable=False)
     is_valid = Column(Boolean, default=True)
     validation_errors = Column(Text)
