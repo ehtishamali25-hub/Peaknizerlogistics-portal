@@ -167,6 +167,8 @@ def update_customer(
     
     return customer
 
+
+
 @router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_customer(
     customer_id: UUID,
@@ -182,11 +184,30 @@ def delete_customer(
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
-    # Delete warehouse assignments first
-    db.query(CustomerWarehouse).filter(
-        CustomerWarehouse.customer_id == customer_id
-    ).delete()
+    # Check for related records and delete them first
+    from app.models.excel_batch import ExcelBatch
+    from app.models.excel_batch_row import ExcelBatchRow
+    from app.models.invoice import Invoice
+    from app.models.product import Product
     
+    # Get all batches for this customer
+    batches = db.query(ExcelBatch).filter(ExcelBatch.customer_id == customer_id).all()
+    
+    for batch in batches:
+        # Delete batch rows
+        db.query(ExcelBatchRow).filter(ExcelBatchRow.batch_id == batch.id).delete()
+    
+    # Delete batches
+    db.query(ExcelBatch).filter(ExcelBatch.customer_id == customer_id).delete()
+    
+    # Delete products
+    db.query(Product).filter(Product.customer_id == customer_id).delete()
+    
+    # Delete invoices (shipping_details will cascade)
+    db.query(Invoice).filter(Invoice.customer_id == customer_id).delete()
+    
+    # Finally delete the customer
     db.delete(customer)
     db.commit()
+    
     return None
