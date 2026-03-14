@@ -169,6 +169,7 @@ const OwnerBatchDetail = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Tracking Number</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Qty</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Label Cost</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Customer Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Order Number</th>
