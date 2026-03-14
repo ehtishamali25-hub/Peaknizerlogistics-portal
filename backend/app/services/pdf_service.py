@@ -98,7 +98,7 @@ class PDFService:
             Arlington, VA 22207<br/>
             Phone: +1 (571) 293-0721<br/>
             Email: contact@peaknizer.com<br/>
-            Website: peaknizer.com
+            Website: peaknizerlogistics.com
             """, normal_style)
 
         invoice_info = Paragraph(f"""
