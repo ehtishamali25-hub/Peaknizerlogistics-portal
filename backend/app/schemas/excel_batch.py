@@ -6,10 +6,11 @@ from decimal import Decimal
 
 class ExcelBatchRowBase(BaseModel):
     tracking_number: str
+    quantity: int = 1 
     label_cost: Decimal
     end_customer_name: str
     order_number: str
-    quantity: int = 1 
+    
     date: date
 
 class ExcelBatchRowCreate(ExcelBatchRowBase):
