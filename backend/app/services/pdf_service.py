@@ -236,6 +236,7 @@ class PDFService:
             ws.cell(row=row_idx, column=4, value=row['end_customer_name'])
             ws.cell(row=row_idx, column=5, value=row['order_number'])
             ws.cell(row=row_idx, column=6, value=row['date'])
+            
         for col in range(1, 6):
             ws.column_dimensions[chr(64 + col)].width = 20
 
