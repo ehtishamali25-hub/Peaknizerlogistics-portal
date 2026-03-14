@@ -80,6 +80,7 @@ async def upload_excel_batch(
             "label_cost": row['label_cost'],
             "end_customer_name": row['end_customer_name'],
             "order_number": row['order_number'],
+            "quantity": row['quantity'],
             "date": row['date'],
             "is_valid": row['is_valid'],
             "validation_errors": row['validation_errors']

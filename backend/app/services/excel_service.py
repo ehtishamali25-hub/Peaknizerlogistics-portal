@@ -9,7 +9,7 @@ class ExcelValidationError(Exception):
 
 class ExcelService:
     
-    REQUIRED_COLUMNS = ['Tracking Number', 'Label Cost', 'Customer Name', 'Order Number', 'Date']
+    REQUIRED_COLUMNS = ['Tracking Number', 'Label Cost', 'Customer Name', 'Order Number', 'Qty','Date']
     
     @staticmethod
     def validate_excel_file(file_path: str) -> Tuple[bool, List[Dict[str, Any]], List[str]]:
@@ -47,6 +47,7 @@ class ExcelService:
                     label_cost_str = str(row[col_indices['Label Cost']]) if row[col_indices['Label Cost']] else '0'
                     customer_name = str(row[col_indices['Customer Name']]) if row[col_indices['Customer Name']] else ''
                     order_number = str(row[col_indices['Order Number']]) if row[col_indices['Order Number']] else ''
+                    qty_str = str(row[col_indices['Qty']]) if row[col_indices['Qty']] else '1'
                     date_value = row[col_indices['Date']]
                     
                     # Validation
@@ -66,6 +67,15 @@ class ExcelService:
                     
                     if not order_number:
                         row_errors.append("Order number is required")
+                    
+                    # Parse quantity
+                    try:
+                        qty = int(float(qty_str))
+                        if qty < 1:
+                            row_errors.append("Quantity must be at least 1")
+                    except:
+                        row_errors.append("Invalid quantity format")
+                        qty = 1
                     
                     # Parse date
                     parsed_date = None
@@ -87,6 +97,7 @@ class ExcelService:
                         'label_cost': label_cost,
                         'end_customer_name': customer_name,
                         'order_number': order_number,
+                        'quantity': qty,
                         'date': parsed_date,
                         'is_valid': len(row_errors) == 0,
                         'validation_errors': '; '.join(row_errors) if row_errors else None
@@ -105,7 +116,7 @@ class ExcelService:
         
         is_valid = len(errors) == 0 and all(row['is_valid'] for row in rows)
         return is_valid, rows, errors
-    
+
     @staticmethod
     def generate_filename(customer_code: str) -> str:
         """Generate filename for uploaded Excel"""

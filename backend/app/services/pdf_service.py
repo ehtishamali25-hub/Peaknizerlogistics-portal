@@ -223,7 +223,7 @@ class PDFService:
         ws = wb.active
         ws.title = "Shipping Details"
 
-        headers = ['Tracking Number', 'Label Cost', 'Customer Name', 'Order Number', 'Date']
+        headers = ['Tracking Number', 'Qty','Label Cost', 'Customer Name', 'Order Number', 'Date']
         for col, header in enumerate(headers, 1):
             cell = ws.cell(row=1, column=col, value=header)
             cell.font = Font(bold=True)
@@ -231,11 +231,11 @@ class PDFService:
 
         for row_idx, row in enumerate(rows, 2):
             ws.cell(row=row_idx, column=1, value=row['tracking_number'])
-            ws.cell(row=row_idx, column=2, value=float(row['label_cost']))
-            ws.cell(row=row_idx, column=3, value=row['end_customer_name'])
-            ws.cell(row=row_idx, column=4, value=row['order_number'])
-            ws.cell(row=row_idx, column=5, value=row['date'])
-
+            ws.cell(row=row_idx, column=2, value=row['quantity']) 
+            ws.cell(row=row_idx, column=3, value=float(row['label_cost']))
+            ws.cell(row=row_idx, column=4, value=row['end_customer_name'])
+            ws.cell(row=row_idx, column=5, value=row['order_number'])
+            ws.cell(row=row_idx, column=6, value=row['date'])
         for col in range(1, 6):
             ws.column_dimensions[chr(64 + col)].width = 20
 

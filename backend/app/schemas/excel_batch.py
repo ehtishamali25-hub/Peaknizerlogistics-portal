@@ -9,6 +9,7 @@ class ExcelBatchRowBase(BaseModel):
     label_cost: Decimal
     end_customer_name: str
     order_number: str
+    quantity: int = 1 
     date: date
 
 class ExcelBatchRowCreate(ExcelBatchRowBase):
@@ -21,6 +22,7 @@ class ExcelBatchRowOut(ExcelBatchRowBase):
     is_valid: bool
     validation_errors: Optional[str] = None
     created_at: datetime
+    quantity: int 
     
     class Config:
         from_attributes = True
