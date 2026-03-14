@@ -155,10 +155,10 @@ def get_batch(
         raise HTTPException(status_code=404, detail="Batch not found")
     
     # Load rows
-    rows = db.query(ExcelBatchRow).filter(
+    batch.rows = db.query(ExcelBatchRow).filter(
         ExcelBatchRow.batch_id == batch_id
     ).all()
-    batch.rows = rows
+    
 
     return batch
 
