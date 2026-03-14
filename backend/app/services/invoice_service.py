@@ -140,6 +140,7 @@ class InvoiceService:
             'label_cost': float(r.label_cost),
             'end_customer_name': r.end_customer_name,
             'order_number': r.order_number,
+            'quantity': r.quantity,
             'date': r.date.strftime('%Y-%m-%d')
         } for r in rows]
         
