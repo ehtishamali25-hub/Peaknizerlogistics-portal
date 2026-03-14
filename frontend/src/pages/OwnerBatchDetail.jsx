@@ -190,6 +190,16 @@ const OwnerBatchDetail = () => {
                           className="w-full px-2 py-1 border rounded text-sm"
                         />
                       </td>
+
+                      <td className="px-4 py-2">  {/* ← ADD QTY INPUT */}
+                        <input
+                          type="number"
+                          min="1"
+                          value={editForm.quantity || 1}
+                          onChange={(e) => setEditForm({...editForm, quantity: parseInt(e.target.value)})}
+                          className="w-16 px-2 py-1 border rounded text-sm"
+                        />
+                      </td>
                       <td className="px-4 py-2">
                         <input
                           type="number"
