@@ -242,6 +242,7 @@ const OwnerBatchDetail = () => {
                     // View mode
                     <>
                       <td className="px-4 py-2 text-sm">{row.tracking_number}</td>
+                      <td className="px-4 py-2 text-center">{row.quantity || 1}</td>
                       <td className="px-4 py-2 text-sm">${parseFloat(row.label_cost).toFixed(2)}</td>
                       <td className="px-4 py-2 text-sm">{row.end_customer_name}</td>
                       <td className="px-4 py-2 text-sm">{row.order_number}</td>
