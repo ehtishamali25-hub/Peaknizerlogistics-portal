@@ -155,10 +155,11 @@ def get_batch(
         raise HTTPException(status_code=404, detail="Batch not found")
     
     # Load rows
-    batch.rows = db.query(ExcelBatchRow).filter(
+    rows = db.query(ExcelBatchRow).filter(
         ExcelBatchRow.batch_id == batch_id
     ).all()
-    
+    batch.rows = rows
+
     return batch
 
 @router.put("/{batch_id}/rows", response_model=List[ExcelBatchRowOut])
