@@ -8,6 +8,7 @@ const CustomersList = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
+  const [message, setMessage] = useState({ type: '', text: '' });
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_code: '',
@@ -23,6 +24,11 @@ const CustomersList = () => {
     fetchWarehouses();
   }, []);
 
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  };
+
   const fetchCustomers = async () => {
     try {
       const response = await axiosInstance.get('/customers/');
@@ -30,6 +36,7 @@ const CustomersList = () => {
       setCustomers(response.data);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
+      showMessage('error', 'Failed to load customers');
     } finally {
       setLoading(false);
     }
@@ -49,18 +56,27 @@ const CustomersList = () => {
     
     // Validate passwords if creating new customer
     if (!editingCustomer && formData.password !== formData.confirm_password) {
-      alert('Passwords do not match');
+      showMessage('error', 'Passwords do not match');
       return;
     }
 
     try {
-      // Remove confirm_password before sending
+      // Get current user for company_id
+      const user = JSON.parse(localStorage.getItem('user'));
+      
+      // Prepare data with company_id
       const { confirm_password, ...dataToSend } = formData;
+      const customerData = {
+        ...dataToSend,
+        company_id: user.company_id
+      };
       
       if (editingCustomer) {
-        await axiosInstance.put(`/customers/${editingCustomer.id}`, dataToSend);
+        await axiosInstance.put(`/customers/${editingCustomer.id}`, customerData);
+        showMessage('success', 'Customer updated successfully');
       } else {
-        await axiosInstance.post('/customers/', dataToSend);
+        await axiosInstance.post('/customers/', customerData);
+        showMessage('success', 'Customer added successfully');
       }
       
       setShowModal(false);
@@ -77,7 +93,7 @@ const CustomersList = () => {
       fetchCustomers();
     } catch (error) {
       console.error('Failed to save customer:', error.response?.data || error);
-      alert(error.response?.data?.detail || 'Failed to save customer');
+      showMessage('error', error.response?.data?.detail || 'Failed to save customer');
     }
   };
 
@@ -99,9 +115,11 @@ const CustomersList = () => {
     if (window.confirm('Are you sure you want to delete this customer?')) {
       try {
         await axiosInstance.delete(`/customers/${id}`);
+        showMessage('success', 'Customer deleted successfully');
         fetchCustomers();
       } catch (error) {
         console.error('Failed to delete customer:', error);
+        showMessage('error', error.response?.data?.detail || 'Failed to delete customer');
       }
     }
   };
@@ -146,6 +164,14 @@ const CustomersList = () => {
           + Add Customer
         </button>
       </div>
+
+      {message.text && (
+        <div className={`mb-4 p-4 rounded ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.text}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-8">Loading...</div>
