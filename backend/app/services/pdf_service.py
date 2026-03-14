@@ -81,14 +81,25 @@ class PDFService:
         # ===========================
         # HEADER (LEFT + RIGHT SPLIT)
         # ===========================
-        company_info = Paragraph("""
-        <b>Peaknizer Logistics</b><br/>
-        2503D N Harrison St,<br/>
-        Arlington, VA 22207<br/>
-        Phone: +1 (571) 293-0721<br/>
-        Email: contact@peaknizerlogistics.com<br/>
-        Website: peaknizerlogistics.com
-        """, normal_style)
+
+        if invoice_data['invoice_type'] == 'shipping':
+            company_info = Paragraph("""
+            <b>Qompany LLC</b><br/>
+            2503D N Harrison St,<br/>
+            Arlington, VA 22207<br/>
+            Phone: +1 (571) 293-0721<br/>
+            Email: contact@qompanyllc.com<br/>
+            Website: peaknizerlogistics.com
+            """, normal_style)
+        else:
+            company_info = Paragraph("""
+            <b>Peaknizer LLC</b><br/>
+            2503D N Harrison St,<br/>
+            Arlington, VA 22207<br/>
+            Phone: +1 (571) 293-0721<br/>
+            Email: contact@peaknizer.com<br/>
+            Website: peaknizer.com
+            """, normal_style)
 
         invoice_info = Paragraph(f"""
         <b>INVOICE</b><br/>
