@@ -1,4 +1,4 @@
-﻿from sqlalchemy import Column, String, Boolean, TIMESTAMP, ForeignKey, Date, Text, DECIMAL, Integer
+﻿from sqlalchemy import Column, Float, String, Boolean, TIMESTAMP, ForeignKey, Date, Text, DECIMAL, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
@@ -25,3 +25,6 @@ class Invoice(Base):
     owner_overridden = Column(Boolean, default=False)
     override_notes = Column(Text)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    total_quantity = Column(Integer, nullable=True)  # Sum of quantities from batch rows
+    total_prep_value = Column(DECIMAL(10,2), nullable=True)  # total_quantity * rate
+    discount_percentage = Column(Float, nullable=True)  # Calculated discount percentage
