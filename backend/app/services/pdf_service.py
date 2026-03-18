@@ -161,7 +161,7 @@ class PDFService:
                 f"${final_amount:.2f}"  # Show final amount ($55.00)
             ])
             
-            table = Table(table_data, colWidths=[150, 40, 50, 70, 60, 70])
+            table = Table(table_data, colWidths=[150, 40, 50, 70, 60, 100])
 
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4CAF50")),
