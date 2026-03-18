@@ -61,6 +61,7 @@ class InvoiceService:
         
         # Calculate totals
         row_count = len(rows)
+        total_quantity = sum(row.quantity for row in rows)  # NEW: Sum of all quantities
         shipping_total = sum(row.label_cost for row in rows)
         
         # Get customer prep rate
@@ -68,7 +69,16 @@ class InvoiceService:
             Customer.id == batch.customer_id
         ).first()
         prep_rate = customer.prep_rate if customer else Decimal('5.5')
-        prep_total = row_count * prep_rate
+        
+        # NEW: Calculate prep invoice values with discount
+        base_prep_total = row_count * prep_rate  # Amount based on tracking count (original amount)
+        total_prep_value = total_quantity * prep_rate  # Total amount based on sum of quantities
+        
+        # Calculate discount percentage
+        if total_prep_value > 0:
+            discount_percentage = ((total_prep_value - base_prep_total) * 100) / total_prep_value
+        else:
+            discount_percentage = Decimal('0')
         
         # Create shipping details
         shipping_detail_data = ShippingDetailCreate(
@@ -108,7 +118,7 @@ class InvoiceService:
         shipping_invoice = Invoice(**shipping_invoice_data.dict())
         db.add(shipping_invoice)
         
-        # Create prep invoice
+        # Create prep invoice with discount
         prep_invoice_number = InvoiceService.generate_invoice_number(
             batch.company_id, 'prep', db
         )
@@ -121,12 +131,16 @@ class InvoiceService:
             invoice_type='prep',
             quantity=row_count,
             rate=prep_rate,
-            total_amount=prep_total,
+            total_amount=base_prep_total,  # Keep original amount for payment
             issue_date=issue_date,
             due_date=due_date,
             status='unpaid',
             is_visible_to_customer=False,
-            created_by=approved_by
+            created_by=approved_by,
+            # NEW: Add discount fields - we'll need to extend the schema
+            total_quantity=total_quantity,
+            total_prep_value=float(total_prep_value),
+            discount_percentage=float(discount_percentage)
         )
         
         prep_invoice = Invoice(**prep_invoice_data.dict())
@@ -163,7 +177,7 @@ class InvoiceService:
         )
         shipping_invoice.pdf_url = shipping_pdf_path
         
-        # Generate prep invoice PDF
+        # Generate prep invoice PDF with discount
         prep_invoice_pdf_data = {
             'invoice_number': prep_invoice_number,
             'invoice_type': 'prep',
@@ -172,9 +186,12 @@ class InvoiceService:
             'issue_date': issue_date.strftime('%Y-%m-%d'),
             'due_date': due_date.strftime('%Y-%m-%d'),
             'status': 'unpaid',
-            'total_amount': float(prep_total),
+            'total_amount': float(base_prep_total),
             'quantity': row_count,
-            'rate': float(prep_rate)
+            'rate': float(prep_rate),
+            'total_quantity': total_quantity,  # NEW
+            'total_prep_value': float(total_prep_value),  # NEW
+            'discount_percentage': float(discount_percentage)  # NEW
         }
         
         prep_pdf_path = InvoiceService.pdf_service.generate_invoice_pdf(prep_invoice_pdf_data)
@@ -202,8 +219,11 @@ class InvoiceService:
             'shipping_invoice_id': shipping_invoice.id,
             'prep_invoice_id': prep_invoice.id,
             'row_count': row_count,
+            'total_quantity': total_quantity,  # NEW
             'shipping_total': float(shipping_total),
-            'prep_total': float(prep_total),
+            'prep_total': float(base_prep_total),
+            'total_prep_value': float(total_prep_value),  # NEW
+            'discount_percentage': float(discount_percentage),  # NEW
             'shipping_pdf': shipping_pdf_path,
             'prep_pdf': prep_pdf_path,
             'excel_file': excel_path

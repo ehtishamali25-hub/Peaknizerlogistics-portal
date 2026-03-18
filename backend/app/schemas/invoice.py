@@ -14,6 +14,11 @@ class InvoiceBase(BaseModel):
     status: Literal['unpaid', 'partially_paid', 'fully_paid'] = 'unpaid'
     is_visible_to_customer: bool = False
 
+    total_quantity: Optional[int] = None  # Sum of all quantities from batch rows
+    total_prep_value: Optional[Decimal] = None  # total_quantity * rate
+    discount_percentage: Optional[float] = None  # Calculated discount percentage
+
+
 class InvoiceCreate(InvoiceBase):
     customer_id: UUID
     shipping_details_id: UUID

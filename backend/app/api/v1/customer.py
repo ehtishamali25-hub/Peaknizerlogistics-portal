@@ -174,7 +174,12 @@ def get_customer_prep_invoices(
             "pdf_url": invoice.pdf_url,
             "shipping_detail_id": shipping_detail.id if shipping_detail else None,
             "has_excel": shipping_detail and shipping_detail.excel_file_url is not None,
-            "has_pdf": shipping_detail and shipping_detail.pdf_file_url is not None
+            "has_pdf": shipping_detail and shipping_detail.pdf_file_url is not None,
+            "quantity": invoice.quantity,  # Number of tracking numbers
+            "total_quantity": invoice.total_quantity,  # Sum of quantities
+            "total_prep_value": float(invoice.total_prep_value) if invoice.total_prep_value else None,
+            "discount_percentage": invoice.discount_percentage,
+            "rate": float(invoice.rate) if invoice.rate else None
         }
         result.append(invoice_data)
     

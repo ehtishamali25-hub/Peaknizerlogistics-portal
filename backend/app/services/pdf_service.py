@@ -125,26 +125,43 @@ class PDFService:
         story.append(Spacer(1, 20))
 
         # ===========================
-        # TABLE
+        # TABLE - DIFFERENT FOR SHIPPING AND PREP
         # ===========================
-        table_data = [["Product Name", "QTY", "Rate", "Amount"]]
-
         if invoice_data['invoice_type'] == 'shipping':
+            # Shipping invoice - simple table
+            table_data = [["Product Name", "QTY", "Rate", "Amount"]]
             table_data.append([
                 "Shipping Charges",
                 str(invoice_data['quantity']),
                 "—",
                 f"${invoice_data['total_amount']:.2f}"
             ])
+            
+            table = Table(table_data, colWidths=[220, 60, 80, 100])
+
         else:
+            # Prep invoice with discount - enhanced table
+            table_data = [["Product Name", "QTY", "Rate", "Total Amount", "Discount", "Amount To Pay"]]
+            
+            tracking_count = invoice_data['quantity']  # Number of tracking numbers
+            total_qty = invoice_data.get('total_quantity', tracking_count)  # Sum of quantities
+            rate = invoice_data['rate']
+            total_amount = total_qty * rate  # Total before discount
+            discount = invoice_data.get('discount_percentage', 0)
+            final_amount = invoice_data['total_amount']  # Amount after discount
+            
+            discount_display = f"{discount:.2f}%" if discount else "0%"
+            
             table_data.append([
                 "Prep Charges",
-                str(invoice_data['quantity']),
-                f"${invoice_data['rate']:.2f}",
-                f"${invoice_data['total_amount']:.2f}"
+                str(total_qty),  # Show sum of quantities (44)
+                f"${rate:.2f}",
+                f"${total_amount:.2f}",  # Show total before discount ($242.00)
+                discount_display,  # Show discount percentage (77.27%)
+                f"${final_amount:.2f}"  # Show final amount ($55.00)
             ])
-
-        table = Table(table_data, colWidths=[220, 60, 80, 100])
+            
+            table = Table(table_data, colWidths=[150, 40, 50, 70, 60, 70])
 
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4CAF50")),
@@ -152,10 +169,18 @@ class PDFService:
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
             ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
-            ('ALIGN', (3, 1), (3, -1), 'RIGHT'),
+            ('ALIGN', (-1, 1), (-1, -1), 'RIGHT'),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
             ('TOPPADDING', (0, 0), (-1, 0), 10),
         ]))
+
+        # Add specific alignment for the new columns in prep invoice
+        if invoice_data['invoice_type'] != 'shipping':
+            table.setStyle(TableStyle([
+                ('ALIGN', (3, 1), (3, -1), 'RIGHT'),  # Total Amount
+                ('ALIGN', (4, 1), (4, -1), 'CENTER'),  # Discount
+                ('ALIGN', (5, 1), (5, -1), 'RIGHT'),   # Final Amount
+            ]))
 
         story.append(table)
         story.append(Spacer(1, 25))
@@ -213,7 +238,6 @@ class PDFService:
 
         doc.build(story)
         return file_path
-
     # ============================================
     # EXCEL FUNCTION (UNCHANGED)
     # ============================================
