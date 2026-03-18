@@ -137,11 +137,9 @@ const CustomerPrepInvoices = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue Date</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tracking Count</th>
-                  
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Amount</th>
-                  
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shipping Details</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice PDF</th>
@@ -155,15 +153,8 @@ const CustomerPrepInvoices = () => {
                     <td className="px-4 py-3">{formatDate(invoice.issue_date)}</td>
                     <td className="px-4 py-3">{formatDate(invoice.due_date)}</td>
                     <td className="px-4 py-3 text-center">{invoice.quantity}</td>
-                    <td className="px-4 py-3 text-center">{invoice.total_quantity || invoice.quantity}</td>
                     <td className="px-4 py-3">{formatCurrency(invoice.rate || 0)}</td>
-                    <td className="px-4 py-3 font-medium">{formatCurrency(invoice.total_prep_value || invoice.total_amount)}</td>
-                    <td className="px-4 py-3 text-center font-medium text-green-600">
-                      {formatPercentage(invoice.discount_percentage)}
-                    </td>
                     <td className="px-4 py-3 font-medium">{formatCurrency(invoice.total_amount)}</td>
-
-
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
                         {invoice.status.replace('_', ' ')}
