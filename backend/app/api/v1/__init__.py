@@ -1,5 +1,6 @@
 ﻿from fastapi import APIRouter
 from app.api.v1 import registrations
+from app.api.v1 import owner
 from app.api.v1 import auth, customers, warehouses, products, batches, downloads, customer, invoices, shipping, payment_proofs, users, inventory, contact
 
 router = APIRouter(prefix="/api/v1")
@@ -17,3 +18,4 @@ router.include_router(users.router)
 router.include_router(inventory.router)
 router.include_router(registrations.router)
 router.include_router(contact.router)
+router.include_router(owner.router)
