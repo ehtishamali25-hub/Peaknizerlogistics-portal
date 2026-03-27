@@ -5,7 +5,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
+import Header from './Header';  
+import Footer from './Footer';
 gsap.registerPlugin(ScrollTrigger);
 
 const Counter = ({ end, label }) => {
