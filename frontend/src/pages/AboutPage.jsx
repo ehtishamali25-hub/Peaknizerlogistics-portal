@@ -29,7 +29,7 @@ const AboutPage = () => {
                 Founded in 2020, Peaknizer Logistics emerged from a simple observation: e-commerce sellers were struggling to manage their growing fulfillment needs while trying to scale their businesses. We saw an opportunity to bridge the gap between online retailers and efficient logistics.
               </p>
               <p className="text-gray-400 mb-4 leading-relaxed">
-                What started as a small warehouse operation in Arlington, Virginia has grown into a comprehensive 3PL provider serving hundreds of satisfied clients across the United States. Our journey has been driven by a relentless commitment to innovation, reliability, and customer success.
+                What started as a small warehouse operation in  Virginia and Texas has grown into a comprehensive 3PL provider serving hundreds of satisfied clients across the United States. Our journey has been driven by a relentless commitment to innovation, reliability, and customer success.
               </p>
               <p className="text-gray-400 leading-relaxed">
                 Today, we operate multiple strategically located fulfillment centers, employ a team of logistics experts, and leverage cutting-edge technology to provide seamless supply chain solutions. Our mission remains unchanged: to make logistics simple, affordable, and transparent for businesses of all sizes.
@@ -42,10 +42,10 @@ const AboutPage = () => {
               </p>
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                  FM
+                  SH
                 </div>
                 <div className="ml-4">
-                  <p className="text-white font-semibold">FNU MUZZ</p>
+                  <p className="text-white font-semibold"> SHAH</p>
                   <p className="text-gray-400 text-sm">Founder & CEO, Peaknizer Logistics</p>
                 </div>
               </div>
@@ -162,22 +162,22 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                name: "Ali Khan",
+                name: "SHAH",
                 role: "Founder & CEO",
                 bio: "15+ years in logistics and supply chain management. Former Amazon operations lead.",
-                initial: "AK"
+                initial: "SH"
               },
               {
-                name: "Sarah Chen",
+                name: "M ALI",
                 role: "Chief Operations Officer",
                 bio: "Expert in warehouse optimization and fulfillment strategy. MBA from Stanford.",
-                initial: "SC"
+                initial: "MA"
               },
               {
-                name: "Mike Rodriguez",
+                name: "E ALI",
                 role: "Director of Technology",
-                bio: "Built scalable systems for多家财富500强企业. Passionate about logistics innovation.",
-                initial: "MR"
+                bio: "Built scalable systems for Client Portal. Passionate about logistics innovation.",
+                initial: "EA"
               },
               {
                 name: "Emily Watson",
@@ -270,11 +270,7 @@ const AboutPage = () => {
                 size: "200,000 sq ft",
                 features: ["Port proximity", "Hazardous materials certified", "Cross-docking", "80 dock doors"]
               },
-              {
-                location: "Los Angeles, CA",
-                size: "180,000 sq ft",
-                features: ["International gateway", "FDA compliant", "Cold storage", "70 dock doors"]
-              }
+              
             ].map((facility, index) => (
               <div key={index} className="bg-gray-900 p-6 rounded-lg border border-orange-500/30">
                 <h3 className="text-xl font-semibold text-white mb-2">{facility.location}</h3>
