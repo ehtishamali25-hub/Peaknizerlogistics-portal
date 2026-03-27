@@ -73,7 +73,7 @@ const PricingPage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-white mb-4">
-              <span className="text-orange-500">🔹 FBM Fulfillment</span> – From Just $2 per Order
+              <span className="text-orange-500">🔹 FBM Fulfillment</span> – From Just $3 per Order
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
               Ideal for Shopify, Etsy, and WooCommerce Sellers
@@ -111,15 +111,15 @@ const PricingPage = () => {
               <tbody className="divide-y divide-gray-800">
                 <tr className="hover:bg-gray-800/50">
                   <td className="px-6 py-4 text-gray-300">100–999 Orders</td>
-                  <td className="px-6 py-4 text-orange-400 font-bold">$2.00</td>
+                  <td className="px-6 py-4 text-orange-400 font-bold">$3.00</td>
                 </tr>
                 <tr className="hover:bg-gray-800/50">
                   <td className="px-6 py-4 text-gray-300">1,000+ Orders</td>
-                  <td className="px-6 py-4 text-orange-400 font-bold">$1.90</td>
+                  <td className="px-6 py-4 text-orange-400 font-bold">$2.50</td>
                 </tr>
                 <tr className="hover:bg-gray-800/50">
                   <td className="px-6 py-4 text-gray-300">10,000+ Orders</td>
-                  <td className="px-6 py-4 text-orange-400 font-bold">$1.90</td>
+                  <td className="px-6 py-4 text-orange-400 font-bold">$2.00</td>
                 </tr>
               </tbody>
             </table>
@@ -134,7 +134,7 @@ const PricingPage = () => {
             <span className="text-orange-500">🔹 FBA Prep Services</span> – Amazon-Ready, Done Right
           </h2>
           <p className="text-gray-400 text-center max-w-2xl mx-auto mb-10">
-            Our Amazon-compliant services include inspection, labeling, polybagging, bundling, and more—starting at just $0.40/unit!
+            Our Amazon-compliant services include inspection, labeling, polybagging, bundling, and more—starting at just $0.60/unit!
           </p>
 
           <div className="max-w-3xl mx-auto bg-gray-900 rounded-lg overflow-hidden border border-orange-500/30">
@@ -153,11 +153,11 @@ const PricingPage = () => {
                 <tr className="hover:bg-gray-800/50">
                   <td className="px-6 py-4 text-gray-300">100 Units</td>
                   <td className="px-6 py-4 text-orange-400 font-bold">$0.60/unit</td>
-                  <td className="px-6 py-4 text-orange-400 font-bold">$1.00/unit</td>
+                  <td className="px-6 py-4 text-orange-400 font-bold">$2.00/unit</td>
                 </tr>
                 <tr className="hover:bg-gray-800/50">
                   <td className="px-6 py-4 text-gray-300">100–500 Units</td>
-                  <td className="px-6 py-4 text-orange-400 font-bold">$0.40/unit</td>
+                  <td className="px-6 py-4 text-orange-400 font-bold">$0.55/unit</td>
                   <td className="px-6 py-4 text-gray-400">Upon Request</td>
                 </tr>
               </tbody>
@@ -165,7 +165,7 @@ const PricingPage = () => {
           </div>
 
           <div className="mt-6 text-center text-gray-400">
-            <p className="text-orange-400 font-semibold">🛑 No storage fees for first 7 days • 🛑 No hidden charges</p>
+            <p className="text-orange-400 font-semibold">🛑 No storage fees for first 30 days • 🛑 No hidden charges</p>
           </div>
         </div>
       </section>
@@ -189,7 +189,7 @@ const PricingPage = () => {
                 </li>
                 <li className="flex justify-between text-gray-300">
                   <span>Additional (Same SKU):</span>
-                  <span className="text-orange-400 font-bold">$0.20</span>
+                  <span className="text-orange-400 font-bold">$0.30</span>
                 </li>
                 <li className="flex justify-between text-gray-300">
                   <span>Different SKU:</span>
@@ -262,11 +262,11 @@ const PricingPage = () => {
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {[
-                  { type: "Poly Bags", size: "Small to XL", price: "$0.20 – $0.70" },
-                  { type: "Shrink Wrap", size: "Small to Standard", price: "$0.20 – $0.30" },
-                  { type: "Bubble Wrap", size: "Small to Large", price: "$0.30 – $0.70" },
-                  { type: "Fragile Wrap", size: "–", price: "$1.25" },
-                  { type: "Shipping Boxes", size: "Small to Custom", price: "$1.00 – $2.50" },
+                  { type: "Poly Bags", size: "Small to XL", price: "$0.40 – $0.70" },
+                  { type: "Shrink Wrap", size: "Small to Standard", price: "$0.40 – $0.30" },
+                  { type: "Bubble Wrap", size: "Small to Large", price: "$0.40 – $0.70" },
+                  { type: "Fragile Wrap", size: "–", price: "$1.50" },
+                  { type: "Shipping Boxes", size: "Small to Custom", price: "$2.00 – $4.50" },
                 ].map((item, index) => (
                   <tr key={index} className="hover:bg-gray-800/50">
                     <td className="px-6 py-4 text-gray-300">{item.type}</td>
@@ -317,7 +317,7 @@ const PricingPage = () => {
       <section className="py-16 bg-gradient-to-b from-gray-900 to-black">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center text-white mb-8">
-            🌟 Why E-Commerce Sellers Choose <span className="text-orange-500">KAK Fulfillment</span>
+            🌟 Why E-Commerce Sellers Choose <span className="text-orange-500">PeaknizerLogistics Fulfillment</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -358,9 +358,9 @@ const PricingPage = () => {
           </p>
           
           <div className="bg-gray-900 p-6 rounded-lg max-w-2xl mx-auto border border-orange-500/30">
-            <p className="text-white mb-2">📍 <span className="text-orange-400">6003 Bellaire Blvd, Ste K, Houston, TX</span></p>
-            <p className="text-white mb-2">📧 <span className="text-orange-400">sales@kaksourcing.com</span></p>
-            <p className="text-white mb-4">📞 <span className="text-orange-400">+1 346-837-1307</span></p>
+            <p className="text-white mb-2">📍 <span className="text-orange-400">2503D N Harrison St, Arlington, VA 22207</span></p>
+            <p className="text-white mb-2">📧 <span className="text-orange-400">info@peaknizerlogistics.com</span></p>
+            <p className="text-white mb-4">📞 <span className="text-orange-400">+1 571-307-4461</span></p>
             
             <button
               onClick={() => setShowQuoteModal(true)}
