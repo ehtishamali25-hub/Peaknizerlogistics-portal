@@ -1,4 +1,4 @@
-// AboutPage.jsx - FULL 3D ENHANCED VERSION
+// AboutPage.jsx - FULL 3D ENHANCED VERSION (FIXED)
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import WebsiteLayout from './WebsiteLayout';
@@ -18,8 +18,10 @@ const CompanyTimeline3D = () => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 16/9, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(1400, 400);
-    mountRef.current.appendChild(renderer.domElement);
+    const container = mountRef.current;
+    
+    renderer.setSize(container.clientWidth, 400);
+    container.appendChild(renderer.domElement);
 
     // Timeline axis
     const timelineGeometry = new THREE.CylinderGeometry(0.05, 0.05, 30);
@@ -35,6 +37,8 @@ const CompanyTimeline3D = () => {
     // Milestone orbs
     const milestones = [];
     const colors = [0xff6b35, 0xfbbf24, 0x10b981, 0x3b82f6, 0x8b5cf6];
+    const positions = [-14, -7, 0, 7, 14];
+    
     for (let i = 0; i < 5; i++) {
       const orbGeometry = new THREE.SphereGeometry(0.8, 32, 32);
       const orbMaterial = new THREE.MeshPhysicalMaterial({
@@ -45,7 +49,7 @@ const CompanyTimeline3D = () => {
         emissiveIntensity: 0.3
       });
       const orb = new THREE.Mesh(orbGeometry, orbMaterial);
-      orb.position.set(i * 7 - 14, 0, Math.sin(i) * 2);
+      orb.position.set(positions[i], 0, Math.sin(i) * 2);
       scene.add(orb);
       milestones.push(orb);
     }
@@ -65,11 +69,25 @@ const CompanyTimeline3D = () => {
       });
 
       camera.position.x = Math.sin(time * 0.1) * 3;
+      camera.lookAt(0, 0, 0);
       renderer.render(scene, camera);
     };
     animate();
 
-    return () => mountRef.current?.removeChild(renderer.domElement);
+    const handleResize = () => {
+      if (container) {
+        renderer.setSize(container.clientWidth, 400);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (container && renderer.domElement) {
+        container.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+    };
   }, []);
 
   return (
@@ -77,28 +95,101 @@ const CompanyTimeline3D = () => {
   );
 };
 
-// 3D Team Holograms
+// 3D Team Holograms - FIXED IMPLEMENTATION
 const TeamHolograms3D = () => {
   const mountRef = useRef(null);
 
   useEffect(() => {
-    // Team member 3D avatars with holographic effect
-    // Implementation similar to previous 3D scenes
+    if (!mountRef.current) return;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, mountRef.current.clientWidth / 500, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    
+    renderer.setSize(mountRef.current.clientWidth, 500);
+    mountRef.current.appendChild(renderer.domElement);
+
+    // Create floating orbs for each team member
+    const teamColors = [0xff6b35, 0x8b5cf6, 0x3b82f6, 0x10b981];
+    const positions = [-6, -2, 2, 6];
+    const orbs = [];
+
+    for (let i = 0; i < 4; i++) {
+      const geometry = new THREE.SphereGeometry(1.2, 64, 64);
+      const material = new THREE.MeshPhysicalMaterial({
+        color: teamColors[i],
+        metalness: 0.7,
+        roughness: 0.3,
+        emissive: teamColors[i],
+        emissiveIntensity: 0.5,
+        transparent: true,
+        opacity: 0.9
+      });
+      const orb = new THREE.Mesh(geometry, material);
+      orb.position.set(positions[i], 0, 0);
+      scene.add(orb);
+      orbs.push(orb);
+      
+      // Add ring around each orb
+      const ringGeometry = new THREE.TorusGeometry(1.4, 0.05, 32, 100);
+      const ringMaterial = new THREE.MeshBasicMaterial({ color: teamColors[i] });
+      const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+      orb.add(ring);
+      
+      // Add small particles around each orb
+      const particleCount = 50;
+      const particleGeometry = new THREE.BufferGeometry();
+      const particlePositions = new Float32Array(particleCount * 3);
+      for (let j = 0; j < particleCount; j++) {
+        particlePositions[j * 3] = (Math.random() - 0.5) * 3;
+        particlePositions[j * 3 + 1] = (Math.random() - 0.5) * 3;
+        particlePositions[j * 3 + 2] = (Math.random() - 0.5) * 3;
+      }
+      particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+      const particleMaterial = new THREE.PointsMaterial({ color: teamColors[i], size: 0.05 });
+      const particles = new THREE.Points(particleGeometry, particleMaterial);
+      orb.add(particles);
+    }
+
+    camera.position.set(0, 0, 12);
+    camera.lookAt(0, 0, 0);
+
+    let time = 0;
+    const animate = () => {
+      requestAnimationFrame(animate);
+      time += 0.02;
+      
+      orbs.forEach((orb, i) => {
+        orb.rotation.y += 0.01;
+        orb.rotation.x = Math.sin(time + i) * 0.5;
+        orb.position.y = Math.sin(time * 1.5 + i) * 0.3;
+        orb.scale.setScalar(1 + Math.sin(time * 2 + i) * 0.1);
+      });
+      
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    const handleResize = () => {
+      if (mountRef.current) {
+        renderer.setSize(mountRef.current.clientWidth, 500);
+        camera.aspect = mountRef.current.clientWidth / 500;
+        camera.updateProjectionMatrix();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (mountRef.current && renderer.domElement) {
+        mountRef.current.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+    };
   }, []);
 
   return (
-    <div className="w-full h-[500px] bg-gradient-to-br from-gray-900/80 to-black/60 rounded-4xl border-4 border-blue-500/50 shadow-4xl backdrop-blur-xl relative overflow-hidden">
-      <div className="absolute inset-0 flex items-center justify-around">
-        {['SH', 'MA', 'EA', 'EW'].map((initial, i) => (
-          <div key={i} className="group w-32 h-32">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-3xl font-black text-white mx-auto shadow-2xl shadow-blue-500/50 absolute inset-4 group-hover:scale-110 transition-all duration-500 animate-pulse">
-              {initial}
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-full blur-xl opacity-50 group-hover:opacity-80 transition-opacity" />
-          </div>
-        ))}
-      </div>
-    </div>
+    <div ref={mountRef} className="w-full h-[500px] bg-gradient-to-br from-gray-900/80 to-black/60 rounded-4xl border-4 border-blue-500/50 shadow-4xl backdrop-blur-xl relative overflow-hidden" />
   );
 };
 
@@ -178,14 +269,14 @@ const AboutPage = () => {
         </div>
 
         <div className="container mx-auto px-6 relative z-20 text-center">
-          <div className="inline-block bg-gradient-to-r from-orange-500/20 via-blue-500/20 to-purple-500/20 px-10 py-5 rounded-4xl border-4 border-gradient-to-r from-orange-500/40 to-blue-500/40 backdrop-blur-xl mb-12">
+          <div className="inline-block bg-gradient-to-r from-orange-500/20 via-blue-500/20 to-purple-500/20 px-10 py-5 rounded-4xl border border-orange-500/40 backdrop-blur-xl mb-12">
             <span className="text-3xl font-black bg-gradient-to-r from-orange-500 via-yellow-500 to-blue-500 bg-clip-text text-transparent tracking-wider">
               EST. 2020
             </span>
           </div>
           
           <h1 className="text-8xl md:text-9xl lg:text-[10rem] font-black leading-[0.85] bg-gradient-to-r from-white via-gray-100 to-gray-200 bg-clip-text text-transparent drop-shadow-4xl mb-8">
-            PEAK<span className="bg-gradient-to-r from-orange-500 via-yellow-500 to-blue-500 bg-clip-text text-transparent drop-shadow-4xl block text-[7rem] md:text-[8rem]">NIZER</span>
+            PEAKNIZER<span className="bg-gradient-to-r from-orange-500 via-yellow-500 to-blue-500 bg-clip-text text-transparent drop-shadow-4xl block text-[7rem] md:text-[8rem]">LOGISTICS</span>
           </h1>
           
           <p className="text-3xl md:text-4xl text-gray-300 max-w-5xl mx-auto leading-relaxed mb-16">
@@ -288,12 +379,12 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* MISSION & VISION - 3D Cards */}
+      {/* MISSION & VISION - 3D Cards - FIXED */}
       <section className="py-32 bg-gradient-to-b from-gray-900/70 to-black/90 relative">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 max-w-6xl mx-auto">
-            <div className="value-card group relative perspective-[1200px] hover:rotate-x-10 transition-all duration-1000">
-              <div className="relative bg-gradient-to-br from-emerald-900/90 to-green-900/70 backdrop-blur-3xl p-16 rounded-4xl border-4 border-gradient-to-r from-emerald-500/60 to-green-500/60 shadow-4xl shadow-emerald-500/40 hover:shadow-emerald-500/70 hover:scale-[1.05] hover:rotate-x-5 transition-all duration-1000">
+            <div className="value-card group relative transition-all duration-1000">
+              <div className="relative bg-gradient-to-br from-emerald-900/90 to-green-900/70 backdrop-blur-3xl p-16 rounded-4xl border-4 border-emerald-500/60 shadow-4xl shadow-emerald-500/40 hover:shadow-emerald-500/70 hover:scale-[1.05] transition-all duration-1000">
                 <div className="text-8xl mb-12 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000 animate-pulse">🎯</div>
                 <h3 className="text-5xl font-black text-white mb-12 bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent drop-shadow-4xl group-hover:scale-110 transition-transform">
                   MISSION
@@ -310,13 +401,13 @@ const AboutPage = () => {
               </div>
             </div>
 
-            <div className="value-card group relative perspective-[1200px] hover:rotate-y-10 transition-all duration-1000">
-              <div className="relative bg-gradient-to-br from-indigo-900/90 to-purple-900/70 backdrop-blur-3xl p-16 rounded-4xl border-4 border-gradient-to-r from-indigo-500/60 to-purple-500/60 shadow-4xl shadow-indigo-500/40 hover:shadow-indigo-500/70 hover:scale-[1.05] hover:rotate-y-5 transition-all duration-1000">
+            <div className="value-card group relative transition-all duration-1000">
+              <div className="relative bg-gradient-to-br from-indigo-900/90 to-purple-900/70 backdrop-blur-3xl p-16 rounded-4xl border-4 border-indigo-500/60 shadow-4xl shadow-indigo-500/40 hover:shadow-indigo-500/70 hover:scale-[1.05] transition-all duration-1000">
                 <div className="text-8xl mb-12 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000 animate-pulse">👁️</div>
                 <h3 className="text-5xl font-black text-white mb-12 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent drop-shadow-4xl group-hover:scale-110 transition-transform">
                   VISION
                 </h3>
-                                <p className="text-2xl text-gray-200 leading-relaxed opacity-85 group-hover:opacity-100 transition-all mb-12">
+                <p className="text-2xl text-gray-200 leading-relaxed opacity-85 group-hover:opacity-100 transition-all mb-12">
                   Become the <span className="font-black text-white">invisible force</span> powering the world's most successful commerce brands through unprecedented logistics intelligence.
                 </p>
                 <ul className="space-y-4 text-xl text-gray-300">
@@ -331,7 +422,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* CORE VALUES - 3D Floating Grid */}
+      {/* CORE VALUES - 3D Floating Grid - FIXED */}
       <section ref={valuesRef} className="py-32 bg-gradient-to-b from-black/80 to-gray-900/60 relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-white/[0.015]" />
         <div className="container mx-auto px-6 relative z-10">
@@ -350,42 +441,48 @@ const AboutPage = () => {
                 icon: '🤝', 
                 title: 'Absolute Integrity', 
                 desc: 'Zero tolerance for opacity. Complete transparency in pricing, processes, and performance.',
-                color: 'from-emerald-500 to-green-500'
+                color: 'from-emerald-500 to-green-500',
+                borderColor: 'border-emerald-500/40'
               },
               { 
                 icon: '⚡', 
                 title: 'Relentless Innovation', 
                 desc: 'AI-first approach. Continuous evolution through technology and process reinvention.',
-                color: 'from-blue-500 to-indigo-500'
+                color: 'from-blue-500 to-indigo-500',
+                borderColor: 'border-blue-500/40'
               },
               { 
                 icon: '🎯', 
                 title: 'Customer Supremacy', 
                 desc: 'Your success IS our success. We measure ourselves by your growth velocity.',
-                color: 'from-orange-500 to-yellow-500'
+                color: 'from-orange-500 to-yellow-500',
+                borderColor: 'border-orange-500/40'
               },
               { 
                 icon: '👥', 
                 title: 'Team Obsession', 
                 desc: 'World-class talent. Continuous development. Ownership culture.',
-                color: 'from-purple-500 to-pink-500'
+                color: 'from-purple-500 to-pink-500',
+                borderColor: 'border-purple-500/40'
               },
               { 
                 icon: '🌱', 
                 title: 'Exponential Growth', 
                 desc: 'Built for 100x scale. Sustainable systems that compound over decades.',
-                color: 'from-green-500 to-emerald-500'
+                color: 'from-green-500 to-emerald-500',
+                borderColor: 'border-green-500/40'
               },
               { 
                 icon: '🌍', 
                 title: 'Global Impact', 
                 desc: 'Economic engines for communities. Responsible stewardship of resources.',
-                color: 'from-indigo-500 to-blue-500'
+                color: 'from-indigo-500 to-blue-500',
+                borderColor: 'border-indigo-500/40'
               }
             ].map((value, i) => (
-              <div key={i} className="value-card group relative perspective-[1000px] hover:rotate-y-15 transition-all duration-1000 cursor-pointer">
-                <div className={`relative bg-gradient-to-br ${value.color} bg-gradient-to-br from-gray-900/95 backdrop-blur-3xl p-12 rounded-4xl border-4 border-white/30 shadow-4xl shadow-${value.color.includes('emerald') ? 'emerald' : value.color.includes('blue') ? 'blue' : value.color.includes('orange') ? 'orange' : value.color.includes('purple') ? 'purple' : value.color.includes('green') ? 'green' : 'indigo'}-500/40 hover:shadow-${value.color.includes('emerald') ? 'emerald' : value.color.includes('blue') ? 'blue' : value.color.includes('orange') ? 'orange' : value.color.includes('purple') ? 'purple' : value.color.includes('green') ? 'green' : 'indigo'}-500/70 hover:scale-[1.08] hover:rotate-y-8 transition-all duration-1000`}>
-                  <div className="text-7xl mb-8 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000 animate-bounce-slow">{value.icon}</div>
+              <div key={i} className="value-card group relative transition-all duration-1000 cursor-pointer">
+                <div className={`relative bg-gradient-to-br ${value.color} bg-gradient-to-br from-gray-900/95 to-black/80 backdrop-blur-3xl p-12 rounded-4xl border-4 ${value.borderColor} shadow-4xl hover:scale-[1.08] transition-all duration-1000`}>
+                  <div className="text-7xl mb-8 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000 animate-pulse">{value.icon}</div>
                   <h3 className="text-3xl font-black text-white mb-6 group-hover:scale-105 transition-transform uppercase tracking-wider">{value.title}</h3>
                   <p className="text-xl text-gray-100 leading-relaxed opacity-85 group-hover:opacity-100 transition-all">{value.desc}</p>
                   <div className="absolute inset-0 bg-gradient-to-r from-white/30 rounded-4xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-1000 -z-10" />
@@ -396,7 +493,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* LEADERSHIP - 3D Holograms */}
+      {/* LEADERSHIP - 3D Holograms - FIXED */}
       <section ref={teamRef} className="py-32 bg-gradient-to-b from-gray-900/80 to-black/90 relative">
         <div className="container mx-auto px-6">
           <div className="text-center mb-24">
@@ -417,32 +514,36 @@ const AboutPage = () => {
                   role: "Founder & CEO",
                   bio: "15+ years logistics. Ex-Amazon. Built 500K+ sq ft network.",
                   initial: "SH",
-                  color: "from-orange-500 to-yellow-500"
-                },
-                {
-                  name: "M. Ali", 
-                  role: "Chief Operations Officer",
-                  bio: "Warehouse optimization expert. Stanford MBA. 99.99% accuracy systems.",
-                  initial: "MA",
-                  color: "from-blue-500 to-indigo-500"
+                  color: "from-orange-500 to-yellow-500",
+                  shadowColor: "shadow-orange-500/50"
                 },
                 {
                   name: "E. Ali",
                   role: "CTO & Head of Engineering", 
                   bio: "Built Client Portal v2.0. AI logistics pioneer. 10+ years software.",
                   initial: "EA",
-                  color: "from-purple-500 to-pink-500"
+                  color: "from-purple-500 to-pink-500",
+                  shadowColor: "shadow-purple-500/50"
+                },
+                {
+                  name: "M. Ali", 
+                  role: "Chief Operations Officer",
+                  bio: "Warehouse optimization expert. Stanford MBA. 99.99% accuracy systems.",
+                  initial: "MA",
+                  color: "from-blue-500 to-indigo-500",
+                  shadowColor: "shadow-blue-500/50"
                 },
                 {
                   name: "Emily Watson",
                   role: "Chief Client Officer",
                   bio: "2,500+ client relationships. Retention specialist. Growth architect.",
                   initial: "EW",
-                  color: "from-green-500 to-emerald-500"
+                  color: "from-green-500 to-emerald-500",
+                  shadowColor: "shadow-green-500/50"
                 }
               ].map((leader, i) => (
-                <div key={i} className="team-member group relative text-center perspective-[1000px] hover:rotate-x-10 transition-all duration-1000 cursor-pointer">
-                  <div className={`relative w-48 h-48 mx-auto mb-8 bg-gradient-to-br ${leader.color} rounded-3xl flex items-center justify-center shadow-4xl shadow-${leader.color.includes('orange') ? 'orange' : leader.color.includes('blue') ? 'blue' : leader.color.includes('purple') ? 'purple' : 'green'}-500/50 group-hover:shadow-${leader.color.includes('orange') ? 'orange' : leader.color.includes('blue') ? 'blue' : leader.color.includes('purple') ? 'purple' : 'green'}-500/70 group-hover:scale-125 group-hover:rotate-x-15 transition-all duration-1000`}>
+                <div key={i} className="team-member group relative text-center transition-all duration-1000 cursor-pointer">
+                  <div className={`relative w-48 h-48 mx-auto mb-8 bg-gradient-to-br ${leader.color} rounded-3xl flex items-center justify-center shadow-4xl ${leader.shadowColor} group-hover:scale-125 transition-all duration-1000`}>
                     <div className="text-5xl font-black text-black drop-shadow-2xl relative z-10">{leader.initial}</div>
                     <div className="absolute inset-0 bg-white/30 rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition-opacity" />
                   </div>
@@ -457,7 +558,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* WHY US - Stats Grid */}
+      {/* WHY US - Stats Grid - FIXED */}
       <section className="py-32 bg-black/80 relative">
         <div className="container mx-auto px-6">
           <div className="text-center mb-24">
@@ -492,7 +593,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* FACILITIES - 3D Map */}
+      {/* FACILITIES - 3D Map - FIXED */}
       <section className="py-32 bg-gradient-to-b from-gray-900/80 to-black/90 relative">
         <div className="container mx-auto px-6">
           <div className="text-center mb-24">
@@ -510,26 +611,26 @@ const AboutPage = () => {
                 location: "Arlington, VA",
                 size: "150K sq ft",
                 features: ["East Coast Hub", "60 docks", "Rail access", "Climate control"],
-                color: "from-orange-500",
-                lat: 38.88
+                color: "from-orange-500 to-yellow-500",
+                shadowColor: "shadow-orange-500/50"
               },
               {
                 location: "Houston, TX", 
                 size: "200K sq ft",
                 features: ["Gulf Gateway", "80 docks", "Hazmat certified", "Port proximity"],
-                color: "from-blue-500",
-                lat: 29.76
+                color: "from-blue-500 to-indigo-500",
+                shadowColor: "shadow-blue-500/50"
               },
               {
                 location: "Chicago, IL",
                 size: "175K sq ft", 
                 features: ["Midwest Core", "Rail nexus", "Cross-dock", "Automation"],
-                color: "from-green-500",
-                lat: 41.88
+                color: "from-green-500 to-emerald-500",
+                shadowColor: "shadow-green-500/50"
               }
             ].map((facility, i) => (
-              <div key={i} className="group relative p-10 bg-gradient-to-br from-gray-900/90 to-black/70 backdrop-blur-xl rounded-4xl border-4 border-white/20 hover:border-gradient-to-r hover:from-orange-500/60 hover:to-blue-500/60 hover:shadow-gradient-to-r hover:shadow-orange-500/50 hover:scale-105 transition-all duration-1000 cursor-pointer shadow-2xl">
-                <div className={`w-20 h-20 ${facility.color} bg-gradient-to-br rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-${facility.color.includes('orange') ? 'orange' : facility.color.includes('blue') ? 'blue' : 'green'}-500/50 group-hover:scale-125 transition-all duration-500`}>
+              <div key={i} className="group relative p-10 bg-gradient-to-br from-gray-900/90 to-black/70 backdrop-blur-xl rounded-4xl border-4 border-white/20 hover:border-orange-500/60 hover:shadow-orange-500/50 hover:scale-105 transition-all duration-1000 cursor-pointer shadow-2xl">
+                <div className={`w-20 h-20 bg-gradient-to-br ${facility.color} rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl ${facility.shadowColor} group-hover:scale-125 transition-all duration-500`}>
                   <div className="text-3xl font-black text-black drop-shadow-lg">📍</div>
                 </div>
                 <h3 className="text-3xl font-black text-white mb-4 text-center group-hover:text-blue-400 transition-colors">{facility.location}</h3>
