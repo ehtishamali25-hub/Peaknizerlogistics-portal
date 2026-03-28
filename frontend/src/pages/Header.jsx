@@ -23,7 +23,7 @@ const Header = () => {
           {/* 3D Logo with Glow */}
           <Link to="/" className="group relative">
             <div className="text-3xl font-black bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-400 bg-clip-text text-transparent drop-shadow-2xl">
-              PEAKNIZER
+              PEAKNIZERLOGISTICS
             </div>
             <div className="absolute -inset-2 bg-gradient-to-r from-orange-500/30 to-orange-400/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500 animate-pulse" />
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 rounded-xl blur animate-ping" />
