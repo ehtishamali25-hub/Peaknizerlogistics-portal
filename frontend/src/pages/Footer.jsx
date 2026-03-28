@@ -21,7 +21,7 @@ const Footer = () => {
           <div className="space-y-6">
             <div className="group">
               <h3 className="text-3xl font-black bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-400 bg-clip-text text-transparent drop-shadow-2xl">
-                PEAKNIZER
+                PEAKNIZERLOGISTICS
               </h3>
               <div className="h-1 w-20 bg-gradient-to-r from-orange-500 to-orange-400 mt-2 rounded-full animate-pulse" />
             </div>
