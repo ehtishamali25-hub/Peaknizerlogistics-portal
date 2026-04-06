@@ -265,3 +265,18 @@ def verify_email(
     db.commit()
     
     return {"message": "Email verified successfully! The owner will review your registration."}
+
+@router.post("/test-email")
+async def test_email(
+    email: str,
+    db: Session = Depends(get_db)
+):
+    """Test email sending"""
+    
+    result = await EmailService.send_email(
+        to_email=email,
+        subject="Test Email from Peaknizer",
+        body="<h1>Test</h1><p>This is a test email.</p>"
+    )
+    
+    return {"success": result, "to": email}
