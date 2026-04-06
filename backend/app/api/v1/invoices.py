@@ -1,6 +1,6 @@
 ﻿from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from app.core.dependencies import get_db, require_role
@@ -69,7 +69,8 @@ def update_invoice_status(
 def get_invoices(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("owner")),
-    customer_id: UUID = None,
+    customer_id: Optional[UUID] = None,
+    status: Optional[str] = None,  # ← ADD THIS LINE
     skip: int = 0,
     limit: int = 100
 ):
@@ -79,6 +80,10 @@ def get_invoices(
     
     if customer_id:
         query = query.filter(Invoice.customer_id == customer_id)
+    
+    # ← ADD THIS STATUS FILTER
+    if status:
+        query = query.filter(Invoice.status == status)
     
     invoices = query.order_by(Invoice.issue_date.desc()).offset(skip).limit(limit).all()
     return invoices
