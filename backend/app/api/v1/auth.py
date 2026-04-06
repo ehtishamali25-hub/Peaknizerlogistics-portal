@@ -1,8 +1,9 @@
 ﻿from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+import secrets
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from datetime import timedelta
-from app.models.registration import RegistrationRequest as RegistrationDBModel  # Rename import
+from app.models.registration import RegistrationRequest as RegistrationDBModel
 
 from app.core.security import verify_password, create_access_token, oauth2_scheme, get_password_hash
 from app.core.dependencies import get_db, get_current_user, require_role
@@ -10,12 +11,13 @@ from app.core.config import settings
 from app.models.user import User
 from app.schemas.auth import LoginRequest, LoginResponse
 from app.schemas.user import UserCreate, UserOut
+from app.services.email_service import EmailService
 from pydantic import BaseModel, EmailStr
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-class RegistrationRequestSchema(BaseModel):  # Rename this class
+class RegistrationRequestSchema(BaseModel):
     customer_name: str
     email: EmailStr
     phone: str
@@ -61,6 +63,7 @@ async def login(
         company_id=str(user.company_id)
     )
 
+
 @router.get("/me")
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return {
@@ -72,6 +75,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "is_active": current_user.is_active
     }
 
+
 @router.post("/register", response_model=UserOut)
 def register_user(
     user_data: UserCreate,
@@ -80,15 +84,12 @@ def register_user(
 ):
     """Register a new user (owner only)"""
     
-    # Check if user exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Hash password
     hashed_password = get_password_hash(user_data.password)
     
-    # Create user - exclude password from dict and add hashed password
     user_dict = user_data.dict(exclude={'password', 'customer_ids', 'warehouse_ids'})
     db_user = User(
         **user_dict,
@@ -96,9 +97,8 @@ def register_user(
     )
     
     db.add(db_user)
-    db.flush()  # Get ID without committing
+    db.flush()
     
-    # Add customer assignments
     from app.models.employee_customer import EmployeeCustomer
     for customer_id in user_data.customer_ids:
         assignment = EmployeeCustomer(
@@ -107,7 +107,6 @@ def register_user(
         )
         db.add(assignment)
     
-    # Add warehouse assignments
     from app.models.employee_warehouse import EmployeeWarehouse
     for warehouse_id in user_data.warehouse_ids:
         assignment = EmployeeWarehouse(
@@ -122,29 +121,40 @@ def register_user(
     return db_user
 
 
-
 @router.post("/register-request")
 def register_request(
     request_data: RegistrationRequestSchema,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    background_tasks: BackgroundTasks
 ):
-    """Submit registration request"""
+    """Submit registration request with email verification"""
     
     # Check if email already exists in users (active accounts)
     existing_user = db.query(User).filter(User.email == request_data.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Check if there's already a PENDING request (not declined or approved)
+    # Check for pending unverified request
     existing_pending = db.query(RegistrationDBModel).filter(
         RegistrationDBModel.email == request_data.email,
-        RegistrationDBModel.status == 'pending'
+        RegistrationDBModel.status == 'pending',
+        RegistrationDBModel.is_verified == False
     ).first()
     
     if existing_pending:
-        raise HTTPException(status_code=400, detail="You already have a pending registration request")
+        raise HTTPException(status_code=400, detail="Please verify your email first. Check your inbox.")
     
-    # Check if there's an approved request (shouldn't happen if user doesn't exist, but check anyway)
+    # Check for verified but not approved
+    existing_verified = db.query(RegistrationDBModel).filter(
+        RegistrationDBModel.email == request_data.email,
+        RegistrationDBModel.status == 'pending',
+        RegistrationDBModel.is_verified == True
+    ).first()
+    
+    if existing_verified:
+        raise HTTPException(status_code=400, detail="Registration already submitted. Awaiting approval.")
+    
+    # Check for approved request
     existing_approved = db.query(RegistrationDBModel).filter(
         RegistrationDBModel.email == request_data.email,
         RegistrationDBModel.status == 'approved'
@@ -153,24 +163,20 @@ def register_request(
     if existing_approved:
         raise HTTPException(status_code=400, detail="This email already has an approved registration")
     
-    # If there's a declined request, we can either:
-    # Option 1: Allow re-registration by updating the existing record
-    # Option 2: Delete the old declined record and create new
-    
-    # Let's go with Option 2 - delete old declined record
+    # Delete old declined record
     existing_declined = db.query(RegistrationDBModel).filter(
         RegistrationDBModel.email == request_data.email,
         RegistrationDBModel.status == 'declined'
     ).first()
     
     if existing_declined:
-        # Delete the old declined request
         db.delete(existing_declined)
         db.commit()
-        print(f"Deleted old declined request for {request_data.email}")
+    
+    # Generate verification token
+    verification_token = secrets.token_urlsafe(32)
     
     # Hash password
-    from app.core.security import get_password_hash
     hashed_password = get_password_hash(request_data.password)
     
     # Create registration request
@@ -182,10 +188,80 @@ def register_request(
         company_address=request_data.company_address,
         password_hash=hashed_password,
         notes=request_data.notes,
-        status='pending'
+        status='pending',
+        is_verified=False,
+        verification_token=verification_token
     )
     
     db.add(registration)
     db.commit()
     
-    return {"message": "Registration request submitted successfully"}
+    # Send verification email
+    frontend_url = "https://peaknizerlogistics-portal-frontend.onrender.com"
+    verification_link = f"{frontend_url}/verify-email?token={verification_token}&email={request_data.email}"
+    
+    email_body = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background-color: #f44336; color: white; padding: 20px; text-align: center; }}
+            .button {{ background-color: #f44336; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; }}
+            .footer {{ margin-top: 30px; font-size: 12px; color: #666; text-align: center; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h2>Verify Your Email Address</h2>
+            </div>
+            <p>Dear {request_data.customer_name},</p>
+            <p>Thank you for registering with <strong>Peaknizer Logistics</strong>. Please verify your email address by clicking the button below:</p>
+            <p style="text-align: center;">
+                <a href="{verification_link}" class="button">Verify Email</a>
+            </p>
+            <p>Or copy and paste this link: <br>{verification_link}</p>
+            <p>This link will expire in 24 hours.</p>
+            <p>If you did not create this account, please ignore this email.</p>
+            <div class="footer">
+                <p>&copy; 2026 Peaknizer Logistics. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    background_tasks.add_task(
+        EmailService.send_email,
+        request_data.email,
+        "Verify Your Email - Peaknizer Logistics",
+        email_body
+    )
+    
+    return {"message": "Registration submitted. Please check your email to verify your address."}
+
+
+@router.get("/verify-email")
+def verify_email(
+    token: str,
+    email: str,
+    db: Session = Depends(get_db)
+):
+    """Verify user's email address"""
+    
+    registration = db.query(RegistrationDBModel).filter(
+        RegistrationDBModel.email == email,
+        RegistrationDBModel.verification_token == token,
+        RegistrationDBModel.is_verified == False
+    ).first()
+    
+    if not registration:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification link")
+    
+    registration.is_verified = True
+    registration.verification_token = None
+    db.commit()
+    
+    return {"message": "Email verified successfully! The owner will review your registration."}

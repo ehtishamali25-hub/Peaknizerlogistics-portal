@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, TIMESTAMP, ForeignKey
+from sqlalchemy import Boolean, Column, String, Text, TIMESTAMP, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
@@ -16,6 +16,8 @@ class RegistrationRequest(Base):
     password_hash = Column(String(255), nullable=False)
     notes = Column(Text)
     status = Column(String(50), default='pending')  # pending, approved, declined
+    is_verified = Column(Boolean, default=False)  # ← ADD THIS
+    verification_token = Column(String(255), nullable=True)  # ← ADD THIS
     rejection_reason = Column(Text)  # Add this for decline reason
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     reviewed_at = Column(TIMESTAMP(timezone=True))

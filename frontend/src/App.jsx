@@ -27,6 +27,7 @@ import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
 import OwnerRegistrations from './pages/OwnerRegistrations';
+import VerifyEmail from './pages/VerifyEmail';
 function App() {
   return (
     <BrowserRouter>
@@ -273,6 +274,10 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
+
+            
+          <Route path="/verify-email" element={<VerifyEmail />} />
           
           <Route path="*" element={<Navigate to="/" />} />
           <Route path="/unauthorized" element={<div>Unauthorized Access</div>} />
