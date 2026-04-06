@@ -124,8 +124,8 @@ def register_user(
 @router.post("/register-request")
 def register_request(
     request_data: RegistrationRequestSchema,
-    db: Session = Depends(get_db),
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
 ):
     """Submit registration request with email verification"""
     
