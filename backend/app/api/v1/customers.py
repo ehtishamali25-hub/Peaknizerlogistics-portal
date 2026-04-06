@@ -168,7 +168,6 @@ def update_customer(
     return customer
 
 
-
 @router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_customer(
     customer_id: UUID,
@@ -189,6 +188,8 @@ def delete_customer(
     from app.models.excel_batch_row import ExcelBatchRow
     from app.models.invoice import Invoice
     from app.models.product import Product
+    from app.models.user import User
+    from app.models.registration import RegistrationRequest
     
     # Get all batches for this customer
     batches = db.query(ExcelBatch).filter(ExcelBatch.customer_id == customer_id).all()
@@ -206,8 +207,17 @@ def delete_customer(
     # Delete invoices (shipping_details will cascade)
     db.query(Invoice).filter(Invoice.customer_id == customer_id).delete()
     
+    # ⬇️⬇️⬇️ ADD THESE TWO LINES ⬇️⬇️⬇️
+    
+    # Delete user account associated with this customer
+    db.query(User).filter(User.email == customer.email).delete()
+    
+    # Delete any registration requests for this email
+    db.query(RegistrationRequest).filter(RegistrationRequest.email == customer.email).delete()
+    
     # Finally delete the customer
     db.delete(customer)
     db.commit()
     
     return None
+
