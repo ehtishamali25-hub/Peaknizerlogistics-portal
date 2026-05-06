@@ -29,9 +29,10 @@ const Header = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 rounded-xl blur animate-ping" />
           </Link>
 
+          
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-2">
-            {['Home', 'Services', 'About', 'Pricing', 'Contact'].map((item) => (
+            {['Home', 'Services', 'About', 'Pricing', 'Contact', 'Privacy'].map((item) => (
               <Link
                 key={item}
                 to={`/${item.toLowerCase()}`}
