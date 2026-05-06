@@ -28,6 +28,7 @@ import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
 import OwnerRegistrations from './pages/OwnerRegistrations';
 import VerifyEmail from './pages/VerifyEmail';
+import PolicyPage from './pages/PolicyPage';
 function App() {
   return (
     <BrowserRouter>
@@ -40,6 +41,7 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/privacy" element={<PolicyPage />} />
           <Route path="/login" element={<Login />} />
           
           {/* Owner Routes */}
