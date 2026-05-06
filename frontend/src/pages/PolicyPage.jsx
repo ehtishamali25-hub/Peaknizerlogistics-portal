@@ -1,4 +1,4 @@
-import WebsiteLayout from '../layouts/WebsiteLayout';
+import WebsiteLayout from './WebsiteLayout';
 import { Link } from 'react-router-dom';
 
 const PolicyPage = () => {
