@@ -189,12 +189,12 @@ const PricingPage = () => {
           </h1>
           
           <p className="text-base sm:text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-12 px-4">
-            🚀 Welcome to Peaknizer Logistics, Arlington's premier FBA & FBM prep center—designed to power your e-commerce growth without breaking the bank.
+            🚀 Welcome to Peaknizer Logistics, Virginia's and Texas's premier FBA & FBM prep center—designed to power your e-commerce growth without breaking the bank.
           </p>
           
           <div className="inline-block bg-gray-900/80 backdrop-blur-2xl border-2 border-orange-500/50 p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl hover:shadow-[0_25px_50px_-10px_rgba(249,115,22,0.4)] transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02]">
             <p className="text-white font-bold text-base sm:text-xl md:text-2xl mb-2 sm:mb-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-              📍 2503D N Harrison St, Arlington, VA, 22207
+              📍 Arlington, VA & Houston, TX
             </p>
             <p className="text-sm sm:text-base md:text-lg text-gray-300">Fully equipped to handle everything from Amazon FBA prep to Shopify order fulfillment.</p>
           </div>
@@ -582,7 +582,7 @@ const PricingPage = () => {
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-10 sm:mb-12 md:mb-16 text-left">
               <div className="group relative bg-black/50 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border-2 border-gray-800/50 hover:border-orange-500/60 hover:shadow-[0_20px_40px_-10px_rgba(249,115,22,0.3)] hover:-translate-y-2 transition-all duration-500 cursor-pointer">
                 <p className="text-gray-500 text-xs sm:text-sm font-bold mb-2 sm:mb-3 uppercase tracking-wider">📍 Location</p>
-                <p className="text-white font-bold text-sm sm:text-base md:text-xl leading-tight">2503D N Harrison St,<br/>Arlington, VA 22207</p>
+                <p className="text-white font-bold text-sm sm:text-base md:text-xl leading-tight">Arlington, VA & Houston, TX</p>
               </div>
               <div className="group relative bg-black/50 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border-2 border-gray-800/50 hover:border-orange-500/60 hover:shadow-[0_20px_40px_-10px_rgba(249,115,22,0.3)] hover:-translate-y-2 transition-all duration-500 cursor-pointer">
                 <p className="text-gray-500 text-xs sm:text-sm font-bold mb-2 sm:mb-3 uppercase tracking-wider">📧 Email Us</p>
