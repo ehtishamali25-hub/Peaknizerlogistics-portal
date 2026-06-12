@@ -8,6 +8,7 @@ from uuid import UUID
 import os
 import shutil
 from datetime import datetime
+from typing import List, Dict
 
 from app.core.dependencies import get_db, get_current_user, require_role
 from app.models.payment_proof import PaymentProof
@@ -120,6 +121,7 @@ def verify_payment_proof(
 
 @router.get("/{proof_id}/download")
 def download_proof(
+
     proof_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -156,3 +158,28 @@ def download_proof(
             "Content-Disposition": f"attachment; filename={filename}"
         }
     )
+
+
+@router.post("/batch", response_model=Dict[str, List[PaymentProofOut]])
+def get_proofs_batch(
+    invoice_ids: List[str],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("owner"))
+):
+    """Get payment proofs for multiple invoices in one request"""
+    from uuid import UUID
+    invoice_uuids = [UUID(id) for id in invoice_ids]
+    
+    proofs = db.query(PaymentProof).filter(
+        PaymentProof.invoice_id.in_(invoice_uuids),
+        PaymentProof.company_id == current_user.company_id
+    ).order_by(PaymentProof.uploaded_at.desc()).all()
+    
+    result: Dict[str, List[PaymentProofOut]] = {}
+    for proof in proofs:
+        inv_id_str = str(proof.invoice_id)
+        if inv_id_str not in result:
+            result[inv_id_str] = []
+        result[inv_id_str].append(proof)
+    
+    return result
