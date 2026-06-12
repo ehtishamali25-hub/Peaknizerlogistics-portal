@@ -14,10 +14,10 @@ if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
 # Configure connection pool
 engine = create_engine(
     DATABASE_URL,
-    pool_size=10,           # Increase from default 5
-    max_overflow=20,        # Increase from default 10
+    pool_size=20,           # Increase from default 10
+    max_overflow=50,        # Increase from default 10
     pool_pre_ping=True,     # Check connections before using
-    pool_recycle=3600       # Recycle connections after 1 hour
+    pool_recycle=300       # Recycle connections after 5 minutes
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
