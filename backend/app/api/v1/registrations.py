@@ -108,8 +108,8 @@ def approve_registration(
     if not registration:
         raise HTTPException(status_code=404, detail="Pending registration not found")
     
-    if not registration.is_verified:
-        raise HTTPException(status_code=400, detail="Email not verified. User must verify email first.")
+    # if not registration.is_verified:
+    #     raise HTTPException(status_code=400, detail="Email not verified. User must verify email first.")
     
     # Check if email already used
     existing_customer = db.query(Customer).filter(Customer.email == registration.email).first()
