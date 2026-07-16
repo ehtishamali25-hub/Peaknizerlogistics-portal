@@ -218,8 +218,8 @@ const ContactPage = () => {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">Warehouse Location</h3>
                       <p className="text-gray-700 text-base">
-                        2503D N Harrison St,<br />
-                        Arlington, VA 22207<br />
+                
+                        Arlington, VA <br />
                         United States
                       </p>
                     </div>
