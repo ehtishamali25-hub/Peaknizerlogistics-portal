@@ -1,14 +1,13 @@
-// HomePage.jsx - RESPONSIVE (Mobile-friendly, 3D intact)
+// HomePage.jsx - NO 3D, PURE CSS + GSAP, ATTRACTIVE UI/UX
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import WebsiteLayout from './WebsiteLayout';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Counter component (responsive text size)
+// Counter component (unchanged)
 const Counter = ({ end, label }) => {
   const [value, setValue] = useState(0);
 
@@ -40,116 +39,59 @@ const Counter = ({ end, label }) => {
   );
 };
 
-// 3D Warehouse Scene (responsive canvas)
-const Warehouse3DScene = () => {
-  const mountRef = useRef(null);
-
-  useEffect(() => {
-    if (!mountRef.current) return;
-
-    const width = mountRef.current.clientWidth;
-    const height = Math.min(width * 0.4, 500); // responsive height
-
-    // Scene setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.shadowMap.enabled = true;
-    mountRef.current.appendChild(renderer.domElement);
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
-    scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.position.set(5, 10, 7);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
-    const fillLight = new THREE.PointLight(0xff6b35, 0.5);
-    fillLight.position.set(-3, 2, 4);
-    scene.add(fillLight);
-
-    // Floor
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 0.7, metalness: 0.1 });
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    scene.add(floor);
-
-    // Simple shelves and boxes
-    const shelfGroup = new THREE.Group();
-    for (let i = 0; i < 4; i++) {
-      const shelfMat = new THREE.MeshStandardMaterial({ color: 0x4a5568, metalness: 0.3 });
-      const shelf = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 4), shelfMat);
-      shelf.position.set(i * 5 - 7.5, 1.5, -4);
-      shelf.castShadow = true;
-      shelf.receiveShadow = true;
-      shelfGroup.add(shelf);
-
-      for (let j = 0; j < 2; j++) {
-        const boxMat = new THREE.MeshStandardMaterial({ color: 0xff6b35 });
-        const box = new THREE.Mesh(new THREE.BoxGeometry(1, 0.8, 1), boxMat);
-        box.position.set(i * 5 - 7.5 + (j * 1.5 - 0.75), 2.2, -3);
-        box.castShadow = true;
-        shelfGroup.add(box);
-      }
-    }
-    scene.add(shelfGroup);
-
-    // Animated truck
-    const truckGroup = new THREE.Group();
-    const truckBody = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, 4), new THREE.MeshStandardMaterial({ color: 0xff6b35 }));
-    truckBody.castShadow = true;
-    truckGroup.add(truckBody);
-    const cab = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 2), new THREE.MeshStandardMaterial({ color: 0xf56565 }));
-    cab.position.set(1, 0.6, 1.5);
-    cab.castShadow = true;
-    truckGroup.add(cab);
-    const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
-    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x2d3748 });
-    const positions = [[-1, 0.2, -1.5], [1, 0.2, -1.5], [-1, 0.2, 1.5], [1, 0.2, 1.5]];
-    positions.forEach(pos => {
-      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-      wheel.rotation.z = Math.PI / 2;
-      wheel.position.set(pos[0], pos[1], pos[2]);
-      wheel.castShadow = true;
-      truckGroup.add(wheel);
-    });
-    truckGroup.position.set(-8, 0, 0);
-    scene.add(truckGroup);
-
-    camera.position.set(0, 5, 12);
-    camera.lookAt(0, 0, 0);
-
-    let time = 0;
-    const animate = () => {
-      requestAnimationFrame(animate);
-      time += 0.01;
-      truckGroup.position.x = -8 + (Math.sin(time) * 4 + 4);
-      camera.position.y = 5 + Math.sin(time * 0.5) * 0.2;
-      camera.lookAt(0, 0, 0);
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    const handleResize = () => {
-      if (!mountRef.current) return;
-      const newWidth = mountRef.current.clientWidth;
-      const newHeight = Math.min(newWidth * 0.4, 500);
-      camera.aspect = newWidth / newHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(newWidth, newHeight);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (mountRef.current && renderer.domElement) mountRef.current.removeChild(renderer.domElement);
-      renderer.dispose();
-    };
-  }, []);
-
+// Static Warehouse Illustration (CSS only, animated)
+const WarehouseIllustration = () => {
   return (
-    <div ref={mountRef} className="w-full h-64 sm:h-80 md:h-[450px] rounded-2xl overflow-hidden border-2 border-orange-500/30 shadow-xl" />
+    <div className="relative w-full h-64 sm:h-80 md:h-[450px] rounded-2xl overflow-hidden border-2 border-orange-500/30 shadow-xl bg-gradient-to-b from-gray-900 to-black">
+      {/* Floor */}
+      <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-gray-800/60 to-transparent" />
+      
+      {/* Shelves with boxes */}
+      <div className="absolute inset-0 flex items-center justify-center space-x-8 md:space-x-12">
+        {[1, 2, 3, 4].map((shelf) => (
+          <div key={shelf} className="relative flex flex-col items-center space-y-2">
+            <div className="w-16 md:w-24 h-24 md:h-32 bg-gray-700/50 rounded-lg shadow-lg border border-orange-500/20" />
+            <div className="flex space-x-1">
+              <div className="w-6 h-6 md:w-8 md:h-8 bg-orange-500/70 rounded shadow" />
+              <div className="w-6 h-6 md:w-8 md:h-8 bg-yellow-500/70 rounded shadow" />
+              <div className="w-6 h-6 md:w-8 md:h-8 bg-orange-500/70 rounded shadow" />
+            </div>
+            <div className="flex space-x-1">
+              <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-500/70 rounded shadow" />
+              <div className="w-6 h-6 md:w-8 md:h-8 bg-orange-500/70 rounded shadow" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Animated Truck (CSS) */}
+      <div className="absolute bottom-8 left-0 animate-[truckMove_10s_linear_infinite]">
+        <div className="flex items-end">
+          <div className="w-16 h-10 bg-orange-500 rounded-t-lg relative">
+            <div className="absolute -top-6 left-2 w-8 h-6 bg-gray-300 rounded-t-lg" />
+            <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-gray-800 rounded-full" />
+            <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-gray-800 rounded-full" />
+          </div>
+          <div className="w-24 h-14 bg-orange-600 rounded-lg ml-1 relative">
+            <div className="absolute -bottom-2 left-2 w-5 h-5 bg-gray-800 rounded-full" />
+            <div className="absolute -bottom-2 right-2 w-5 h-5 bg-gray-800 rounded-full" />
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes truckMove {
+          0% { transform: translateX(-20px); }
+          50% { transform: translateX(calc(100vw - 150px)); }
+          100% { transform: translateX(-20px); }
+        }
+        @media (max-width: 640px) {
+          .animate-\\[truckMove_10s_linear_infinite\\] {
+            animation-duration: 8s;
+          }
+        }
+      `}</style>
+    </div>
   );
 };
 
@@ -265,13 +207,13 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* 3D Warehouse */}
+        {/* Warehouse Illustration */}
         <section className="py-16 md:py-24 bg-black/80">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="text-center mb-8 md:mb-12">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">Our State-of-the-Art Facilities</h2>
             </div>
-            <Warehouse3DScene />
+            <WarehouseIllustration />
           </div>
         </section>
 
