@@ -1,4 +1,4 @@
-// Header.jsx
+// Header.jsx – Light Theme (Blue Accent)
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -23,30 +23,30 @@ const Header = () => {
   const navLinks = ['Home', 'Services', 'About', 'Pricing', 'Contact', 'Privacy'];
 
   return (
-    <header className={`fixed w-full top-0 z-50 transition-all duration-300 backdrop-blur-xl ${
-      scrolled ? 'bg-black/95 shadow-2xl shadow-orange-500/10' : 'bg-gradient-to-r from-black/80 to-gray-900/80'
-    } border-b border-orange-500/30`}>
+    <header className={`fixed w-full top-0 z-50 transition-all duration-300 ${
+      scrolled
+        ? 'bg-white/95 shadow-md backdrop-blur-sm'
+        : 'bg-white/80 backdrop-blur-sm border-b border-gray-200'
+    }`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="group relative">
-            <div className="text-xl md:text-3xl font-black bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-400 bg-clip-text text-transparent drop-shadow-2xl">
-              PEAKNIZERLOGISTICS
+            <div className="text-xl md:text-3xl font-bold text-gray-900 drop-shadow-sm">
+              PEAKNIZER<span className="text-blue-600">LOGISTICS</span>
             </div>
-            <div className="absolute -inset-2 bg-gradient-to-r from-orange-500/30 to-orange-400/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500 animate-pulse" />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-2">
+          <nav className="hidden lg:flex items-center space-x-1">
             {navLinks.map((item) => (
               <Link
                 key={item}
                 to={`/${item.toLowerCase()}`}
-                className="group relative px-4 py-2 text-gray-300 font-medium hover:text-white transition-all duration-300"
+                className="group relative px-4 py-2 text-gray-700 font-medium hover:text-blue-600 transition-all duration-300"
               >
                 {item}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-yellow-400 group-hover:w-full transition-all duration-300" />
-                <span className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 rounded-lg -z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 blur-sm" />
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
           </nav>
@@ -56,16 +56,15 @@ const Header = () => {
             href="https://peaknizerlogistics-portal-frontend.onrender.com/login"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden lg:block group relative bg-gradient-to-r from-orange-500 to-orange-600 text-black px-8 py-3 rounded-2xl font-bold shadow-2xl shadow-orange-500/25 hover:shadow-orange-500/50 transform hover:-translate-y-1 transition-all duration-300 hover:from-orange-400 hover:to-orange-500"
+            className="hidden lg:block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300"
           >
-            <span className="relative z-10">CLIENT PORTAL</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-all duration-300" />
+            CLIENT PORTAL
           </a>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 text-orange-500 hover:text-orange-400 transition-colors focus:outline-none"
+            className="lg:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors focus:outline-none"
             aria-label="Toggle menu"
           >
             <svg className={`w-6 h-6 transition-transform ${mobileOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,16 +73,16 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Menu (Full width dropdown) */}
+        {/* Mobile Menu */}
         <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
           mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
         }`}>
-          <div className="bg-black/95 backdrop-blur-xl border-t border-orange-500/30 py-4 space-y-2 px-4">
+          <div className="bg-white border-t border-gray-200 py-4 space-y-2 px-4 shadow-lg">
             {navLinks.map((item) => (
               <Link
                 key={item}
                 to={`/${item.toLowerCase()}`}
-                className="block px-4 py-3 text-gray-300 hover:text-white hover:bg-orange-500/10 rounded-xl transition-all duration-300 font-medium"
+                className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300 font-medium"
                 onClick={() => setMobileOpen(false)}
               >
                 {item}
@@ -94,7 +93,7 @@ const Header = () => {
               href="https://peaknizerlogistics-portal-frontend.onrender.com/login"
               target="_blank"
               rel="noopener noreferrer"
-              className="block text-center bg-gradient-to-r from-orange-500 to-orange-600 text-black font-bold px-4 py-3 rounded-xl mt-4 hover:from-orange-400 hover:to-orange-500 transition-all"
+              className="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-3 rounded-lg mt-4 transition-all shadow-sm hover:shadow-md"
               onClick={() => setMobileOpen(false)}
             >
               CLIENT PORTAL
