@@ -375,7 +375,7 @@ const ContactPage = () => {
             <div className="max-w-4xl mx-auto">
               <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 shadow-sm">
                 <div className="aspect-video w-full bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-lg border border-gray-300">
-                  📍 2503D N Harrison St, Arlington, VA 22207
+                  📍 Arlington, VA 
                   {/* You can embed a Google Maps iframe here if desired */}
                 </div>
                 <div className="text-center mt-4">
