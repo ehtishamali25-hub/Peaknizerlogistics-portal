@@ -487,7 +487,7 @@ const PricingPage = () => {
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                 <p className="text-blue-200 text-xs uppercase tracking-wider font-bold">📞 Call</p>
-                <p className="text-white font-semibold text-lg">+1 571-307-4461</p>
+                <p className="text-white font-semibold text-lg">+1 571-518-2791</p>
               </div>
             </div>
             <button
@@ -538,7 +538,7 @@ const PricingPage = () => {
                       onChange={handleInputChange}
                       required
                       className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 outline-none transition"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="+1 (571) 518-2791"
                     />
                   </div>
                 </div>

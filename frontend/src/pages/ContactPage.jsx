@@ -205,8 +205,8 @@ const ContactPage = () => {
                     <div className="text-3xl text-blue-500">📞</div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">Phone</h3>
-                      <a href="tel:+15713074461" className="text-blue-600 hover:underline text-base">
-                        +1 (571) 307-4461
+                      <a href="tel:+15715182791" className="text-blue-600 hover:underline text-base">
+                        +1 (571) 518-2791
                       </a>
                       <p className="text-gray-500 text-sm mt-1">Mon-Fri, 9AM-6PM EST</p>
                     </div>
