@@ -78,18 +78,31 @@ class ExcelService:
                         qty = 1
                     
                     # Parse date
+                    # Parse date – handle numeric Excel serial dates
                     parsed_date = None
-                    if date_value:
+                    if date_value is not None and date_value != '':
                         if isinstance(date_value, datetime):
                             parsed_date = date_value.date()
-                        elif isinstance(date_value, str):
+                        elif isinstance(date_value, (int, float)):
+                            # Excel serial date: days since 1899-12-30
                             try:
-                                parsed_date = datetime.strptime(date_value, '%Y-%m-%d').date()
+                                from datetime import timedelta
+                                excel_epoch = datetime(1899, 12, 30)
+                                parsed_date = (excel_epoch + timedelta(days=float(date_value))).date()
                             except:
+                                row_errors.append("Invalid numeric date")
+                        elif isinstance(date_value, str):
+                            # Try common formats
+                            for fmt in ('%Y-%m-%d', '%m/%d/%Y', '%d-%m-%Y', '%Y/%m/%d'):
                                 try:
-                                    parsed_date = datetime.strptime(date_value, '%m/%d/%Y').date()
+                                    parsed_date = datetime.strptime(date_value, fmt).date()
+                                    break
                                 except:
-                                    row_errors.append("Invalid date format. Use YYYY-MM-DD")
+                                    continue
+                            else:
+                                row_errors.append("Invalid date format. Use YYYY-MM-DD")
+                        else:
+                            row_errors.append("Unsupported date type")
                     
                     row_data = {
                         'row_number': row_idx,
