@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
      # Charity settings — only invoices issued on/after this date count toward the charity total
-    CHARITY_START_DATE: str = os.getenv("CHARITY_START_DATE", "2026-09-01")
+    CHARITY_START_DATE: str = os.getenv("CHARITY_START_DATE", "2026-08-07")
     CHARITY_RATE_PER_ORDER: float = float(os.getenv("CHARITY_RATE_PER_ORDER", "0.20"))
     
     # Email settings
