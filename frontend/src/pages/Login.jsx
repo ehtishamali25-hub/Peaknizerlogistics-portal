@@ -8,7 +8,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  // Registration form state
   const [regForm, setRegForm] = useState({
     customer_name: '',
     email: '',
@@ -37,19 +36,16 @@ const Login = () => {
     setError('');
     setSuccess('');
 
-    // Validate passwords match
     if (regForm.password !== regForm.confirm_password) {
       setError('Passwords do not match');
       return;
     }
 
-    // Validate required fields
     if (!regForm.customer_name || !regForm.email || !regForm.phone || !regForm.password) {
       setError('Please fill in all required fields');
       return;
     }
 
-    // Prepare the data to send
     const requestData = {
       customer_name: regForm.customer_name,
       email: regForm.email,
@@ -60,8 +56,6 @@ const Login = () => {
       notes: regForm.notes || null
     };
 
-    console.log('Sending registration data:', requestData);
-
     try {
       const response = await fetch(`${API_URL}/auth/register-request`, {
         method: 'POST',
@@ -71,10 +65,7 @@ const Login = () => {
         body: JSON.stringify(requestData),
       });
 
-      console.log('Response status:', response.status);
-      
       const data = await response.json();
-      console.log('Response data:', data);
 
       if (response.ok) {
         setSuccess('Registration submitted successfully! The owner will review your request.');
@@ -99,29 +90,28 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-96 border-t-4 border-orange-500">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-orange-600">PEAKNIZERLOGISTICS</h1>
-          <p className="text-gray-600 mt-2">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 p-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-sm sm:max-w-md border-t-4 border-orange-500 max-h-[95vh] overflow-y-auto">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-orange-600">PEAKNIZERLOGISTICS</h1>
+          <p className="text-gray-600 mt-2 text-sm sm:text-base">
             {isLogin ? 'Sign in to your account' : 'Create a new account'}
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-sm">
             {success}
           </div>
         )}
 
         {isLogin ? (
-          // Login Form
           <form onSubmit={handleLogin}>
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -151,13 +141,12 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium"
+              className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium"
             >
               Sign In
             </button>
           </form>
         ) : (
-          // Registration Form
           <form onSubmit={handleRegister} className="space-y-4 max-h-[500px] overflow-y-auto px-1">
             <div>
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -263,7 +252,7 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium"
+              className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium"
             >
               Create Account
             </button>
@@ -281,10 +270,6 @@ const Login = () => {
           >
             {isLogin ? 'Need an account? Create one' : 'Already have an account? Sign in'}
           </button>
-        </div>
-
-        <div className="mt-4 text-center text-sm text-gray-500">
-          
         </div>
       </div>
     </div>

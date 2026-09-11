@@ -29,21 +29,21 @@ const VerifyEmail = () => {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md w-full max-w-sm sm:max-w-md text-center">
         {status === 'verifying' && (
           <>
             <div className="text-3xl mb-4">⏳</div>
-            <h2 className="text-xl font-bold mb-2">Verifying...</h2>
-            <p>Please wait while we verify your email address.</p>
+            <h2 className="text-lg sm:text-xl font-bold mb-2">Verifying...</h2>
+            <p className="text-sm sm:text-base">Please wait while we verify your email address.</p>
           </>
         )}
 
         {status === 'success' && (
           <>
             <div className="text-3xl mb-4">✅</div>
-            <h2 className="text-xl font-bold mb-2">Email Verified!</h2>
-            <p className="mb-4">{message}</p>
+            <h2 className="text-lg sm:text-xl font-bold mb-2">Email Verified!</h2>
+            <p className="mb-4 text-sm sm:text-base">{message}</p>
             <Link to="/login" className="text-blue-600 hover:underline">Go to Login</Link>
           </>
         )}
@@ -51,8 +51,8 @@ const VerifyEmail = () => {
         {status === 'error' && (
           <>
             <div className="text-3xl mb-4">❌</div>
-            <h2 className="text-xl font-bold mb-2">Verification Failed</h2>
-            <p className="text-red-600 mb-4">{message}</p>
+            <h2 className="text-lg sm:text-xl font-bold mb-2">Verification Failed</h2>
+            <p className="text-red-600 mb-4 text-sm sm:text-base">{message}</p>
             <Link to="/register" className="text-blue-600 hover:underline">Try Again</Link>
           </>
         )}

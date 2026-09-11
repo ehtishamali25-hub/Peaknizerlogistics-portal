@@ -16,7 +16,6 @@ const CustomerProofs = () => {
   const fetchProofs = async () => {
     try {
       const response = await axiosInstance.get('/customer/proofs');
-      console.log('Proofs:', response.data);
       setProofs(response.data);
     } catch (error) {
       console.error('Failed to fetch proofs:', error);
@@ -67,82 +66,78 @@ const CustomerProofs = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="text-center py-8">Loading...</div>
-      </MainLayout>
+      <div className="text-center py-8">Loading...</div>
     );
   }
 
   return (
-    
-      <div className="max-w-7xl mx-auto">
-        <BackButton />
-        
-        <h1 className="text-3xl font-bold mb-8">My Payment Proofs</h1>
+    <div className="max-w-7xl mx-auto">
+      <BackButton />
+      
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">My Payment Proofs</h1>
 
-        {message.text && (
-          <div className={`mb-4 p-4 rounded ${
-            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}>
-            {message.text}
-          </div>
-        )}
+      {message.text && (
+        <div className={`mb-4 p-4 rounded ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.text}
+        </div>
+      )}
 
-        {proofs.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500">No payment proofs uploaded yet.</p>
-            <p className="text-sm text-gray-400 mt-2">
-              Go to your invoices page to upload payment proofs.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {proofs.map((proof) => (
-              <div key={proof.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
-                <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-3xl">{getFileIcon(proof.file_url)}</span>
-                      <div>
-                        <h3 className="font-medium">Invoice #{proof.invoice_number}</h3>
-                        <p className="text-sm text-gray-500">{formatDate(proof.uploaded_at)}</p>
-                      </div>
+      {proofs.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <p className="text-gray-500">No payment proofs uploaded yet.</p>
+          <p className="text-sm text-gray-400 mt-2">
+            Go to your invoices page to upload payment proofs.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {proofs.map((proof) => (
+            <div key={proof.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+              <div className="p-4 sm:p-6">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <span className="text-3xl shrink-0">{getFileIcon(proof.file_url)}</span>
+                    <div className="min-w-0">
+                      <h3 className="font-medium break-words">Invoice #{proof.invoice_number}</h3>
+                      <p className="text-sm text-gray-500">{formatDate(proof.uploaded_at)}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      proof.verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {proof.verified ? 'Verified' : 'Pending'}
+                  </div>
+                  <span className={`shrink-0 px-2 py-1 rounded-full text-xs font-medium ${
+                    proof.verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {proof.verified ? 'Verified' : 'Pending'}
+                  </span>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <span className="text-sm text-gray-600 break-all">
+                      File: {proof.file_url.split('/').pop()}
                     </span>
+                    <button
+                      onClick={() => downloadFile(
+                        `/payment-proofs/${proof.id}/download`,
+                        proof.file_url.split('/').pop()
+                      )}
+                      className="text-blue-600 hover:text-blue-900 text-sm font-medium text-left sm:text-right"
+                    >
+                      Download
+                    </button>
                   </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">
-                        File: {proof.file_url.split('/').pop()}
-                      </span>
-                      <button
-                        onClick={() => downloadFile(
-                          `/payment-proofs/${proof.id}/download`,
-                          proof.file_url.split('/').pop()
-                        )}
-                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                      >
-                        Download
-                      </button>
-                    </div>
-                    {proof.verified_at && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        Verified on: {formatDate(proof.verified_at)}
-                      </p>
-                    )}
-                  </div>
+                  {proof.verified_at && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Verified on: {formatDate(proof.verified_at)}
+                    </p>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

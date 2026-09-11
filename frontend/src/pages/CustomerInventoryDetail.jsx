@@ -28,14 +28,11 @@ const CustomerInventoryDetail = () => {
     fetchCustomerWarehouses();
   }, [customerId]);
 
-  // This fetches the customer's assigned warehouses
   const fetchCustomerWarehouses = async () => {
     try {
-      // Get customer details which include warehouse_ids
       const customerRes = await axiosInstance.get(`/customers/${customerId}`);
       const warehouseIds = customerRes.data.warehouse_ids || [];
       
-      // Get all warehouses and filter to only assigned ones
       const warehousesRes = await axiosInstance.get('/warehouses/');
       const allWarehouses = warehousesRes.data;
       const filtered = allWarehouses.filter(w => warehouseIds.includes(w.id));
@@ -60,7 +57,6 @@ const CustomerInventoryDetail = () => {
       const productsData = response.data.products;
       setProducts(productsData);
       
-      // Initialize edit values for both received and shipped
       const initialEditValues = {};
       const initialBatchNumbers = {};
       
@@ -110,13 +106,9 @@ const CustomerInventoryDetail = () => {
   };
 
  const handleSaveAll = async (productId) => {
-    console.log('Saving all for product:', productId);
-    console.log('Current editValues:', editValues);
-    console.log('Assigned warehouses:', assignedWarehouses);
     setSaving(true);
     
     try {
-      // Save batch number
       const batchNumber = batchNumbers[productId];
       if (batchNumber !== undefined) {
         await axiosInstance.put(`/products/${productId}`, {
@@ -124,7 +116,6 @@ const CustomerInventoryDetail = () => {
         });
       }
       
-      // Save each warehouse one by one with both received and shipped values
       for (const warehouse of assignedWarehouses) {
         const receivedKey = `${productId}-${warehouse.name}-received`;
         const shippedKey = `${productId}-${warehouse.name}-shipped`;
@@ -140,7 +131,6 @@ const CustomerInventoryDetail = () => {
       
       setMessage({ type: 'success', text: 'All warehouses updated successfully' });
       
-      // Refresh data from server
       await fetchInventory();
       
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
@@ -161,7 +151,6 @@ const CustomerInventoryDetail = () => {
 
     setSaving(true);
     try {
-      // First create the product with batch number
       const productRes = await axiosInstance.post('/products/', {
         product_name: newProduct.product_name,
         sku: newProduct.sku,
@@ -172,7 +161,6 @@ const CustomerInventoryDetail = () => {
       
       const productId = productRes.data.id;
       
-      // Then create inventory records for each assigned warehouse with initial units
       for (const warehouse of assignedWarehouses) {
         await axiosInstance.put(`/inventory/product/${productId}/warehouse/${warehouse.id}`, {
           units_received: 0,
@@ -184,7 +172,6 @@ const CustomerInventoryDetail = () => {
       setShowAddProductModal(false);
       setNewProduct({ product_name: '', sku: '', batch_number: '' });
       
-      // Refresh inventory
       await fetchInventory();
       
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
@@ -203,51 +190,127 @@ const CustomerInventoryDetail = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="text-center py-8">Loading...</div>
-      </MainLayout>
+      <div className="text-center py-8">Loading...</div>
     );
   }
 
   return (
-    
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-6">
+        <button
+          onClick={() => navigate('/inventory')}
+          className="text-green-600 hover:text-green-800 mb-4 inline-block"
+        >
+          ← Back to Customers
+        </button>
+        
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <h1 className="text-xl sm:text-3xl font-bold break-words">
+            Inventory for {customer?.name} ({customer?.code})
+          </h1>
           <button
-            onClick={() => navigate('/inventory')}
-            className="text-green-600 hover:text-green-800 mb-4 inline-block"
+            onClick={() => setShowAddProductModal(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full sm:w-auto shrink-0"
           >
-            ← Back to Customers
+            + Add Product
           </button>
-          
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">
-              Inventory for {customer?.name} ({customer?.code})
-            </h1>
+        </div>
+        
+        <div className="mt-2 text-sm text-gray-600">
+          <span className="font-medium">Assigned Warehouses:</span>{' '}
+          {assignedWarehouses.map(w => w.name).join(', ')}
+        </div>
+      </div>
+
+      {message.text && (
+        <div className={`mb-4 p-4 rounded ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
+      {/* Mobile: stacked cards, one per product with per-warehouse breakdown */}
+      <div className="lg:hidden space-y-3">
+        {products.map((product) => (
+          <div key={product.product_id} className="bg-white rounded-lg shadow p-4">
+            <p className="font-medium mb-2">{product.product_name}</p>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="text-xs text-gray-500">SKU</label>
+                <p className="text-sm">{product.sku}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Batch</label>
+                <input
+                  type="text"
+                  value={batchNumbers[product.product_id] || ''}
+                  onChange={(e) => handleBatchChange(product.product_id, e.target.value)}
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm"
+                  placeholder="Batch"
+                  disabled={saving}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t">
+              {warehouseNames.map(warehouse => {
+                const receivedKey = `${product.product_id}-${warehouse}-received`;
+                const shippedKey = `${product.product_id}-${warehouse}-shipped`;
+                const received = editValues[receivedKey] || 0;
+                const shipped = editValues[shippedKey] || 0;
+                const left = calculateLeft(received, shipped);
+
+                return (
+                  <div key={warehouse}>
+                    <p className="text-xs font-medium text-gray-600 mb-1">{warehouse}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-xs text-gray-500">Received</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={received}
+                          onChange={(e) => handleReceivedChange(product.product_id, warehouse, e.target.value)}
+                          className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm text-center"
+                          disabled={saving}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Shipped</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={shipped}
+                          onChange={(e) => handleShippedChange(product.product_id, warehouse, e.target.value)}
+                          className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm text-center"
+                          disabled={saving}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Left</label>
+                        <p className="text-center font-medium pt-1.5">{left}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             <button
-              onClick={() => setShowAddProductModal(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={() => handleSaveAll(product.product_id)}
+              disabled={saving}
+              className="w-full mt-3 bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 disabled:bg-gray-400"
             >
-              + Add Product
+              {saving ? 'Saving...' : 'Save All'}
             </button>
           </div>
-          
-          {/* Show assigned warehouses */}
-          <div className="mt-2 text-sm text-gray-600">
-            <span className="font-medium">Assigned Warehouses:</span>{' '}
-            {assignedWarehouses.map(w => w.name).join(', ')}
-          </div>
-        </div>
+        ))}
+      </div>
 
-        {message.text && (
-          <div className={`mb-4 p-4 rounded ${
-            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}>
-            {message.text}
-          </div>
-        )}
-
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Desktop: table */}
+      <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -339,94 +402,94 @@ const CustomerInventoryDetail = () => {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {products.length === 0 && (
-          <div className="bg-white rounded-lg shadow p-8 text-center mt-4">
-            <p className="text-gray-500">No products found for this customer.</p>
-            <button
-              onClick={() => setShowAddProductModal(true)}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Add Your First Product
-            </button>
-          </div>
-        )}
+      {products.length === 0 && (
+        <div className="bg-white rounded-lg shadow p-8 text-center mt-4">
+          <p className="text-gray-500">No products found for this customer.</p>
+          <button
+            onClick={() => setShowAddProductModal(true)}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Add Your First Product
+          </button>
+        </div>
+      )}
 
-        {/* Add Product Modal */}
-        {showAddProductModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <h3 className="text-lg font-bold mb-4">Add New Product</h3>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  value={newProduct.product_name}
-                  onChange={(e) => setNewProduct({...newProduct, product_name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="e.g., iPhone Case"
-                />
-              </div>
+      {/* Add Product Modal */}
+      {showAddProductModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start sm:items-center justify-center p-4 z-50">
+          <div className="w-full max-w-sm sm:max-w-md p-5 border shadow-lg rounded-md bg-white my-8 sm:my-0 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold mb-4">Add New Product</h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Product Name *
+              </label>
+              <input
+                type="text"
+                value={newProduct.product_name}
+                onChange={(e) => setNewProduct({...newProduct, product_name: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="e.g., iPhone Case"
+              />
+            </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  SKU *
-                </label>
-                <input
-                  type="text"
-                  value={newProduct.sku}
-                  onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="e.g., IP-CASE-001"
-                />
-              </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                SKU *
+              </label>
+              <input
+                type="text"
+                value={newProduct.sku}
+                onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="e.g., IP-CASE-001"
+              />
+            </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Initial Batch Number
-                </label>
-                <input
-                  type="text"
-                  value={newProduct.batch_number}
-                  onChange={(e) => setNewProduct({...newProduct, batch_number: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="e.g., BATCH001"
-                />
-              </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Initial Batch Number
+              </label>
+              <input
+                type="text"
+                value={newProduct.batch_number}
+                onChange={(e) => setNewProduct({...newProduct, batch_number: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="e.g., BATCH001"
+              />
+            </div>
 
-              <div className="mb-4 p-3 bg-blue-50 rounded">
-                <p className="text-sm text-blue-700">
-                  <span className="font-medium">Assigned Warehouses:</span><br />
-                  {assignedWarehouses.map(w => w.name).join(', ')}
-                </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  Initial units will be set to 0 for all warehouses.
-                </p>
-              </div>
+            <div className="mb-4 p-3 bg-blue-50 rounded">
+              <p className="text-sm text-blue-700">
+                <span className="font-medium">Assigned Warehouses:</span><br />
+                {assignedWarehouses.map(w => w.name).join(', ')}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Initial units will be set to 0 for all warehouses.
+              </p>
+            </div>
 
-              <div className="flex justify-end space-x-2">
-                <button
-                  onClick={() => setShowAddProductModal(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddProduct}
-                  disabled={saving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
-                >
-                  {saving ? 'Adding...' : 'Add Product'}
-                </button>
-              </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowAddProductModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddProduct}
+                disabled={saving}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                {saving ? 'Adding...' : 'Add Product'}
+              </button>
             </div>
           </div>
-        )}
-      </div>
-    
+        </div>
+      )}
+    </div>
   );
 };
 

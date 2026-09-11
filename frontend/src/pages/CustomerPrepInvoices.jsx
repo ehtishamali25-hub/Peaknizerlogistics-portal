@@ -7,7 +7,7 @@ import { downloadFile } from '../utils/download';
 
 const CustomerPrepInvoices = () => {
   const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); 
   const [uploadingFor, setUploadingFor] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -19,7 +19,6 @@ const CustomerPrepInvoices = () => {
   const fetchInvoices = async () => {
     try {
       const response = await axiosInstance.get('/customer/invoices/prep');
-      console.log('Prep invoices:', response.data);
       setInvoices(response.data);
     } catch (error) {
       console.error('Failed to fetch invoices:', error);
@@ -58,7 +57,6 @@ const CustomerPrepInvoices = () => {
   };
 
   const downloadFile = async (url, filename) => {
-    console.log('downloadFile called with:', { url, filename });
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(url, {
@@ -104,33 +102,159 @@ const CustomerPrepInvoices = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="text-center py-8">Loading...</div>
-      </MainLayout>
+      <div className="text-center py-8">Loading...</div>
     );
   }
 
+  const UploadControl = ({ invoice }) => (
+    uploadingFor === invoice.id ? (
+      <div className="flex flex-col gap-2">
+        <input
+          type="file"
+          onChange={handleFileChange}
+          accept=".pdf,.jpg,.jpeg,.png"
+          className="text-sm w-full"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleUploadProof(invoice.id)}
+            className="flex-1 text-green-600 text-sm font-medium px-2 py-1.5 border border-green-600 rounded"
+          >
+            Upload
+          </button>
+          <button
+            onClick={() => setUploadingFor(null)}
+            className="flex-1 text-gray-600 text-sm font-medium px-2 py-1.5 border border-gray-600 rounded"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ) : (
+      <button
+        onClick={() => setUploadingFor(invoice.id)}
+        className="w-full text-purple-600 text-sm font-medium px-3 py-1.5 border border-purple-600 rounded"
+      >
+        Upload Proof
+      </button>
+    )
+  );
+
   return (
-    
-      <div className="max-w-7xl mx-auto">
-        <BackButton />
-        
-        <h1 className="text-3xl font-bold mb-8">Preparation Invoices</h1>
+    <div className="max-w-7xl mx-auto">
+      <BackButton />
+      
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Preparation Invoices</h1>
 
-        {message.text && (
-          <div className={`mb-4 p-4 rounded ${
-            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}>
-            {message.text}
-          </div>
-        )}
+      {message.text && (
+        <div className={`mb-4 p-4 rounded ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.text}
+        </div>
+      )}
 
-        {invoices.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500">No preparation invoices available.</p>
+      {invoices.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <p className="text-gray-500">No preparation invoices available.</p>
+        </div>
+      ) : (
+        <>
+          {/* Mobile: stacked cards */}
+          <div className="lg:hidden space-y-3">
+            {invoices.map((invoice) => (
+              <div key={invoice.id} className="bg-white rounded-lg shadow p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="font-medium">{invoice.invoice_number}</p>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                    {invoice.status.replace('_', ' ')}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Issue Date</p>
+                    <p>{formatDate(invoice.issue_date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Due Date</p>
+                    <p>{formatDate(invoice.due_date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Quantity</p>
+                    <p>{invoice.quantity}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Rate</p>
+                    <p>{formatCurrency(invoice.rate || 0)}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-gray-500">Amount</p>
+                    <p className="font-medium text-base">{formatCurrency(invoice.total_amount)}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mb-3 pt-2 border-t">
+                  {invoice.has_excel && (
+                    <button
+                      onClick={async () => {
+                        const token = localStorage.getItem('token');
+                        const url = `https://peaknizerlogistics-portal-backend.onrender.com/api/v1/downloads/shipping-details/${invoice.shipping_detail_id}/excel`;
+                        const response = await fetch(url, {
+                          headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const blob = await response.blob();
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = `shipping_details_${invoice.invoice_number}.xlsx`;
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(() => {
+                          document.body.removeChild(a);
+                          window.URL.revokeObjectURL(blobUrl);
+                        }, 5000);
+                      }}
+                      className="text-green-600 text-sm font-medium px-2 py-1 border border-green-600 rounded"
+                    >
+                      Excel
+                    </button>
+                  )}
+                  {invoice.has_pdf && (
+                    <button
+                      onClick={() => downloadFile(
+                        `/customer/downloads/shipping-details/${invoice.shipping_detail_id}/pdf`,
+                        `shipping_details_${invoice.invoice_number}.pdf`
+                      )}
+                      className="text-red-600 text-sm font-medium px-2 py-1 border border-red-600 rounded"
+                    >
+                      Shipping PDF
+                    </button>
+                  )}
+                  <button
+                    onClick={async () => {
+                      const token = localStorage.getItem('token');
+                      const url = `https://peaknizerlogistics-portal-backend.onrender.com/api/v1/downloads/invoice/${invoice.id}`;
+                      const response = await fetch(url, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      const blob = await response.blob();
+                      const blobUrl = window.URL.createObjectURL(blob);
+                      window.open(blobUrl, '_blank');
+                    }}
+                    className="text-blue-600 text-sm font-medium px-2 py-1 border border-blue-600 rounded"
+                  >
+                    Invoice PDF
+                  </button>
+                </div>
+
+                <UploadControl invoice={invoice} />
+              </div>
+            ))}
           </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
+
+          {/* Desktop: table */}
+          <div className="hidden lg:block bg-white rounded-lg shadow overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -189,15 +313,10 @@ const CustomerPrepInvoices = () => {
                         )}
                         {invoice.has_pdf && (
                           <button
-                            onClick={() => {
-                               
-                              console.log('Button clicked for invoice:', invoice.id);
-                              console.log('Filename being passed:', `invoice_${invoice.invoice_number}.pdf`);
-                              console.log('URL being passed:', `/customer/downloads/shipping-details/${invoice.shipping_detail_id}/pdf`);
-                              downloadFile(
+                            onClick={() => downloadFile(
                               `/customer/downloads/shipping-details/${invoice.shipping_detail_id}/pdf`,
                               `shipping_details_${invoice.invoice_number}.pdf`
-                            )}}
+                            )}
                             className="text-red-600 hover:text-red-900 text-sm font-medium px-2 py-1 border border-red-600 rounded"
                           >
                             PDF
@@ -263,9 +382,9 @@ const CustomerPrepInvoices = () => {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
-    
+        </>
+      )}
+    </div>
   );
 };
 
