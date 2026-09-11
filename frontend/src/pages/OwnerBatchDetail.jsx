@@ -2,15 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '../api/axios';
 import BackButton from '../components/BackButton';
-
-// Inside the return, after MainLayout:
-<MainLayout>
-  <div className="max-w-7xl mx-auto">
-    <BackButton />
-    <h1 className="text-3xl font-bold mb-8">Owner Dashboard</h1>
-    {/* rest of the content */}
-  </div>
-</MainLayout>
 import MainLayout from '../layouts/MainLayout';
 
 const OwnerBatchDetail = () => {
@@ -32,7 +23,6 @@ const OwnerBatchDetail = () => {
   const fetchBatchDetails = async () => {
     try {
       const response = await axiosInstance.get(`/batches/${id}`);
-      console.log('Batch details:', response.data);
       setBatch(response.data);
       setRows(response.data.rows || []);
     } catch (error) {
@@ -115,56 +105,174 @@ const OwnerBatchDetail = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  if (loading) return <MainLayout><div className="text-center py-8">Loading...</div></MainLayout>;
+  if (loading) return <div className="text-center py-8">Loading...</div>;
 
   return (
-    
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <BackButton />
-          <h1 className="text-3xl font-bold">Batch Details</h1>
-          <div className="space-x-2">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              batch?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-              batch?.status === 'approved' ? 'bg-green-100 text-green-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {batch?.status}
-            </span>
+    <div className="max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <BackButton />
+        <h1 className="text-2xl sm:text-3xl font-bold">Batch Details</h1>
+        <div>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+            batch?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+            batch?.status === 'approved' ? 'bg-green-100 text-green-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {batch?.status}
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-500">Batch ID</p>
+            <p className="font-mono text-lg break-all">{formatBatchId(batch)}</p>
+            <p className="text-xs text-gray-400 mt-1 break-all">{batch?.id}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Customer Code</p>
+            <p className="text-lg">{getCustomerCode(batch?.customer_id)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Employee</p>
+            <p className="text-lg">{getUploaderName(batch?.uploaded_by)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Upload Date</p>
+            <p className="text-lg">{formatDate(batch?.upload_date)}</p>
           </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Batch ID</p>
-              <p className="font-mono text-lg">{formatBatchId(batch)}</p>
-              <p className="text-xs text-gray-400 mt-1">{batch?.id}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Customer Code</p>
-              <p className="text-lg">{getCustomerCode(batch?.customer_id)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Employee</p>
-              <p className="text-lg">{getUploaderName(batch?.uploaded_by)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Upload Date</p>
-              <p className="text-lg">{formatDate(batch?.upload_date)}</p>
-            </div>
+        {batch?.notes && (
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">Notes</p>
+            <p className="mt-1 break-words">{batch.notes}</p>
           </div>
-          {batch?.notes && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-500">Notes</p>
-              <p className="mt-1">{batch.notes}</p>
-            </div>
-          )}
-        </div>
+        )}
+      </div>
 
-        <h2 className="text-xl font-bold mb-4">Shipping Rows</h2>
-        
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+      <h2 className="text-lg sm:text-xl font-bold mb-4">Shipping Rows</h2>
+
+      {/* Mobile: stacked cards */}
+      <div className="lg:hidden space-y-3">
+        {rows.map((row) => (
+          <div key={row.id} className="bg-white rounded-lg shadow p-4">
+            {editingRowId === row.id ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500">Tracking Number</label>
+                  <input
+                    type="text"
+                    value={editForm.tracking_number}
+                    onChange={(e) => setEditForm({...editForm, tracking_number: e.target.value})}
+                    className="w-full px-2 py-2 border rounded text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500">Qty</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={editForm.quantity || 1}
+                      onChange={(e) => setEditForm({...editForm, quantity: parseInt(e.target.value)})}
+                      className="w-full px-2 py-2 border rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Label Cost</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editForm.label_cost}
+                      onChange={(e) => setEditForm({...editForm, label_cost: e.target.value})}
+                      className="w-full px-2 py-2 border rounded text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Customer Name</label>
+                  <input
+                    type="text"
+                    value={editForm.end_customer_name}
+                    onChange={(e) => setEditForm({...editForm, end_customer_name: e.target.value})}
+                    className="w-full px-2 py-2 border rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Order Number</label>
+                  <input
+                    type="text"
+                    value={editForm.order_number}
+                    onChange={(e) => setEditForm({...editForm, order_number: e.target.value})}
+                    className="w-full px-2 py-2 border rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Date</label>
+                  <input
+                    type="date"
+                    value={editForm.date}
+                    onChange={(e) => setEditForm({...editForm, date: e.target.value})}
+                    className="w-full px-2 py-2 border rounded text-sm"
+                  />
+                </div>
+                <div className="flex gap-3 pt-2 border-t">
+                  <button
+                    onClick={() => handleSave(row.id)}
+                    className="flex-1 bg-green-600 text-white px-3 py-2 rounded text-sm font-medium"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-start mb-2">
+                  <p className="font-mono text-sm break-all">{row.tracking_number}</p>
+                  <p className="text-sm font-medium">${parseFloat(row.label_cost).toFixed(2)}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Qty</p>
+                    <p>{row.quantity || 1}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Date</p>
+                    <p>{formatDate(row.date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Customer Name</p>
+                    <p className="break-words">{row.end_customer_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Order Number</p>
+                    <p className="break-words">{row.order_number}</p>
+                  </div>
+                </div>
+                {batch?.status === 'pending' && (
+                  <button
+                    onClick={() => handleEdit(row)}
+                    className="text-blue-600 text-sm font-medium pt-2 border-t w-full text-left"
+                  >
+                    Edit
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -181,7 +289,6 @@ const OwnerBatchDetail = () => {
               {rows.map((row) => (
                 <tr key={row.id}>
                   {editingRowId === row.id ? (
-                    // Edit mode
                     <>
                       <td className="px-4 py-2">
                         <input
@@ -191,8 +298,7 @@ const OwnerBatchDetail = () => {
                           className="w-full px-2 py-1 border rounded text-sm"
                         />
                       </td>
-
-                      <td className="px-4 py-2">  {/* ← ADD QTY INPUT */}
+                      <td className="px-4 py-2">
                         <input
                           type="number"
                           min="1"
@@ -250,7 +356,6 @@ const OwnerBatchDetail = () => {
                       </td>
                     </>
                   ) : (
-                    // View mode
                     <>
                       <td className="px-4 py-2 text-sm">{row.tracking_number}</td>
                       <td className="px-4 py-2 text-center">{row.quantity || 1}</td>
@@ -276,7 +381,7 @@ const OwnerBatchDetail = () => {
           </table>
         </div>
       </div>
-    
+    </div>
   );
 };
 

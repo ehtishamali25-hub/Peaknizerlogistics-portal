@@ -32,7 +32,6 @@ const CustomersList = () => {
   const fetchCustomers = async () => {
     try {
       const response = await axiosInstance.get('/customers/');
-      console.log('Customers response:', response.data);
       setCustomers(response.data);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
@@ -54,17 +53,14 @@ const CustomersList = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate passwords if creating new customer
     if (!editingCustomer && formData.password !== formData.confirm_password) {
       showMessage('error', 'Passwords do not match');
       return;
     }
 
     try {
-      // Get current user for company_id
       const user = JSON.parse(localStorage.getItem('user'));
       
-      // Prepare data with company_id
       const { confirm_password, ...dataToSend } = formData;
       const customerData = {
         ...dataToSend,
@@ -105,7 +101,7 @@ const CustomersList = () => {
       email: customer.email,
       prep_rate: customer.prep_rate,
       warehouse_ids: customer.warehouse_ids || [],
-      password: '', // Don't show existing password
+      password: '',
       confirm_password: ''
     });
     setShowModal(true);
@@ -143,8 +139,8 @@ const CustomersList = () => {
 
   return (
     <MainLayout>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Customers</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Customers</h1>
         <button
           onClick={() => {
             setEditingCustomer(null);
@@ -159,7 +155,7 @@ const CustomersList = () => {
             });
             setShowModal(true);
           }}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full sm:w-auto"
         >
           + Add Customer
         </button>
@@ -176,55 +172,94 @@ const CustomersList = () => {
       {loading ? (
         <div className="text-center py-8">Loading...</div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prep Rate</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned Warehouses</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Has Login</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {customers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">{customer.customer_name}</td>
-                  <td className="px-6 py-4">{customer.customer_code}</td>
-                  <td className="px-6 py-4">{customer.email}</td>
-                  <td className="px-6 py-4">${customer.prep_rate}</td>
-                  <td className="px-6 py-4">{getWarehouseNames(customer.warehouse_ids)}</td>
-                  <td className="px-6 py-4">
-                    <span className="text-green-600">✓</span>
-                  </td>
-                  <td className="px-6 py-4 space-x-2">
-                    <button
-                      onClick={() => handleEdit(customer)}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(customer.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Mobile: stacked cards */}
+          <div className="md:hidden space-y-3">
+            {customers.map((customer) => (
+              <div key={customer.id} className="bg-white rounded-lg shadow p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="font-medium">{customer.customer_name}</p>
+                    <p className="text-xs text-gray-500">{customer.customer_code}</p>
+                  </div>
+                  <span className="text-green-600 text-sm">✓ Login</span>
+                </div>
+                <div className="text-sm space-y-1 mb-3">
+                  <p className="text-gray-600 break-words">{customer.email}</p>
+                  <p className="text-gray-600">Prep Rate: <span className="font-medium">${customer.prep_rate}</span></p>
+                  <p className="text-gray-600">Warehouses: <span className="font-medium">{getWarehouseNames(customer.warehouse_ids)}</span></p>
+                </div>
+                <div className="flex gap-4 pt-2 border-t">
+                  <button
+                    onClick={() => handleEdit(customer)}
+                    className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(customer.id)}
+                    className="text-red-600 hover:text-red-900 text-sm font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prep Rate</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned Warehouses</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Has Login</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {customers.map((customer) => (
+                    <tr key={customer.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">{customer.customer_name}</td>
+                      <td className="px-6 py-4">{customer.customer_code}</td>
+                      <td className="px-6 py-4">{customer.email}</td>
+                      <td className="px-6 py-4">${customer.prep_rate}</td>
+                      <td className="px-6 py-4">{getWarehouseNames(customer.warehouse_ids)}</td>
+                      <td className="px-6 py-4">
+                        <span className="text-green-600">✓</span>
+                      </td>
+                      <td className="px-6 py-4 space-x-2">
+                        <button
+                          onClick={() => handleEdit(customer)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(customer.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start sm:items-center justify-center p-4 z-50">
+          <div className="w-full max-w-sm sm:max-w-md p-5 border shadow-lg rounded-md bg-white my-8 sm:my-0 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold mb-4">
               {editingCustomer ? 'Edit Customer' : 'Add New Customer'}
             </h3>
@@ -266,7 +301,6 @@ const CustomersList = () => {
                 />
               </div>
 
-              {/* Password Fields - Only show for new customers */}
               {!editingCustomer && (
                 <>
                   <div className="mb-4">
@@ -310,7 +344,6 @@ const CustomersList = () => {
                 />
               </div>
 
-              {/* Warehouse Assignment */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Assign Warehouses
@@ -327,14 +360,14 @@ const CustomersList = () => {
                           onChange={() => handleWarehouseToggle(warehouse.id)}
                           className="rounded"
                         />
-                        <span>{warehouse.name} - {warehouse.location}</span>
+                        <span className="text-sm">{warehouse.name} - {warehouse.location}</span>
                       </label>
                     ))
                   )}
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}

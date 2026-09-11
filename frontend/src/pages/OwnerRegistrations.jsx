@@ -121,21 +121,21 @@ const OwnerRegistrations = () => {
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Registration Requests</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Registration Requests</h1>
 
         {/* Info Box */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-blue-800">
+          <p className="text-blue-800 text-sm sm:text-base">
             <strong>Note:</strong> When approving a request, the customer will be created with their 
             chosen password. You only need to provide Customer Code, Prep Rate, and Warehouse assignments.
           </p>
         </div>
 
         {/* Filter Buttons */}
-        <div className="mb-6 flex space-x-2">
+        <div className="mb-6 flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
           <button
             onClick={() => setFilter('pending')}
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
               filter === 'pending' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
             }`}
           >
@@ -143,7 +143,7 @@ const OwnerRegistrations = () => {
           </button>
           <button
             onClick={() => setFilter('approved')}
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
               filter === 'approved' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
             }`}
           >
@@ -151,7 +151,7 @@ const OwnerRegistrations = () => {
           </button>
           <button
             onClick={() => setFilter('declined')}
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
               filter === 'declined' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
             }`}
           >
@@ -159,7 +159,7 @@ const OwnerRegistrations = () => {
           </button>
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
               filter === 'all' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
             }`}
           >
@@ -177,28 +177,28 @@ const OwnerRegistrations = () => {
           <div className="space-y-4">
             {filteredRegistrations.map((reg) => (
               <div key={reg.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
-                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                  <div className="flex justify-between items-center">
+                <div className="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                     <div>
                       <h2 className="text-lg font-semibold">{reg.customer_name}</h2>
                       <p className="text-sm text-gray-600">{reg.email}</p>
                     </div>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(reg.status)}`}>
                         {reg.status}
                       </span>
                       
                       {reg.status === 'pending' && (
-                        <div className="space-x-2">
+                        <div className="flex gap-2">
                           <button
                             onClick={() => handleApproveClick(reg)}
-                            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                            className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700"
                           >
                             Approve
                           </button>
                           <button
                             onClick={() => handleDeclineClick(reg)}
-                            className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                            className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700"
                           >
                             Decline
                           </button>
@@ -208,8 +208,8 @@ const OwnerRegistrations = () => {
                   </div>
                 </div>
 
-                <div className="px-6 py-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="px-4 sm:px-6 py-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Phone</p>
                       <p className="font-medium">{reg.phone}</p>
@@ -218,26 +218,26 @@ const OwnerRegistrations = () => {
                       <p className="text-sm text-gray-500">Company</p>
                       <p className="font-medium">{reg.company_name || '-'}</p>
                     </div>
-                    <div className="col-span-2">
+                    <div className="sm:col-span-2">
                       <p className="text-sm text-gray-500">Company Address</p>
-                      <p className="font-medium">{reg.company_address || '-'}</p>
+                      <p className="font-medium break-words">{reg.company_address || '-'}</p>
                     </div>
-                    <div className="col-span-2">
+                    <div className="sm:col-span-2">
                       <p className="text-sm text-gray-500">Notes</p>
-                      <p className="font-medium">{reg.notes || '-'}</p>
+                      <p className="font-medium break-words">{reg.notes || '-'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Requested On</p>
                       <p className="font-medium">{formatDate(reg.created_at)}</p>
                     </div>
                     {reg.status === 'declined' && reg.rejection_reason && (
-                      <div className="col-span-2">
+                      <div className="sm:col-span-2">
                         <p className="text-sm text-gray-500">Rejection Reason</p>
-                        <p className="font-medium text-red-600">{reg.rejection_reason}</p>
+                        <p className="font-medium text-red-600 break-words">{reg.rejection_reason}</p>
                       </div>
                     )}
                     {reg.status === 'approved' && reg.reviewed_at && (
-                      <div className="col-span-2">
+                      <div className="sm:col-span-2">
                         <p className="text-sm text-gray-500">Approved On</p>
                         <p className="font-medium text-green-600">{formatDate(reg.reviewed_at)}</p>
                       </div>
@@ -251,8 +251,8 @@ const OwnerRegistrations = () => {
 
         {/* Approve Modal */}
         {showApproveModal && selectedReg && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start sm:items-center justify-center p-4 z-50">
+            <div className="w-full max-w-sm sm:max-w-md p-5 border shadow-lg rounded-md bg-white my-8 sm:my-0 max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-bold mb-4">Approve Registration</h3>
               
               <div className="mb-4">
@@ -301,13 +301,13 @@ const OwnerRegistrations = () => {
                         onChange={() => handleWarehouseToggle(warehouse.id)}
                         className="rounded"
                       />
-                      <span>{warehouse.name} - {warehouse.location}</span>
+                      <span className="text-sm">{warehouse.name} - {warehouse.location}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setShowApproveModal(false)}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
@@ -327,8 +327,8 @@ const OwnerRegistrations = () => {
 
         {/* Decline Modal */}
         {showDeclineModal && selectedReg && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start sm:items-center justify-center p-4 z-50">
+            <div className="w-full max-w-sm sm:max-w-md p-5 border shadow-lg rounded-md bg-white my-8 sm:my-0 max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-bold mb-4">Decline Registration</h3>
               
               <div className="mb-4">
@@ -350,7 +350,7 @@ const OwnerRegistrations = () => {
                 />
               </div>
 
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setShowDeclineModal(false)}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"

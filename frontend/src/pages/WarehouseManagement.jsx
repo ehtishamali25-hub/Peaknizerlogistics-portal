@@ -39,10 +39,8 @@ const WarehouseManagement = () => {
     const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Get current user from localStorage
       const user = JSON.parse(localStorage.getItem('user'));
       
-      // Prepare data with company_id
       const warehouseData = {
         ...formData,
         company_id: user.company_id
@@ -90,8 +88,6 @@ const WarehouseManagement = () => {
 
   const handleToggleStatus = async (id, currentStatus) => {
     try {
-      // You might need to create a toggle-status endpoint for warehouses
-      // For now, we'll use the update endpoint
       const warehouse = warehouses.find(w => w.id === id);
       await axiosInstance.put(`/warehouses/${id}`, {
         ...warehouse,
@@ -106,154 +102,197 @@ const WarehouseManagement = () => {
   };
 
   return (
-    
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <BackButton />
-          <h1 className="text-3xl font-bold">Warehouse Management</h1>
-          <button
-            onClick={() => {
-              setEditingWarehouse(null);
-              setFormData({ name: '', location: '', is_active: true });
-              setShowModal(true);
-            }}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            + Add Warehouse
-          </button>
+    <div className="max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <BackButton />
+        <h1 className="text-2xl sm:text-3xl font-bold">Warehouse Management</h1>
+        <button
+          onClick={() => {
+            setEditingWarehouse(null);
+            setFormData({ name: '', location: '', is_active: true });
+            setShowModal(true);
+          }}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full sm:w-auto"
+        >
+          + Add Warehouse
+        </button>
+      </div>
+
+      {message.text && (
+        <div className={`mb-4 p-4 rounded ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.text}
         </div>
+      )}
 
-        {message.text && (
-          <div className={`mb-4 p-4 rounded ${
-            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}>
-            {message.text}
+      {loading ? (
+        <div className="text-center py-8">Loading...</div>
+      ) : warehouses.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <p className="text-gray-500">No warehouses added yet.</p>
+        </div>
+      ) : (
+        <>
+          {/* Mobile: stacked cards */}
+          <div className="md:hidden space-y-3">
+            {warehouses.map((warehouse) => (
+              <div key={warehouse.id} className="bg-white rounded-lg shadow p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="font-medium">{warehouse.name}</p>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    warehouse.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {warehouse.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">{warehouse.location || '-'}</p>
+                <p className="text-xs text-gray-500 mb-3">Created: {new Date(warehouse.created_at).toLocaleDateString()}</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-2 pt-2 border-t">
+                  <button
+                    onClick={() => handleEdit(warehouse)}
+                    className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleToggleStatus(warehouse.id, warehouse.is_active)}
+                    className={`text-sm font-medium ${
+                      warehouse.is_active ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'
+                    }`}
+                  >
+                    {warehouse.is_active ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(warehouse.id)}
+                    className="text-red-600 hover:text-red-900 text-sm font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
 
-        {loading ? (
-          <div className="text-center py-8">Loading...</div>
-        ) : warehouses.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500">No warehouses added yet.</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {warehouses.map((warehouse) => (
-                  <tr key={warehouse.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium">{warehouse.name}</td>
-                    <td className="px-6 py-4">{warehouse.location || '-'}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        warehouse.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {warehouse.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{new Date(warehouse.created_at).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 space-x-2">
-                      <button
-                        onClick={() => handleEdit(warehouse)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(warehouse.id, warehouse.is_active)}
-                        className={`text-sm ${
-                          warehouse.is_active ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'
-                        }`}
-                      >
-                        {warehouse.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(warehouse.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
+          {/* Desktop: table */}
+          <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Add/Edit Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <h3 className="text-lg font-bold mb-4">
-                {editingWarehouse ? 'Edit Warehouse' : 'Add New Warehouse'}
-              </h3>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Warehouse Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_active}
-                      onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
-                      className="rounded"
-                    />
-                    <span className="text-sm font-medium text-gray-700">Active</span>
-                  </label>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                  >
-                    {editingWarehouse ? 'Update' : 'Create'}
-                  </button>
-                </div>
-              </form>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {warehouses.map((warehouse) => (
+                    <tr key={warehouse.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 font-medium">{warehouse.name}</td>
+                      <td className="px-6 py-4">{warehouse.location || '-'}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          warehouse.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {warehouse.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">{new Date(warehouse.created_at).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 space-x-2">
+                        <button
+                          onClick={() => handleEdit(warehouse)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleToggleStatus(warehouse.id, warehouse.is_active)}
+                          className={`text-sm ${
+                            warehouse.is_active ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'
+                          }`}
+                        >
+                          {warehouse.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(warehouse.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        )}
-      </div>
-    
+        </>
+      )}
+
+      {/* Add/Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start sm:items-center justify-center p-4 z-50">
+          <div className="w-full max-w-sm sm:max-w-md p-5 border shadow-lg rounded-md bg-white my-8 sm:my-0 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold mb-4">
+              {editingWarehouse ? 'Edit Warehouse' : 'Add New Warehouse'}
+            </h3>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Warehouse Name *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({...formData, location: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_active}
+                    onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Active</span>
+                </label>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  {editingWarehouse ? 'Update' : 'Create'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
