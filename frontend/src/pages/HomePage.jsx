@@ -23,7 +23,7 @@ const Counter = ({ end, label }) => {
 
   return (
     <div className="flex-1 text-center px-6 py-4 sm:py-0">
-      <div className="text-3xl sm:text-4xl font-medium text-[#0E2A47]">{value.toLocaleString()}+</div>
+      <div className="text-4xl sm:text-5xl font-bold text-[#0E2A47]">{value.toLocaleString()}+</div>
       <div className="text-slate-500 text-sm mt-1">{label}</div>
     </div>
   );
@@ -45,7 +45,43 @@ const portalFeatures = [
   { title: 'Role-based access', desc: 'Owners see the full operation; customers see exactly their own inventory, invoices, and shipments.' }
 ];
 
-const platforms = ['Amazon', 'Shopify', 'Etsy', 'WooCommerce', 'Walmart', 'eBay'];
+const whyUs = [
+  { title: 'No long-term contracts', desc: 'Month-to-month service. We earn your business with performance, not a lock-in agreement.' },
+  { title: 'Transparent, volume-based pricing', desc: 'Rates improve as your order volume grows — no hidden platform or onboarding fees.' },
+  { title: 'A real account manager', desc: 'One point of contact who knows your account, not a rotating support queue.' }
+];
+
+const platforms = [
+  { name: 'Amazon', logo: '/images/logos/amazon.png' },
+  { name: 'Shopify', logo: '/images/logos/shopify.png' },
+  { name: 'Etsy', logo: '/images/logos/etsy.png' },
+  { name: 'WooCommerce', logo: '/images/logos/woocommerce.png' },
+  { name: 'Walmart', logo: '/images/logos/walmart.png' },
+  { name: 'eBay', logo: '/images/logos/ebay.png' }
+];
+
+const PlatformLogo = ({ name, logo }) => {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div className="flex items-center justify-center h-16 w-full">
+        <span className="text-white font-bold text-lg sm:text-xl">{name}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center h-16 w-full">
+      <img
+        src={logo}
+        alt={`${name} logo`}
+        className="max-h-8 sm:max-h-10 w-auto object-contain brightness-0 invert opacity-90 hover:opacity-100 transition-opacity"
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+};
 
 const HomePage = () => {
   const [lead, setLead] = useState({ name: '', email: '', phone: '', channel: 'Amazon seller', note: '' });
@@ -79,11 +115,11 @@ const HomePage = () => {
           <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-24 lg:py-28">
             <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 lg:gap-16 items-center">
               <div ref={heroRef}>
-                <span className="inline-flex items-center gap-2 text-sm font-medium text-emerald-300 mb-5">
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-300 mb-5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                   Third-party logistics & fulfillment
                 </span>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-medium leading-tight text-white mb-5">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-5">
                   Fulfillment infrastructure for growing e-commerce brands
                 </h1>
                 <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-lg mb-8">
@@ -92,13 +128,13 @@ const HomePage = () => {
                 <div className="flex flex-wrap gap-4 mb-10">
                   <Link
                     to="/login"
-                    className="bg-emerald-500 hover:bg-emerald-400 text-[#0E2A47] font-medium px-6 py-3 rounded-md transition-colors"
+                    className="bg-emerald-500 hover:bg-emerald-400 text-[#0E2A47] font-semibold px-6 py-3 rounded-md transition-colors"
                   >
                     Get started
                   </Link>
                   <Link
                     to="/pricing"
-                    className="border border-white/25 hover:border-white/50 text-white font-medium px-6 py-3 rounded-md transition-colors"
+                    className="border border-white/25 hover:border-white/50 text-white font-semibold px-6 py-3 rounded-md transition-colors"
                   >
                     View pricing
                   </Link>
@@ -111,7 +147,7 @@ const HomePage = () => {
               </div>
 
               <div className="bg-white rounded-xl shadow-xl p-6 sm:p-8">
-                <h3 className="text-xl font-medium text-[#0E2A47] mb-1">Request a fulfillment quote</h3>
+                <h3 className="text-xl font-bold text-[#0E2A47] mb-1">Request a fulfillment quote</h3>
                 <p className="text-slate-500 text-sm mb-6">We'll reply with pricing within one business day.</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <input
@@ -162,7 +198,7 @@ const HomePage = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full bg-[#0E2A47] hover:bg-[#123457] text-white font-medium py-3 rounded-md transition-colors disabled:opacity-60"
+                    className="w-full bg-[#0E2A47] hover:bg-[#123457] text-white font-semibold py-3 rounded-md transition-colors disabled:opacity-60"
                   >
                     {submitting ? 'Sending...' : 'Request quote'}
                   </button>
@@ -189,8 +225,8 @@ const HomePage = () => {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div>
-                <span className="text-sm font-medium text-emerald-600">End-to-end fulfillment</span>
-                <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2 mb-5">
+                <span className="text-sm font-semibold text-emerald-600">End-to-end fulfillment</span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2 mb-5">
                   One warehouse partner, from receiving to returns
                 </h2>
                 <p className="text-slate-600 leading-relaxed mb-6">
@@ -221,8 +257,8 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Built to scale: image + text reversed */}
-        <section className="bg-slate-50 py-16 sm:py-24">
+        {/* Built to scale: image + text reversed, tinted background */}
+        <section className="bg-[#0E2A47]/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div className="rounded-xl overflow-hidden order-2 lg:order-1">
@@ -233,8 +269,8 @@ const HomePage = () => {
                 />
               </div>
               <div className="order-1 lg:order-2">
-                <span className="text-sm font-medium text-emerald-600">Built for high-volume sellers</span>
-                <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2 mb-5">
+                <span className="text-sm font-semibold text-emerald-600">Built for high-volume sellers</span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2 mb-5">
                   Fulfillment that keeps up as you scale
                 </h2>
                 <p className="text-slate-600 leading-relaxed mb-6">
@@ -267,7 +303,7 @@ const HomePage = () => {
           />
           <div className="absolute inset-0 bg-[#0E2A47]/50"></div>
           <div className="absolute bottom-6 right-6 sm:bottom-10 sm:right-10 bg-white rounded-xl shadow-xl px-6 py-5 max-w-xs">
-            <div className="text-3xl font-medium text-[#0E2A47]">99.9%</div>
+            <div className="text-4xl font-bold text-[#0E2A47]">99.9%</div>
             <div className="text-slate-500 text-sm mt-1">Order accuracy across every warehouse in our network</div>
           </div>
         </section>
@@ -277,8 +313,8 @@ const HomePage = () => {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div>
-                <span className="text-sm font-medium text-emerald-600">Amazon FBA prep</span>
-                <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2 mb-5">
+                <span className="text-sm font-semibold text-emerald-600">Amazon FBA prep</span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2 mb-5">
                   Prep done right the first time
                 </h2>
                 <p className="text-slate-600 leading-relaxed mb-6">
@@ -309,20 +345,54 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Process */}
-        <section className="bg-slate-50 py-16 sm:py-24">
+        {/* Why sellers choose us — tinted cards */}
+        <section className="bg-emerald-50/60 py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-medium text-emerald-600">How it works</span>
-              <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2">
+              <span className="text-sm font-semibold text-emerald-600">Why sellers choose us</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2">
+                A fulfillment partner, not just a warehouse
+              </h2>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-6">
+              {whyUs.map((item) => (
+                <div key={item.title} className="bg-white border border-emerald-100 rounded-xl p-6 shadow-sm">
+                  <h3 className="text-lg font-bold text-[#0E2A47] mb-2">{item.title}</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Second warehouse banner */}
+        <section className="relative">
+          <img
+            src="/images/warehouse-dispatch.jpg"
+            alt="Packed orders staged for dispatch"
+            className="w-full h-64 sm:h-96 object-cover"
+          />
+          <div className="absolute inset-0 bg-[#0E2A47]/40"></div>
+          <div className="absolute bottom-6 left-6 sm:bottom-10 sm:left-10 bg-white rounded-xl shadow-xl px-6 py-5 max-w-xs">
+            <div className="text-4xl font-bold text-[#0E2A47]">Same-day</div>
+            <div className="text-slate-500 text-sm mt-1">Orders placed before cutoff ship the same day</div>
+          </div>
+        </section>
+
+        {/* Process */}
+        <section className="bg-[#0E2A47]/[0.03] py-16 sm:py-24">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="max-w-2xl mb-10 sm:mb-12">
+              <span className="text-sm font-semibold text-emerald-600">How it works</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2">
                 From your warehouse to your customer's door
               </h2>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {steps.map((step) => (
-                <div key={step.num}>
-                  <div className="text-sm font-medium text-emerald-600 mb-2">{step.num}</div>
-                  <h3 className="text-lg font-medium text-[#0E2A47] mb-2">{step.title}</h3>
+                <div key={step.num} className="bg-white border border-slate-200 rounded-xl p-6">
+                  <div className="text-sm font-bold text-emerald-600 mb-2">{step.num}</div>
+                  <h3 className="text-lg font-bold text-[#0E2A47] mb-2">{step.title}</h3>
                   <p className="text-slate-600 text-sm leading-relaxed">{step.desc}</p>
                 </div>
               ))}
@@ -335,8 +405,8 @@ const HomePage = () => {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center mb-12">
               <div>
-                <span className="text-sm font-medium text-emerald-600">Your account, always visible</span>
-                <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2 mb-5">
+                <span className="text-sm font-semibold text-emerald-600">Your account, always visible</span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2 mb-5">
                   Track everything from your own portal
                 </h2>
                 <p className="text-slate-600 leading-relaxed mb-6">
@@ -344,15 +414,15 @@ const HomePage = () => {
                 </p>
                 <Link
                   to="/login"
-                  className="inline-block bg-[#0E2A47] hover:bg-[#123457] text-white font-medium px-6 py-3 rounded-md transition-colors"
+                  className="inline-block bg-[#0E2A47] hover:bg-[#123457] text-white font-semibold px-6 py-3 rounded-md transition-colors"
                 >
                   Log in to your portal
                 </Link>
               </div>
               <div className="rounded-xl overflow-hidden">
                 <img
-                  src="/images/warehouse-dispatch.jpg"
-                  alt="Packed orders staged for dispatch"
+                  src="/images/warehouse-office.jpg"
+                  alt="Staff reviewing shipments on a laptop in the warehouse"
                   className="w-full h-72 sm:h-96 object-cover"
                 />
               </div>
@@ -360,8 +430,8 @@ const HomePage = () => {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {portalFeatures.map((f) => (
-                <div key={f.title} className="border border-slate-200 rounded-xl p-6">
-                  <h3 className="text-lg font-medium text-[#0E2A47] mb-2">{f.title}</h3>
+                <div key={f.title} className="bg-[#0E2A47]/[0.03] border border-slate-200 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-[#0E2A47] mb-2">{f.title}</h3>
                   <p className="text-slate-600 text-sm leading-relaxed">{f.desc}</p>
                 </div>
               ))}
@@ -369,22 +439,24 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Platforms */}
-        <section className="bg-slate-50 border-y border-slate-200 py-10 sm:py-12">
+        {/* Platforms — highlighted band with logos */}
+        <section className="bg-[#0E2A47] py-14 sm:py-16">
           <div className="container mx-auto px-4 sm:px-6">
-            <p className="text-center text-sm text-slate-500 mb-6">Built to support sellers on</p>
-            <div className="flex flex-wrap justify-center gap-x-10 gap-y-3">
+            <p className="text-center text-sm font-semibold text-emerald-300 uppercase tracking-wide mb-8">
+              Built to support sellers on
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 max-w-4xl mx-auto">
               {platforms.map((p) => (
-                <span key={p} className="text-slate-400 font-medium text-lg">{p}</span>
+                <PlatformLogo key={p.name} name={p.name} logo={p.logo} />
               ))}
             </div>
           </div>
         </section>
 
         {/* Closing CTA */}
-        <section className="bg-[#0E2A47] py-16 sm:py-20">
+        <section className="bg-[#0E2A47] py-16 sm:py-20 border-t border-white/10">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl sm:text-3xl font-medium text-white mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               Ready to move fulfillment off your plate?
             </h2>
             <p className="text-slate-300 max-w-xl mx-auto mb-8">
@@ -393,13 +465,13 @@ const HomePage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/login"
-                className="bg-emerald-500 hover:bg-emerald-400 text-[#0E2A47] font-medium px-6 py-3 rounded-md transition-colors"
+                className="bg-emerald-500 hover:bg-emerald-400 text-[#0E2A47] font-semibold px-6 py-3 rounded-md transition-colors"
               >
                 Get started
               </Link>
               <Link
                 to="/pricing"
-                className="border border-white/25 hover:border-white/50 text-white font-medium px-6 py-3 rounded-md transition-colors"
+                className="border border-white/25 hover:border-white/50 text-white font-semibold px-6 py-3 rounded-md transition-colors"
               >
                 View pricing
               </Link>
