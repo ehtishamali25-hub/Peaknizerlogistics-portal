@@ -29,35 +29,20 @@ const Counter = ({ end, label }) => {
   );
 };
 
-const services = [
-  {
-    title: 'Warehousing & inventory management',
-    desc: 'Store inventory across our warehouse network, track stock levels in real time, and get alerted before you run low. Every unit is scanned on receipt and reconciled against your records.',
-    featured: true
-  },
-  {
-    title: 'Amazon FBA prep',
-    desc: 'Labeling, poly-bagging, and carton prep completed to current FBA requirements.'
-  },
-  {
-    title: 'Pick, pack & ship',
-    desc: 'Same-day order processing with carrier-rate optimization on every shipment.'
-  },
-  {
-    title: 'Volume-based pricing',
-    desc: 'Rates that scale down as your order volume grows — no flat platform fees.'
-  },
-  {
-    title: 'Dedicated account support',
-    desc: 'A real point of contact for every account, not a ticket queue.'
-  }
+const steps = [
+  { num: '01', title: 'Receive', desc: 'Inventory is checked in, counted, and inspected against your packing list the same day it arrives.' },
+  { num: '02', title: 'Store', desc: 'Stock is slotted across our warehouse network based on order velocity, so fast-moving SKUs ship faster.' },
+  { num: '03', title: 'Pick & pack', desc: 'Orders are picked, packed, and quality-checked with a 99.9% accuracy rate before they leave the building.' },
+  { num: '04', title: 'Ship', desc: 'We select the fastest, most cost-effective carrier for every order and hand you tracking automatically.' }
 ];
 
-const steps = [
-  { num: '01', title: 'Receive', desc: 'Inventory is checked in, counted, and inspected against your packing list.' },
-  { num: '02', title: 'Store', desc: 'Stock is slotted across our warehouse network based on order velocity.' },
-  { num: '03', title: 'Pick & pack', desc: 'Orders are picked and packed with a 99.9% accuracy rate.' },
-  { num: '04', title: 'Ship', desc: 'We select the fastest, most cost-effective carrier for every order.' }
+const portalFeatures = [
+  { title: 'Live inventory, every warehouse', desc: 'See received, shipped, and remaining units for every product across every warehouse, updated in real time.' },
+  { title: 'Prep & shipping invoices', desc: 'Every invoice is generated automatically and available to download as a PDF, with clear paid/unpaid status.' },
+  { title: 'Payment proof uploads', desc: 'Upload a payment receipt directly against any invoice — no emailing files back and forth.' },
+  { title: 'Batch tracking', desc: 'Follow every inbound shipment from upload through approval, with full shipping details attached.' },
+  { title: 'Shipping documentation', desc: 'Download shipping detail sheets and packing records for any batch, any time.' },
+  { title: 'Role-based access', desc: 'Owners see the full operation; customers see exactly their own inventory, invoices, and shipments.' }
 ];
 
 const platforms = ['Amazon', 'Shopify', 'Etsy', 'WooCommerce', 'Walmart', 'eBay'];
@@ -199,49 +184,133 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Services */}
+        {/* Overview: text + image side by side */}
+        <section className="py-16 sm:py-24">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div>
+                <span className="text-sm font-medium text-emerald-600">End-to-end fulfillment</span>
+                <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2 mb-5">
+                  One warehouse partner, from receiving to returns
+                </h2>
+                <p className="text-slate-600 leading-relaxed mb-6">
+                  Most sellers piece together receiving, storage, prep, and shipping across separate vendors. We run all of it under one roof, with one team accountable for every step — so nothing falls through the cracks between handoffs.
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    'Receiving and inspection against your packing list',
+                    'Climate-controlled storage across our warehouse network',
+                    'Amazon FBA prep completed to current marketplace standards',
+                    'Same-day pick, pack, and carrier-optimized shipping'
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                      <span className="text-slate-600">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-xl overflow-hidden">
+                <img
+                  src="/images/warehouse-racking.jpg"
+                  alt="Warehouse storage racking with inventory"
+                  className="w-full h-72 sm:h-96 object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Built to scale: image + text reversed */}
         <section className="bg-slate-50 py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
-            <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-medium text-emerald-600">What we do</span>
-              <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2">
-                Full-service fulfillment, built around your catalog
-              </h2>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 sm:p-8 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-xl font-medium text-[#0E2A47] mb-3">{services[0].title}</h3>
-                  <p className="text-slate-600 leading-relaxed max-w-md">{services[0].desc}</p>
-                </div>
-                <Link to="/services" className="text-emerald-600 font-medium mt-6 inline-block">
-                  Learn about storage
-                </Link>
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div className="rounded-xl overflow-hidden order-2 lg:order-1">
+                <img
+                  src="/images/warehouse-picking.jpg"
+                  alt="Staff picking and packing orders in the warehouse"
+                  className="w-full h-72 sm:h-96 object-cover"
+                />
               </div>
-              <div className="grid grid-rows-2 gap-6">
-                {services.slice(1, 3).map((s) => (
-                  <div key={s.title} className="bg-white border border-slate-200 rounded-xl p-6">
-                    <h3 className="text-lg font-medium text-[#0E2A47] mb-2">{s.title}</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed">{s.desc}</p>
-                  </div>
-                ))}
+              <div className="order-1 lg:order-2">
+                <span className="text-sm font-medium text-emerald-600">Built for high-volume sellers</span>
+                <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2 mb-5">
+                  Fulfillment that keeps up as you scale
+                </h2>
+                <p className="text-slate-600 leading-relaxed mb-6">
+                  Whether you're running a single SKU or a full multi-channel catalog across Amazon, Shopify, and Walmart, our operation is built to absorb volume spikes without missing a delivery window.
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    'FBA and WFS prep services for marketplace-managed inventory',
+                    'Multi-channel order routing from a single stock pool',
+                    'Returns receiving, inspection, and restocking',
+                    'Volume-based pricing that improves as you grow'
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                      <span className="text-slate-600">{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
+          </div>
+        </section>
 
-            <div className="grid sm:grid-cols-2 gap-6 mt-6">
-              {services.slice(3).map((s) => (
-                <div key={s.title} className="bg-white border border-slate-200 rounded-xl p-6">
-                  <h3 className="text-lg font-medium text-[#0E2A47] mb-2">{s.title}</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed">{s.desc}</p>
-                </div>
-              ))}
+        {/* Full-width warehouse banner with stat card */}
+        <section className="relative">
+          <img
+            src="/images/warehouse-wide.jpg"
+            alt="Wide view of warehouse floor with shelving and inventory"
+            className="w-full h-72 sm:h-[28rem] object-cover"
+          />
+          <div className="absolute inset-0 bg-[#0E2A47]/50"></div>
+          <div className="absolute bottom-6 right-6 sm:bottom-10 sm:right-10 bg-white rounded-xl shadow-xl px-6 py-5 max-w-xs">
+            <div className="text-3xl font-medium text-[#0E2A47]">99.9%</div>
+            <div className="text-slate-500 text-sm mt-1">Order accuracy across every warehouse in our network</div>
+          </div>
+        </section>
+
+        {/* FBA prep detail: text + image */}
+        <section className="py-16 sm:py-24">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div>
+                <span className="text-sm font-medium text-emerald-600">Amazon FBA prep</span>
+                <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2 mb-5">
+                  Prep done right the first time
+                </h2>
+                <p className="text-slate-600 leading-relaxed mb-6">
+                  Rejected FBA shipments cost you time and money. Every unit that passes through our prep stations is labeled, poly-bagged, and boxed to current Amazon requirements before it's routed to a fulfillment center — so your inventory is accepted on the first attempt.
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    'FNSKU labeling and barcode verification',
+                    'Poly-bagging, bundling, and set creation',
+                    'Carton content labeling and weight checks',
+                    'Compliance checks against current Amazon policy'
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                      <span className="text-slate-600">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-xl overflow-hidden">
+                <img
+                  src="/images/warehouse-prep.jpg"
+                  alt="Staff prepping and labeling products for FBA"
+                  className="w-full h-72 sm:h-96 object-cover"
+                />
+              </div>
             </div>
           </div>
         </section>
 
         {/* Process */}
-        <section className="bg-white py-16 sm:py-24">
+        <section className="bg-slate-50 py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
               <span className="text-sm font-medium text-emerald-600">How it works</span>
@@ -255,6 +324,45 @@ const HomePage = () => {
                   <div className="text-sm font-medium text-emerald-600 mb-2">{step.num}</div>
                   <h3 className="text-lg font-medium text-[#0E2A47] mb-2">{step.title}</h3>
                   <p className="text-slate-600 text-sm leading-relaxed">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Portal section */}
+        <section className="py-16 sm:py-24">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center mb-12">
+              <div>
+                <span className="text-sm font-medium text-emerald-600">Your account, always visible</span>
+                <h2 className="text-2xl sm:text-3xl font-medium text-[#0E2A47] mt-2 mb-5">
+                  Track everything from your own portal
+                </h2>
+                <p className="text-slate-600 leading-relaxed mb-6">
+                  Every customer gets a login to our portal — not just a shared spreadsheet or a monthly email. You can check inventory, download invoices, upload payment proof, and follow every shipment without waiting on a reply from our team.
+                </p>
+                <Link
+                  to="/login"
+                  className="inline-block bg-[#0E2A47] hover:bg-[#123457] text-white font-medium px-6 py-3 rounded-md transition-colors"
+                >
+                  Log in to your portal
+                </Link>
+              </div>
+              <div className="rounded-xl overflow-hidden">
+                <img
+                  src="/images/warehouse-dispatch.jpg"
+                  alt="Packed orders staged for dispatch"
+                  className="w-full h-72 sm:h-96 object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {portalFeatures.map((f) => (
+                <div key={f.title} className="border border-slate-200 rounded-xl p-6">
+                  <h3 className="text-lg font-medium text-[#0E2A47] mb-2">{f.title}</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">{f.desc}</p>
                 </div>
               ))}
             </div>
