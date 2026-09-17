@@ -65,18 +65,18 @@ const PlatformLogo = ({ name, logo }) => {
 
   if (failed) {
     return (
-      <div className="flex items-center justify-center h-16 w-full">
-        <span className="text-white font-bold text-lg sm:text-xl">{name}</span>
+      <div className="flex items-center justify-center h-16 w-full bg-white rounded-lg">
+        <span className="text-[#0E2A47] font-bold text-base">{name}</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center h-16 w-full">
+    <div className="flex items-center justify-center h-16 w-full bg-white rounded-lg px-4">
       <img
         src={logo}
         alt={`${name} logo`}
-        className="max-h-8 sm:max-h-10 w-auto object-contain brightness-0 invert opacity-90 hover:opacity-100 transition-opacity"
+        className="max-h-8 sm:max-h-10 max-w-full object-contain"
         onError={() => setFailed(true)}
       />
     </div>
