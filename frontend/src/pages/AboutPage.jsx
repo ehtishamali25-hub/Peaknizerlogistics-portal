@@ -1,298 +1,186 @@
-// AboutPage.jsx – TOTALLY NEW DESIGN (light theme, blue accent, no 3D)
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import WebsiteLayout from './WebsiteLayout';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-gsap.registerPlugin(ScrollTrigger);
+const values = [
+  { title: 'Straight talk on pricing', desc: 'No hidden fees, no surprise charges after the invoice lands. What we quote is what you pay.' },
+  { title: 'Built for scale', desc: 'Our systems are designed to absorb volume spikes without missing a delivery window.' },
+  { title: 'A real point of contact', desc: 'Every account has someone who knows it — not a rotating support queue.' },
+  { title: 'Compliance first', desc: 'Every unit that ships is handled to current marketplace and carrier requirements.' },
+  { title: 'Visibility, always', desc: 'Our client portal gives you live access to inventory, invoices, and shipments — no waiting on an email.' },
+  { title: 'Month-to-month', desc: 'We earn renewal through performance, not a long-term contract.' }
+];
+
+const team = [
+  { role: 'Founder & CEO', desc: 'Sets the direction for the company and owns the relationship with every major account.', initials: 'CEO' },
+  { role: 'Head of Engineering', desc: 'Builds and maintains the client portal and internal systems that keep operations running.', initials: 'ENG' },
+  { role: 'Operations Lead', desc: 'Runs day-to-day warehouse operations and keeps accuracy and turnaround on target.', initials: 'OPS' },
+  { role: 'Client Success Lead', desc: 'The point of contact for onboarding and ongoing account support.', initials: 'CS' }
+];
+
+const facilities = [
+  { location: 'Arlington, VA', features: ['East Coast coverage', 'Dock access', 'Climate-appropriate storage'] },
+  { location: 'Houston, TX', features: ['Gulf Coast coverage', 'Dock access', 'Port proximity'] }
+];
 
 const AboutPage = () => {
   const heroRef = useRef(null);
-  const storyRef = useRef(null);
-  const valuesRef = useRef(null);
-  const teamRef = useRef(null);
 
   useEffect(() => {
-    // Hero fade
     gsap.fromTo(heroRef.current,
       { opacity: 0, y: 20 },
       { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }
     );
-
-    // Story content
-    ScrollTrigger.create({
-      trigger: storyRef.current,
-      start: 'top 85%',
-      onEnter: () => {
-        gsap.from('.story-item', {
-          opacity: 0,
-          y: 20,
-          stagger: 0.2,
-          duration: 0.6,
-          ease: 'power2.out'
-        });
-      }
-    });
-
-    // Values
-    ScrollTrigger.create({
-      trigger: valuesRef.current,
-      start: 'top 85%',
-      onEnter: () => {
-        gsap.from('.value-card', {
-          opacity: 0,
-          y: 20,
-          stagger: 0.1,
-          duration: 0.6,
-          ease: 'power2.out'
-        });
-      }
-    });
-
-    // Team
-    ScrollTrigger.create({
-      trigger: teamRef.current,
-      start: 'top 85%',
-      onEnter: () => {
-        gsap.from('.team-member', {
-          opacity: 0,
-          scale: 0.95,
-          stagger: 0.1,
-          duration: 0.6,
-          ease: 'power2.out'
-        });
-      }
-    });
   }, []);
 
   return (
     <WebsiteLayout>
-      <div className="bg-gray-50 min-h-screen text-gray-800">
+      <div className="bg-white text-slate-700">
 
-        {/* ===== HERO ===== */}
-        <header ref={heroRef} className="py-20 md:py-28 bg-white border-b border-gray-100">
-          <div className="container mx-auto px-4 sm:px-6 text-center">
-            <div className="inline-block bg-blue-50 px-4 py-1.5 rounded-full border border-blue-200 mb-6">
-              <span className="text-blue-600 text-sm font-medium">EST. 2020</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-gray-900">
-              PEAKNIZER<span className="text-blue-600 block text-3xl sm:text-4xl md:text-5xl">LOGISTICS</span>
+        {/* Hero */}
+        <section className="bg-brand-navy">
+          <div ref={heroRef} className="container mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+            <span className="text-sm font-semibold text-emerald-300">About us</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mt-3 mb-5">
+              Peaknizer Logistics
             </h1>
-            <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto mt-4 leading-relaxed">
-              Pioneering the future of <span className="text-blue-600 font-semibold">3PL fulfillment</span>
-              <br />
-              <span className="text-gray-500 text-base md:text-lg">500K+ sq ft • 2,500+ brands • 60K orders/month</span>
+            <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+              A fulfillment partner for e-commerce brands, built around straightforward pricing, real accountability, and a portal that keeps you informed at every step.
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link
-                to="/services"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
-              >
-                SERVICES
-              </Link>
-              <Link
-                to="/contact"
-                className="border border-gray-300 hover:border-blue-600 text-gray-700 hover:text-blue-600 px-8 py-3 rounded-lg font-semibold transition-all"
-              >
-                START PARTNERSHIP
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        {/* ===== OUR STORY (Timeline) ===== */}
-        <section ref={storyRef} className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Left – textual story */}
-              <div className="space-y-6">
-                <h2 className="text-3xl font-bold text-gray-900">FROM GARAGE TO GLOBAL</h2>
-                <div className="space-y-4 text-gray-600">
-                  <p className="story-item">
-                    Founded in <span className="font-semibold text-blue-600">2020</span>, Peaknizer emerged from a simple truth: 
-                    e‑commerce was exploding, but logistics was the bottleneck strangling growth.
-                  </p>
-                  <p className="story-item">
-                    What began as a <span className="font-semibold text-blue-600">single warehouse</span> in Virginia has scaled to 
-                    <span className="font-semibold text-blue-600">500K+ sq ft</span> across strategic US locations, serving 
-                    <span className="font-semibold text-blue-600">2,500+ brands</span>.
-                  </p>
-                  <p className="story-item">
-                    Today we process <span className="font-semibold text-blue-600">60K orders monthly</span> with 
-                    <span className="font-semibold text-blue-600">99.99% accuracy</span>, powered by proprietary AI and 
-                    relentless innovation.
-                  </p>
-                </div>
-                {/* Testimonial */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                  <div className="text-4xl text-blue-500 mb-2">“</div>
-                  <p className="text-gray-700 italic text-lg">
-                    "We don't just move boxes. We architect supply chains that scale empires."
-                  </p>
-                  <div className="flex items-center mt-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xl mr-3">
-                      SH
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">Shah</p>
-                      <p className="text-sm text-blue-600">Founder &amp; CEO</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right – timeline stats (replaces 3D) */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                <h3 className="text-2xl font-semibold text-gray-900 text-center mb-6">OUR JOURNEY</h3>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <div className="text-3xl font-bold text-blue-600">2020</div>
-                    <div className="text-gray-500 text-sm">Founded</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-blue-600">500K+</div>
-                    <div className="text-gray-500 text-sm">Sq Ft Served</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-blue-600">2,500+</div>
-                    <div className="text-gray-500 text-sm">Happy Brands</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-blue-600">60K</div>
-                    <div className="text-gray-500 text-sm">Orders/Month</div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
-        {/* ===== MISSION & VISION ===== */}
-        <section className="py-16 bg-white border-y border-gray-100">
+        {/* Story + photo */}
+        <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
-            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-              {/* Mission */}
-              <div className="bg-gray-50 rounded-xl border border-gray-200 p-8 hover:border-blue-400 transition-colors">
-                <div className="text-5xl mb-4">🎯</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">MISSION</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Empower brands to conquer commerce through flawless, scalable logistics that eliminate friction and maximize velocity.
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div>
+                <span className="text-sm font-semibold text-emerald-600">Our story</span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2 mb-5">
+                  Fulfillment that started with a simple frustration
+                </h2>
+                <p className="text-slate-600 leading-relaxed mb-4">
+                  We started Peaknizer Logistics because too many growing sellers were stuck stitching together separate vendors for receiving, storage, prep, and shipping — and paying for the gaps between them.
                 </p>
-                <ul className="mt-4 space-y-2 text-gray-600">
-                  <li className="flex items-start"><span className="text-blue-500 mr-2">✓</span>Zero‑defect execution</li>
-                  <li className="flex items-start"><span className="text-blue-500 mr-2">✓</span>AI‑first innovation</li>
-                  <li className="flex items-start"><span className="text-blue-500 mr-2">✓</span>Partnership mindset</li>
-                </ul>
-              </div>
-              {/* Vision */}
-              <div className="bg-gray-50 rounded-xl border border-gray-200 p-8 hover:border-blue-400 transition-colors">
-                <div className="text-5xl mb-4">👁️</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">VISION</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Become the <span className="font-semibold text-gray-900">invisible force</span> powering the world's most successful commerce brands through unprecedented logistics intelligence.
+                <p className="text-slate-600 leading-relaxed">
+                  Running fulfillment under one roof, with one team accountable for the whole process, means fewer handoffs, fewer mistakes, and a lot less time spent chasing status updates.
                 </p>
-                <ul className="mt-4 space-y-2 text-gray-600">
-                  <li className="flex items-start"><span className="text-blue-500 mr-2">✓</span>Global expansion</li>
-                  <li className="flex items-start"><span className="text-blue-500 mr-2">✓</span>AI supremacy</li>
-                  <li className="flex items-start"><span className="text-blue-500 mr-2">✓</span>Industry leadership</li>
-                </ul>
+              </div>
+              <div className="rounded-xl overflow-hidden">
+                <img
+                  src="/images/about/warehouse-exterior.jpg"
+                  alt="Exterior of a Peaknizer Logistics warehouse"
+                  className="w-full h-72 sm:h-96 object-cover"
+                />
               </div>
             </div>
           </div>
         </section>
 
-        {/* ===== CORE VALUES ===== */}
-        <section ref={valuesRef} className="py-16 bg-gray-50">
+        {/* Values */}
+        <section className="bg-brand-navy/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">CORE PRINCIPLES</h2>
-            <p className="text-gray-500 text-center max-w-2xl mx-auto mb-10">The DNA that powers everything we do</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {[
-                { icon: '🤝', title: 'Absolute Integrity', desc: 'Zero tolerance for opacity. Complete transparency in pricing, processes, and performance.' },
-                { icon: '⚡', title: 'Relentless Innovation', desc: 'AI-first approach. Continuous evolution through technology and process reinvention.' },
-                { icon: '🎯', title: 'Customer Supremacy', desc: 'Your success IS our success. We measure ourselves by your growth velocity.' },
-                { icon: '👥', title: 'Team Obsession', desc: 'World-class talent. Continuous development. Ownership culture.' },
-                { icon: '🌱', title: 'Exponential Growth', desc: 'Built for 100x scale. Sustainable systems that compound over decades.' },
-                { icon: '🌍', title: 'Global Impact', desc: 'Economic engines for communities. Responsible stewardship of resources.' }
-              ].map((value, i) => (
-                <div key={i} className="value-card bg-white rounded-xl border border-gray-200 p-6 hover:border-blue-400 transition-colors shadow-sm hover:shadow-md">
-                  <div className="text-4xl mb-3">{value.icon}</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{value.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{value.desc}</p>
+            <div className="max-w-2xl mb-10 sm:mb-12">
+              <span className="text-sm font-semibold text-emerald-600">What we stand for</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
+                The principles behind how we run
+              </h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {values.map((v) => (
+                <div key={v.title} className="bg-white border border-slate-200 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-brand-navy mb-2">{v.title}</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">{v.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ===== EXECUTIVE TEAM ===== */}
-        <section ref={teamRef} className="py-16 bg-white border-y border-gray-100">
+        {/* Team photo banner */}
+        <section className="relative">
+          <img
+            src="/images/about/team-floor.jpg"
+            alt="Team working on the warehouse floor"
+            className="w-full h-64 sm:h-96 object-cover"
+          />
+          <div className="absolute inset-0 bg-brand-navy/50 flex items-center">
+            <div className="container mx-auto px-4 sm:px-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white max-w-md">
+                A team that treats your inventory like it's their own
+              </h2>
+            </div>
+          </div>
+        </section>
+
+        {/* Leadership */}
+        <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">EXECUTIVE TEAM</h2>
-            <p className="text-gray-500 text-center max-w-2xl mx-auto mb-10">World-class operators building the future of logistics</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-              {[
-                { name: 'Shah', role: 'Founder & CEO', bio: '15+ years logistics. Ex-Amazon. Built 500K+ sq ft network.', initial: 'SH' },
-                { name: 'E. Ali', role: 'CTO & Head of Engineering', bio: 'Built Client Portal v2.0. AI logistics pioneer. 10+ years software.', initial: 'EA' },
-                { name: 'M. Ali', role: 'Chief Operations Officer', bio: 'Warehouse optimization expert. Stanford MBA. 99.99% accuracy systems.', initial: 'MA' },
-                { name: 'Emily Watson', role: 'Chief Client Officer', bio: '2,500+ client relationships. Retention specialist. Growth architect.', initial: 'EW' }
-              ].map((leader, i) => (
-                <div key={i} className="team-member bg-gray-50 rounded-xl border border-gray-200 p-6 text-center hover:border-blue-400 transition-colors shadow-sm hover:shadow-md">
-                  <div className="w-24 h-24 mx-auto bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-3xl mb-4">
-                    {leader.initial}
+            <div className="max-w-2xl mb-10 sm:mb-12">
+              <span className="text-sm font-semibold text-emerald-600">Leadership</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
+                The people running day-to-day operations
+              </h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {team.map((leader) => (
+                <div key={leader.role} className="bg-white border border-slate-200 rounded-xl p-6 text-center">
+                  <div className="w-16 h-16 mx-auto bg-emerald-50 rounded-full flex items-center justify-center text-brand-navy font-bold text-sm mb-4">
+                    {leader.initials}
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900">{leader.name}</h3>
-                  <p className="text-blue-600 font-medium text-sm mb-2">{leader.role}</p>
-                  <p className="text-gray-500 text-sm leading-relaxed">{leader.bio}</p>
+                  <h3 className="text-base font-bold text-brand-navy mb-2">{leader.role}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{leader.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ===== PROVEN RESULTS (stats) ===== */}
-        <section className="py-16 bg-gray-50 border-y border-gray-100">
+        {/* Prep station photo */}
+        <section className="bg-brand-navy/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">PROVEN RESULTS</h2>
-            <p className="text-gray-500 text-center max-w-2xl mx-auto mb-10">Numbers don't lie. Scale does.</p>
-            <div className="flex flex-wrap justify-center gap-8 md:gap-16 max-w-4xl mx-auto">
-              {[
-                { num: '99.9%', label: 'Accuracy' },
-                { num: '24h', label: 'Avg Turnaround' },
-                { num: '500K+', label: 'Sq Ft Capacity' },
-                { num: '2,500+', label: 'Active Brands' },
-                { num: '60K', label: 'Orders/Month' },
-                { num: '0', label: 'Downtime Days' }
-              ].map((stat, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-3xl sm:text-4xl font-bold text-blue-600">{stat.num}</div>
-                  <div className="text-gray-500 text-sm">{stat.label}</div>
-                </div>
-              ))}
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div className="rounded-xl overflow-hidden order-2 lg:order-1">
+                <img
+                  src="/images/about/prep-station.jpg"
+                  alt="Prep station with labeling equipment"
+                  className="w-full h-72 sm:h-96 object-cover"
+                />
+              </div>
+              <div className="order-1 lg:order-2">
+                <span className="text-sm font-semibold text-emerald-600">How we operate</span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2 mb-5">
+                  Process over improvisation
+                </h2>
+                <p className="text-slate-600 leading-relaxed mb-4">
+                  Every unit that comes through our doors follows the same checklist: received, counted, inspected, and slotted before it's ever picked for an order. Prep work follows current marketplace requirements, not a best guess.
+                </p>
+                <p className="text-slate-600 leading-relaxed">
+                  That consistency is what keeps accuracy high and rejected shipments rare.
+                </p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ===== STRATEGIC FOOTPRINT (facilities) ===== */}
-        <section className="py-16 bg-white border-y border-gray-100">
+        {/* Facilities */}
+        <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">STRATEGIC FOOTPRINT</h2>
-            <p className="text-gray-500 text-center max-w-2xl mx-auto mb-10">Multi‑location network optimized for velocity</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {[
-                { location: 'Arlington, VA', size: '150K sq ft', features: ['East Coast Hub', '60 docks', 'Rail access', 'Climate control'] },
-                { location: 'Houston, TX', size: '200K sq ft', features: ['Gulf Gateway', '80 docks', 'Hazmat certified', 'Port proximity'] },
-                { location: 'Chicago, IL', size: '175K sq ft', features: ['Midwest Core', 'Rail nexus', 'Cross-dock', 'Automation'] }
-              ].map((facility, i) => (
-                <div key={i} className="bg-gray-50 rounded-xl border border-gray-200 p-6 hover:border-blue-400 transition-colors shadow-sm hover:shadow-md">
-                  <div className="text-4xl mb-3">📍</div>
-                  <h3 className="text-xl font-semibold text-gray-900">{facility.location}</h3>
-                  <p className="text-blue-600 font-medium">{facility.size}</p>
-                  <ul className="mt-3 space-y-1 text-gray-600 text-sm">
-                    {facility.features.map((feature, j) => (
-                      <li key={j} className="flex items-center">
-                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
+            <div className="max-w-2xl mb-10 sm:mb-12">
+              <span className="text-sm font-semibold text-emerald-600">Where we operate</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
+                Our warehouse locations
+              </h2>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-6 max-w-3xl">
+              {facilities.map((f) => (
+                <div key={f.location} className="bg-white border border-slate-200 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-brand-navy mb-3">{f.location}</h3>
+                  <ul className="space-y-2">
+                    {f.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2 text-sm text-slate-600">
+                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                         {feature}
                       </li>
                     ))}
@@ -303,31 +191,32 @@ const AboutPage = () => {
           </div>
         </section>
 
-        {/* ===== FINAL CTA (blue gradient) ===== */}
-        <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-700">
+        {/* Closing CTA */}
+        <section className="bg-brand-navy py-16 sm:py-20">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              JOIN THE <span className="text-yellow-300">REVOLUTION</span>
+              Want to see if we're a fit?
             </h2>
-            <p className="text-blue-50 text-lg mb-8 max-w-2xl mx-auto">
-              Experience logistics that scales with your ambition. Partner with the future.
+            <p className="text-slate-300 max-w-xl mx-auto mb-8">
+              Tell us about your business and we'll walk you through how we'd handle your fulfillment.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/services"
-                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                to="/contact"
+                className="bg-brand-emerald hover:bg-emerald-400 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors"
               >
-                DISCOVER SERVICES
+                Get in touch
               </Link>
               <Link
-                to="/contact"
-                className="bg-white/20 backdrop-blur-sm text-white px-8 py-3 rounded-lg font-semibold text-lg border border-white/30 hover:bg-white/30 transition-all"
+                to="/services"
+                className="border border-white/25 hover:border-white/50 text-white font-semibold px-6 py-3 rounded-md transition-colors"
               >
-                START PARTNERSHIP →
+                View services
               </Link>
             </div>
           </div>
         </section>
+
       </div>
     </WebsiteLayout>
   );
