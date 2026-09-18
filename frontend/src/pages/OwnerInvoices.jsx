@@ -293,7 +293,7 @@ const OwnerInvoices = () => {
                       </button>
 
                       <button
-                        onClick={() => downloadFile(`downloads/invoice/${invoice.id}`, `invoice_${invoice.invoice_number}.pdf`)}
+                        onClick={() => downloadFile(`/downloads/invoice/${invoice.id}`, `invoice_${invoice.invoice_number}.pdf`)}
                         className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium ml-auto"
                       >
                         PDF
@@ -388,7 +388,7 @@ const OwnerInvoices = () => {
                         </td>
                         <td className="px-4 py-3 space-x-2">
                           <button
-                            onClick={() => downloadFile(`downloads/invoice/${invoice.id}`, `invoice_${invoice.invoice_number}.pdf` )}
+                            onClick={() => downloadFile(`/downloads/invoice/${invoice.id}`, `invoice_${invoice.invoice_number}.pdf` )}
                             className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
                           >
                             PDF
@@ -445,7 +445,7 @@ const OwnerInvoices = () => {
                         
                         <button
                           onClick={() => downloadFile(
-                            proof.file_url,
+                            `/payment-proofs/${proof.id}/download`,
                             proof.file_url.split('/').pop()
                           )}
                           className="text-blue-600 hover:text-blue-900 text-sm"
