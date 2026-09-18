@@ -1,4 +1,3 @@
-// WebsiteLayout.jsx - WITH SCROLL TO TOP ON ROUTE CHANGE
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from './Header';
@@ -12,9 +11,9 @@ const WebsiteLayout = ({ children }) => {
   }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900/50 to-black overflow-x-hidden">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <Header />
-      <main className="pt-20 pb-24">
+      <main className="pt-16 md:pt-20">
         {children}
       </main>
       <Footer />
