@@ -118,11 +118,8 @@ def verify_payment_proof(
     return proof
 
 
-
-
 @router.get("/{proof_id}/download")
 def download_proof(
-
     proof_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -154,10 +151,7 @@ def download_proof(
     return FileResponse(
         path=proof.file_url,
         media_type=media_type,
-        filename=filename,
-        headers={
-            "Content-Disposition": f"attachment; filename={filename}"
-        }
+        filename=filename
     )
 
 
