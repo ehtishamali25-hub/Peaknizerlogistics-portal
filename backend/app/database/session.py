@@ -11,6 +11,12 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localho
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# SQLAlchemy 2.1+ changed the default driver for bare "postgresql://" URLs
+# from psycopg2 to psycopg (v3). We only have psycopg2-binary installed,
+# so pin the driver explicitly to avoid "No module named 'psycopg'" errors.
+if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+
 # Configure connection pool
 engine = create_engine(
     DATABASE_URL,
@@ -40,4 +46,4 @@ def receive_checkout(dbapi_connection, connection_record, connection_proxy):
 @event.listens_for(engine, "checkin")
 def receive_checkin(dbapi_connection, connection_record):
     """Debug: Log when connections are returned"""
-    print("Connection checked in")        
+    print("Connection checked in")
