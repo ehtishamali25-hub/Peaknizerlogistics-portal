@@ -1,9 +1,10 @@
 ﻿from typing import Optional
-import secrets
+import random
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from datetime import datetime, timedelta
 from app.models.registration import RegistrationRequest as RegistrationDBModel
+from app.models.email_verification import EmailVerification
 
 from app.core.security import verify_password, create_access_token, oauth2_scheme, get_password_hash
 from app.core.dependencies import get_db, get_current_user, require_role
@@ -11,6 +12,7 @@ from app.core.config import settings
 from app.models.user import User
 from app.schemas.auth import LoginRequest, LoginResponse
 from app.schemas.user import UserCreate, UserOut
+from app.schemas.email_verification import SendCodeRequest, VerifyCodeRequest
 from app.services.email_service import EmailService
 from pydantic import BaseModel, EmailStr
 
@@ -121,84 +123,51 @@ def register_user(
     return db_user
 
 
-@router.post("/register-request")
-def register_request(
-    request_data: RegistrationRequestSchema,
+@router.post("/send-verification-code")
+async def send_verification_code(
+    request_data: SendCodeRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
-    """Submit registration request with email verification"""
+    """Send a 6-digit OTP to verify an email address before registration"""
     
-    # Check if email already exists in users (active accounts)
     existing_user = db.query(User).filter(User.email == request_data.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Check for pending unverified request
-    existing_pending = db.query(RegistrationDBModel).filter(
+    existing_registration = db.query(RegistrationDBModel).filter(
         RegistrationDBModel.email == request_data.email,
-        RegistrationDBModel.status == 'pending',
-        RegistrationDBModel.is_verified == False
+        RegistrationDBModel.status.in_(['approved', 'pending'])
+    ).first()
+    if existing_registration:
+        raise HTTPException(status_code=400, detail="This email already has a registration on file")
+    
+    otp_code = f"{random.randint(0, 999999):06d}"
+    expires_at = datetime.now() + timedelta(minutes=10)
+    
+    existing_verification = db.query(EmailVerification).filter(
+        EmailVerification.email == request_data.email
     ).first()
     
-    if existing_pending:
-        raise HTTPException(status_code=400, detail="Please verify your email first. Check your inbox.")
+    if existing_verification:
+        existing_verification.customer_name = request_data.customer_name
+        existing_verification.otp_code = otp_code
+        existing_verification.otp_expires_at = expires_at
+        existing_verification.attempts = 0
+        existing_verification.verified = False
+        existing_verification.verified_at = None
+    else:
+        existing_verification = EmailVerification(
+            email=request_data.email,
+            customer_name=request_data.customer_name,
+            otp_code=otp_code,
+            otp_expires_at=expires_at,
+            attempts=0,
+            verified=False
+        )
+        db.add(existing_verification)
     
-    # Check for verified but not approved
-    existing_verified = db.query(RegistrationDBModel).filter(
-        RegistrationDBModel.email == request_data.email,
-        RegistrationDBModel.status == 'pending',
-        RegistrationDBModel.is_verified == True
-    ).first()
-    
-    if existing_verified:
-        raise HTTPException(status_code=400, detail="Registration already submitted. Awaiting approval.")
-    
-    # Check for approved request
-    existing_approved = db.query(RegistrationDBModel).filter(
-        RegistrationDBModel.email == request_data.email,
-        RegistrationDBModel.status == 'approved'
-    ).first()
-    
-    if existing_approved:
-        raise HTTPException(status_code=400, detail="This email already has an approved registration")
-    
-    # Delete old declined record
-    existing_declined = db.query(RegistrationDBModel).filter(
-        RegistrationDBModel.email == request_data.email,
-        RegistrationDBModel.status == 'declined'
-    ).first()
-    
-    if existing_declined:
-        db.delete(existing_declined)
-        db.commit()
-    
-    # Generate verification token
-    verification_token = secrets.token_urlsafe(32)
-    
-    # Hash password
-    hashed_password = get_password_hash(request_data.password)
-    
-    # Create registration request
-    registration = RegistrationDBModel(
-        customer_name=request_data.customer_name,
-        email=request_data.email,
-        phone=request_data.phone,
-        company_name=request_data.company_name,
-        company_address=request_data.company_address,
-        password_hash=hashed_password,
-        notes=request_data.notes,
-        status='pending',
-        is_verified=False,
-        verification_token=verification_token
-    )
-    
-    db.add(registration)
     db.commit()
-    
-    # Send verification email
-    frontend_url = "https://peaknizerlogistics-portal-frontend.onrender.com"
-    verification_link = f"{frontend_url}/verify-email?token={verification_token}&email={request_data.email}"
     
     email_body = f"""
     <!DOCTYPE html>
@@ -208,23 +177,23 @@ def register_request(
             body {{ font-family: Arial, sans-serif; line-height: 1.6; }}
             .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
             .header {{ background-color: #f44336; color: white; padding: 20px; text-align: center; }}
-            .button {{ background-color: #f44336; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; }}
+            .code-box {{ background-color: #f8f8f8; border: 1px solid #ddd; border-radius: 5px; padding: 20px; text-align: center; margin: 20px 0; }}
+            .code {{ font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #f44336; }}
             .footer {{ margin-top: 30px; font-size: 12px; color: #666; text-align: center; }}
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
-                <h2>Verify Your Email Address</h2>
+                <h2>Your Verification Code</h2>
             </div>
             <p>Dear {request_data.customer_name},</p>
-            <p>Thank you for registering with <strong>Peaknizer Logistics</strong>. Please verify your email address by clicking the button below:</p>
-            <p style="text-align: center;">
-                <a href="{verification_link}" class="button">Verify Email</a>
-            </p>
-            <p>Or copy and paste this link: <br>{verification_link}</p>
-            <p>This link will expire in 24 hours.</p>
-            <p>If you did not create this account, please ignore this email.</p>
+            <p>Use the code below to verify your email address and continue creating your account with <strong>Peaknizer Logistics</strong>:</p>
+            <div class="code-box">
+                <div class="code">{otp_code}</div>
+            </div>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you did not request this code, please ignore this email.</p>
             <div class="footer">
                 <p>&copy; 2026 Peaknizer Logistics. All rights reserved.</p>
             </div>
@@ -236,11 +205,112 @@ def register_request(
     background_tasks.add_task(
         EmailService.send_email,
         request_data.email,
-        "Verify Your Email - Peaknizer Logistics",
+        "Your Verification Code - Peaknizer Logistics",
         email_body
     )
     
-    return {"message": "Registration submitted. Please check your email to verify your address."}
+    return {"message": "Verification code sent. Please check your email."}
+
+
+@router.post("/verify-code")
+def verify_code(
+    request_data: VerifyCodeRequest,
+    db: Session = Depends(get_db)
+):
+    """Verify the 6-digit code sent to the customer's email"""
+    
+    verification = db.query(EmailVerification).filter(
+        EmailVerification.email == request_data.email
+    ).first()
+    
+    if not verification:
+        raise HTTPException(status_code=400, detail="No verification code found for this email. Please request a new code.")
+    
+    if verification.verified:
+        return {"message": "Email already verified.", "verified": True}
+    
+    if verification.attempts >= 5:
+        raise HTTPException(status_code=400, detail="Too many incorrect attempts. Please request a new code.")
+    
+    if datetime.now() > verification.otp_expires_at.replace(tzinfo=None):
+        raise HTTPException(status_code=400, detail="Code expired. Please request a new code.")
+    
+    if request_data.code != verification.otp_code:
+        verification.attempts += 1
+        db.commit()
+        remaining = 5 - verification.attempts
+        raise HTTPException(status_code=400, detail=f"Incorrect code. {remaining} attempt(s) remaining.")
+    
+    verification.verified = True
+    verification.verified_at = datetime.now()
+    db.commit()
+    
+    return {"message": "Email verified successfully.", "verified": True}
+
+
+@router.post("/register-request")
+def register_request(
+    request_data: RegistrationRequestSchema,
+    db: Session = Depends(get_db)
+):
+    """Submit registration request — requires the email to already be OTP-verified"""
+    
+    existing_user = db.query(User).filter(User.email == request_data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    existing_pending = db.query(RegistrationDBModel).filter(
+        RegistrationDBModel.email == request_data.email,
+        RegistrationDBModel.status == 'pending'
+    ).first()
+    if existing_pending:
+        raise HTTPException(status_code=400, detail="Registration already submitted. Awaiting approval.")
+    
+    existing_approved = db.query(RegistrationDBModel).filter(
+        RegistrationDBModel.email == request_data.email,
+        RegistrationDBModel.status == 'approved'
+    ).first()
+    if existing_approved:
+        raise HTTPException(status_code=400, detail="This email already has an approved registration")
+    
+    existing_declined = db.query(RegistrationDBModel).filter(
+        RegistrationDBModel.email == request_data.email,
+        RegistrationDBModel.status == 'declined'
+    ).first()
+    if existing_declined:
+        db.delete(existing_declined)
+        db.commit()
+    
+    verification = db.query(EmailVerification).filter(
+        EmailVerification.email == request_data.email,
+        EmailVerification.verified == True
+    ).first()
+    
+    if not verification:
+        raise HTTPException(status_code=400, detail="Please verify your email before submitting the form.")
+    
+    if datetime.now() > verification.verified_at.replace(tzinfo=None) + timedelta(hours=1):
+        raise HTTPException(status_code=400, detail="Verification expired. Please verify your email again.")
+    
+    hashed_password = get_password_hash(request_data.password)
+    
+    registration = RegistrationDBModel(
+        customer_name=request_data.customer_name,
+        email=request_data.email,
+        phone=request_data.phone,
+        company_name=request_data.company_name,
+        company_address=request_data.company_address,
+        password_hash=hashed_password,
+        notes=request_data.notes,
+        status='pending',
+        is_verified=True,
+        verification_token=None
+    )
+    
+    db.add(registration)
+    db.commit()
+    
+    return {"message": "Registration submitted successfully. The owner will review your request."}
 
 
 @router.get("/verify-email")
@@ -249,7 +319,9 @@ def verify_email(
     email: str,
     db: Session = Depends(get_db)
 ):
-    """Verify user's email address"""
+    """Legacy link-based verification endpoint — no longer used by the current
+    registration flow (replaced by OTP via /send-verification-code and
+    /verify-code), kept here in case anything still references it."""
     
     registration = db.query(RegistrationDBModel).filter(
         RegistrationDBModel.email == email,
