@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
@@ -9,6 +9,7 @@ from app.models.user import User
 from app.schemas.invoice import InvoiceOut
 from app.services.pdf_service import PDFService
 from app.services.invoice_service import InvoiceService
+from app.services.email_service import EmailService
 from app.models.customer import Customer  
 from app.models.shipping_detail import ShippingDetail  
 from app.models.excel_batch_row import ExcelBatchRow  
@@ -19,10 +20,12 @@ router = APIRouter(prefix="/invoices", tags=["Invoices"])
 def toggle_invoice_visibility(
     invoice_id: UUID,
     visible: bool,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("owner"))
 ):
-    """Toggle invoice visibility for customer"""
+    """Toggle invoice visibility for customer. Going from Hidden -> Visible
+    sends the customer an email notification with the invoice PDF attached."""
     
     invoice = db.query(Invoice).filter(
         Invoice.id == invoice_id,
@@ -32,8 +35,36 @@ def toggle_invoice_visibility(
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
+    was_visible = invoice.is_visible_to_customer
     invoice.is_visible_to_customer = visible
     db.commit()
+    
+    # Only notify on the Hidden -> Visible transition, so the customer
+    # doesn't get repeat emails if the owner toggles it back and forth.
+    if visible and not was_visible:
+        customer = db.query(Customer).filter(
+            Customer.id == invoice.customer_id
+        ).first()
+        
+        if customer and customer.email and invoice.pdf_url:
+            email_body = EmailService.get_invoice_notification_email_template(
+                customer_name=customer.customer_name,
+                invoice_number=invoice.invoice_number,
+                invoice_type=invoice.invoice_type,
+                total_amount=f"${float(invoice.total_amount):.2f}",
+                due_date=invoice.due_date.strftime('%Y-%m-%d')
+            )
+            
+            attachment_filename = f"Invoice_{invoice.invoice_number}.pdf"
+            
+            background_tasks.add_task(
+                EmailService.send_email,
+                customer.email,
+                f"New Invoice Available - {invoice.invoice_number}",
+                email_body,
+                invoice.pdf_url,
+                attachment_filename
+            )
     
     return {"message": f"Invoice visibility set to {visible}", "invoice_id": str(invoice_id)}
 
@@ -70,7 +101,7 @@ def get_invoices(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("owner")),
     customer_id: Optional[UUID] = None,
-    status: Optional[str] = None,  # ← ADD THIS LINE
+    status: Optional[str] = None,
     skip: int = 0,
     limit: int = 100
 ):
@@ -81,7 +112,6 @@ def get_invoices(
     if customer_id:
         query = query.filter(Invoice.customer_id == customer_id)
     
-    # ← ADD THIS STATUS FILTER
     if status:
         query = query.filter(Invoice.status == status)
     
