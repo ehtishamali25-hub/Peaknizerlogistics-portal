@@ -14,6 +14,8 @@ from app.models.inventory import Inventory
 from app.models.customer_warehouse import CustomerWarehouse
 from app.models.registration import RegistrationRequest
 from app.models.charity_donation import CharityDonation
+from app.models.email_verification import EmailVerification
+
 
 
 
@@ -21,5 +23,5 @@ __all__ = [
     "Company", "User", "Customer", "Warehouse", "Product", 
     "ExcelBatch", "ExcelBatchRow", "ShippingDetail", "Invoice", 
     "PaymentProof", "EmployeeCustomer", "EmployeeWarehouse", "Inventory", "CustomerWarehouse","RegistrationRequest",
-    "CharityDonation"
+    "CharityDonation", "EmailVerification"
 ]
