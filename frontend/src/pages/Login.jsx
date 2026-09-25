@@ -19,6 +19,14 @@ const Login = () => {
     notes: ''
   });
 
+  // Email OTP verification state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [otpMessage, setOtpMessage] = useState({ type: '', text: '' });
+
   const { login } = useAuth();
 
   const handleLogin = async (e) => {
@@ -31,10 +39,100 @@ const Login = () => {
     }
   };
 
+  const resetOtpState = () => {
+    setOtpSent(false);
+    setOtpCode('');
+    setEmailVerified(false);
+    setOtpMessage({ type: '', text: '' });
+  };
+
+  const handleRegEmailChange = (value) => {
+    setRegForm({ ...regForm, email: value });
+    // If the email changes after a code was sent or verified, that
+    // verification no longer applies to the new address.
+    if (otpSent || emailVerified) {
+      resetOtpState();
+    }
+  };
+
+  const handleSendCode = async () => {
+    setOtpMessage({ type: '', text: '' });
+
+    if (!regForm.customer_name || !regForm.email) {
+      setOtpMessage({ type: 'error', text: 'Please enter your name and email first.' });
+      return;
+    }
+
+    setSendingCode(true);
+    try {
+      const response = await fetch(`${API_URL}/auth/send-verification-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_name: regForm.customer_name,
+          email: regForm.email
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setOtpSent(true);
+        setOtpCode('');
+        setOtpMessage({ type: 'success', text: 'Code sent! Please check your email.' });
+      } else {
+        setOtpMessage({ type: 'error', text: data.detail || 'Failed to send code.' });
+      }
+    } catch (err) {
+      setOtpMessage({ type: 'error', text: 'Network error. Please try again.' });
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    setOtpMessage({ type: '', text: '' });
+
+    if (!otpCode || otpCode.length !== 6) {
+      setOtpMessage({ type: 'error', text: 'Please enter the 6-digit code.' });
+      return;
+    }
+
+    setVerifyingCode(true);
+    try {
+      const response = await fetch(`${API_URL}/auth/verify-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: regForm.email,
+          code: otpCode
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setEmailVerified(true);
+        setOtpMessage({ type: 'success', text: 'Email verified!' });
+      } else {
+        setOtpMessage({ type: 'error', text: data.detail || 'Incorrect code.' });
+      }
+    } catch (err) {
+      setOtpMessage({ type: 'error', text: 'Network error. Please try again.' });
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (!emailVerified) {
+      setError('Please verify your email address before submitting.');
+      return;
+    }
 
     if (regForm.password !== regForm.confirm_password) {
       setError('Passwords do not match');
@@ -79,6 +177,7 @@ const Login = () => {
           confirm_password: '',
           notes: ''
         });
+        resetOtpState();
         setTimeout(() => setIsLogin(true), 3000);
       } else {
         setError(data.detail || 'Registration failed');
@@ -165,13 +264,60 @@ const Login = () => {
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 Email *
               </label>
-              <input
-                type="email"
-                value={regForm.email}
-                onChange={(e) => setRegForm({...regForm, email: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                required
-              />
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={regForm.email}
+                  onChange={(e) => handleRegEmailChange(e.target.value)}
+                  disabled={emailVerified}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100"
+                  required
+                />
+                {!emailVerified && (
+                  <button
+                    type="button"
+                    onClick={handleSendCode}
+                    disabled={sendingCode}
+                    className="shrink-0 bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium px-3 py-2 rounded-md disabled:opacity-60 whitespace-nowrap"
+                  >
+                    {sendingCode ? 'Sending...' : otpSent ? 'Resend' : 'Send Code'}
+                  </button>
+                )}
+              </div>
+
+              {emailVerified && (
+                <p className="text-green-600 text-sm mt-2 flex items-center gap-1">
+                  <span>✓</span> Email verified
+                </p>
+              )}
+
+              {otpSent && !emailVerified && (
+                <div className="mt-3 flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="6-digit code"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 tracking-widest"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyCode}
+                    disabled={verifyingCode}
+                    className="shrink-0 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium px-3 py-2 rounded-md disabled:opacity-60"
+                  >
+                    {verifyingCode ? 'Verifying...' : 'Verify'}
+                  </button>
+                </div>
+              )}
+
+              {otpMessage.text && (
+                <p className={`text-sm mt-2 ${otpMessage.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+                  {otpMessage.text}
+                </p>
+              )}
             </div>
 
             <div>
@@ -250,9 +396,16 @@ const Login = () => {
               />
             </div>
 
+            {!emailVerified && (
+              <p className="text-xs text-gray-500 text-center">
+                Please verify your email above before submitting.
+              </p>
+            )}
+
             <button
               type="submit"
-              className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium"
+              disabled={!emailVerified}
+              className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Create Account
             </button>
