@@ -4,80 +4,128 @@ import MainLayout from '../layouts/MainLayout';
 import BackButton from '../components/BackButton';
 import { downloadFile } from '../utils/download';
 
+const PAGE_SIZE = 25;
+
 const OwnerInvoices = () => {
+  const [view, setView] = useState('customers'); // 'customers' | 'invoices'
+
+  const [customerSummaries, setCustomerSummaries] = useState([]);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [typeFilter, setTypeFilter] = useState('all');   // all | shipping | prep
+  const [paidFilter, setPaidFilter] = useState('all');   // all | paid | unpaid
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const [invoices, setInvoices] = useState([]);
-  const [batches, setBatches] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [shippingDetails, setShippingDetails] = useState([]);
   const [proofs, setProofs] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
+
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showProofsModal, setShowProofsModal] = useState(false);
   const [invoiceProofs, setInvoiceProofs] = useState([]);
 
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
   useEffect(() => {
-    fetchAllData();
+    fetchCustomerSummaries();
   }, []);
 
-  const fetchAllData = async () => {
-    setLoading(true);
+  useEffect(() => {
+    if (view === 'invoices' && selectedCustomer) {
+      fetchInvoicesForCustomer();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, selectedCustomer, typeFilter, paidFilter, page]);
+
+  const fetchCustomerSummaries = async () => {
+    setSummaryLoading(true);
     try {
-      const [invoicesRes, batchesRes, customersRes, shippingRes] = await Promise.all([
-        axiosInstance.get('/invoices/'),
-        axiosInstance.get('/batches/'),
-        axiosInstance.get('/customers/'),
-        axiosInstance.get('/shipping-details/')
-      ]);
-      
-      setInvoices(invoicesRes.data);
-      setBatches(batchesRes.data);
-      
-      const custMap = {};
-      customersRes.data.forEach(c => custMap[c.id] = c);
-      setCustomers(custMap);
-      
-      const shippingMap = {};
-      shippingRes.data.forEach(s => shippingMap[s.id] = s);
-      setShippingDetails(shippingMap);
-      
-      await fetchProofsForInvoices(invoicesRes.data);
-      
+      const res = await axiosInstance.get('/invoices/customer-summary');
+      setCustomerSummaries(res.data);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
+      console.error('Failed to fetch customer summary:', error);
     } finally {
-      setLoading(false);
+      setSummaryLoading(false);
+    }
+  };
+
+  const fetchInvoicesForCustomer = async () => {
+    setInvoicesLoading(true);
+    try {
+      const params = {
+        customer_id: selectedCustomer.customer_id,
+        skip: (page - 1) * PAGE_SIZE,
+        limit: PAGE_SIZE
+      };
+      if (typeFilter !== 'all') params.invoice_type = typeFilter;
+      if (paidFilter === 'paid') params.paid = true;
+      if (paidFilter === 'unpaid') params.paid = false;
+
+      const res = await axiosInstance.get('/invoices/', { params });
+      setInvoices(res.data);
+      const total = res.headers['x-total-count'];
+      setTotalCount(total ? parseInt(total, 10) : res.data.length);
+
+      await fetchProofsForInvoices(res.data);
+    } catch (error) {
+      console.error('Failed to fetch invoices:', error);
+    } finally {
+      setInvoicesLoading(false);
     }
   };
 
   const fetchProofsForInvoices = async (invoicesList) => {
-    const proofsMap = {};
-    
-    await Promise.all(
-      invoicesList.map(async (invoice) => {
-        try {
-          const response = await axiosInstance.get(`/payment-proofs/invoice/${invoice.id}`);
-          proofsMap[invoice.id] = response.data;
-        } catch (error) {
-          console.error(`Failed to fetch proofs for invoice ${invoice.id}:`, error);
-          proofsMap[invoice.id] = [];
-        }
-      })
-    );
-    
-    setProofs(proofsMap);
+    if (invoicesList.length === 0) {
+      setProofs({});
+      return;
+    }
+    try {
+      const invoiceIds = invoicesList.map(inv => inv.id);
+      const response = await axiosInstance.post('/payment-proofs/batch', invoiceIds);
+      const proofsMap = {};
+      invoicesList.forEach(inv => {
+        proofsMap[inv.id] = response.data[inv.id] || [];
+      });
+      setProofs(proofsMap);
+    } catch (error) {
+      console.error('Failed to fetch proofs batch:', error);
+      setProofs({});
+    }
+  };
+
+  const openCustomer = (customer, type = 'all', paid = 'all') => {
+    setSelectedCustomer(customer);
+    setTypeFilter(type);
+    setPaidFilter(paid);
+    setPage(1);
+    setView('invoices');
+  };
+
+  const backToCustomers = () => {
+    setView('customers');
+    setSelectedCustomer(null);
+    setInvoices([]);
+    setProofs({});
+  };
+
+  const changeTypeFilter = (type) => {
+    setTypeFilter(type);
+    setPage(1);
+  };
+
+  const changePaidFilter = (paid) => {
+    setPaidFilter(paid);
+    setPage(1);
   };
 
   const toggleVisibility = async (invoiceId, currentStatus) => {
     try {
       await axiosInstance.put(`/invoices/${invoiceId}/visibility?visible=${!currentStatus}`);
-      
-      setInvoices(invoices.map(inv => 
-        inv.id === invoiceId 
-          ? { ...inv, is_visible_to_customer: !currentStatus }
-          : inv
+      setInvoices(invoices.map(inv =>
+        inv.id === invoiceId ? { ...inv, is_visible_to_customer: !currentStatus } : inv
       ));
-      
     } catch (error) {
       console.error('Failed to toggle visibility:', error);
     }
@@ -86,13 +134,9 @@ const OwnerInvoices = () => {
   const updateInvoiceStatus = async (invoiceId, newStatus) => {
     try {
       await axiosInstance.put(`/invoices/${invoiceId}/status?status=${newStatus}`);
-      
-      setInvoices(invoices.map(inv => 
-        inv.id === invoiceId 
-          ? { ...inv, status: newStatus }
-          : inv
+      setInvoices(invoices.map(inv =>
+        inv.id === invoiceId ? { ...inv, status: newStatus } : inv
       ));
-      
     } catch (error) {
       console.error('Failed to update status:', error);
     }
@@ -107,131 +151,169 @@ const OwnerInvoices = () => {
   const verifyProof = async (proofId, verified) => {
     try {
       await axiosInstance.put(`/payment-proofs/${proofId}/verify`, { verified });
-      
       const response = await axiosInstance.get(`/payment-proofs/invoice/${selectedInvoice.id}`);
       setInvoiceProofs(response.data);
-      
-      setProofs({
-        ...proofs,
-        [selectedInvoice.id]: response.data
-      });
-      
+      setProofs({ ...proofs, [selectedInvoice.id]: response.data });
     } catch (error) {
       console.error('Failed to verify proof:', error);
     }
   };
 
-  const getBatchForInvoice = (invoice) => {
-    const shippingDetail = shippingDetails[invoice.shipping_details_id];
-    if (shippingDetail) {
-      return batches.find(b => b.id === shippingDetail.batch_id);
-    }
-    return null;
-  };
+  const formatDate = (dateString) => new Date(dateString).toLocaleDateString();
+  const formatDateTime = (dateString) => new Date(dateString).toLocaleString();
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(parseFloat(amount) || 0);
 
-  const getCustomerName = (customerId) => {
-    const customer = customers[customerId];
-    return customer ? `${customer.customer_name} (${customer.customer_code})` : customerId.substring(0, 8);
-  };
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'unpaid': return 'bg-red-100 text-red-800';
-      case 'partially_paid': return 'bg-yellow-100 text-yellow-800';
-      case 'fully_paid': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
-  const filteredInvoices = invoices.filter(inv => 
-    filter === 'all' ? true : inv.invoice_type === filter
-  );
-
-  if (loading) {
+  // ===================== CUSTOMER SUMMARY VIEW =====================
+  if (view === 'customers') {
     return (
       <MainLayout>
-        <div className="text-center py-8">Loading...</div>
+        <div className="max-w-7xl mx-auto">
+          <BackButton />
+          <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Invoices by Customer</h1>
+
+          {summaryLoading ? (
+            <div className="text-center py-8">Loading...</div>
+          ) : customerSummaries.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <p className="text-gray-500">No customers found.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {customerSummaries.map((c) => (
+                <div key={c.customer_id} className="bg-white rounded-lg shadow p-4 sm:p-6">
+                  <button
+                    onClick={() => openCustomer(c, 'all', 'all')}
+                    className="text-left mb-4 hover:underline"
+                  >
+                    <p className="text-lg font-bold text-gray-900">{c.customer_name}</p>
+                    <p className="text-sm text-gray-500">{c.customer_code}</p>
+                  </button>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
+                    <button
+                      onClick={() => openCustomer(c, 'all', 'all')}
+                      className="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 text-center transition-colors"
+                    >
+                      <p className="text-2xl font-bold text-gray-900">{c.total_count}</p>
+                      <p className="text-xs text-gray-500">All Invoices</p>
+                    </button>
+                    <button
+                      onClick={() => openCustomer(c, 'shipping', 'all')}
+                      className="bg-blue-50 hover:bg-blue-100 rounded-lg p-3 text-center transition-colors"
+                    >
+                      <p className="text-2xl font-bold text-blue-700">{c.shipping_count}</p>
+                      <p className="text-xs text-blue-600">Shipping</p>
+                    </button>
+                    <button
+                      onClick={() => openCustomer(c, 'prep', 'all')}
+                      className="bg-purple-50 hover:bg-purple-100 rounded-lg p-3 text-center transition-colors"
+                    >
+                      <p className="text-2xl font-bold text-purple-700">{c.prep_count}</p>
+                      <p className="text-xs text-purple-600">Prep</p>
+                    </button>
+                    <button
+                      onClick={() => openCustomer(c, 'all', 'paid')}
+                      className="bg-green-50 hover:bg-green-100 rounded-lg p-3 text-center transition-colors"
+                    >
+                      <p className="text-2xl font-bold text-green-700">{c.paid_count}</p>
+                      <p className="text-xs text-green-600">Paid</p>
+                    </button>
+                    <button
+                      onClick={() => openCustomer(c, 'all', 'unpaid')}
+                      className="bg-red-50 hover:bg-red-100 rounded-lg p-3 text-center transition-colors"
+                    >
+                      <p className="text-2xl font-bold text-red-700">{c.unpaid_count}</p>
+                      <p className="text-xs text-red-600">Unpaid</p>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4 pt-3 border-t text-sm">
+                    <div>
+                      <span className="text-gray-500">Shipping balance: </span>
+                      <span className="font-semibold text-red-700">{formatCurrency(c.shipping_unpaid_balance)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Prep balance: </span>
+                      <span className="font-semibold text-red-700">{formatCurrency(c.prep_unpaid_balance)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </MainLayout>
     );
   }
 
+  // ===================== DRILLED-DOWN INVOICE LIST VIEW =====================
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto">
-        <BackButton />
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 sm:mb-8">
-          
-          <h1 className="text-2xl sm:text-3xl font-bold">All Invoices</h1>
-          
+        <div className="mb-4">
+          <button
+            onClick={backToCustomers}
+            className="text-green-600 hover:text-green-800 text-sm font-medium"
+          >
+            ← Back to Customers
+          </button>
+        </div>
+
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold">{selectedCustomer.customer_name}</h1>
+          <p className="text-gray-500 text-sm">{selectedCustomer.customer_code}</p>
+        </div>
+
+        <div className="flex flex-wrap gap-4 mb-6">
           <div className="flex gap-2 overflow-x-auto pb-1">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
-                filter === 'all' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilter('shipping')}
-              className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
-                filter === 'shipping' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              Shipping
-            </button>
-            <button
-              onClick={() => setFilter('prep')}
-              className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
-                filter === 'prep' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              Prep
-            </button>
+            {['all', 'shipping', 'prep'].map((t) => (
+              <button
+                key={t}
+                onClick={() => changeTypeFilter(t)}
+                className={`px-4 py-2 rounded whitespace-nowrap text-sm ${
+                  typeFilter === t ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
+                }`}
+              >
+                {t === 'all' ? 'All Types' : t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {['all', 'paid', 'unpaid'].map((p) => (
+              <button
+                key={p}
+                onClick={() => changePaidFilter(p)}
+                className={`px-4 py-2 rounded whitespace-nowrap text-sm ${
+                  paidFilter === p ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
+                }`}
+              >
+                {p === 'all' ? 'All Payments' : p.charAt(0).toUpperCase() + p.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
 
-        {filteredInvoices.length === 0 ? (
+        {invoicesLoading ? (
+          <div className="text-center py-8">Loading...</div>
+        ) : invoices.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500">No invoices found.</p>
+            <p className="text-gray-500">No invoices found for this filter.</p>
           </div>
         ) : (
           <>
             {/* Mobile: stacked cards */}
             <div className="lg:hidden space-y-3">
-              {filteredInvoices.map((invoice) => {
-                const batch = getBatchForInvoice(invoice);
+              {invoices.map((invoice) => {
                 const invoiceProofs = proofs[invoice.id] || [];
-
                 return (
                   <div key={invoice.id} className="bg-white rounded-lg shadow p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <p className="font-mono text-sm font-medium">{invoice.invoice_number}</p>
                         <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                          invoice.invoice_type === 'shipping' 
-                            ? 'bg-blue-100 text-blue-800' 
+                          invoice.invoice_type === 'shipping'
+                            ? 'bg-blue-100 text-blue-800'
                             : 'bg-purple-100 text-purple-800'
                         }`}>
                           {invoice.invoice_type}
@@ -239,8 +321,6 @@ const OwnerInvoices = () => {
                       </div>
                       <p className="font-bold text-lg">{formatCurrency(invoice.total_amount)}</p>
                     </div>
-
-                    <p className="text-sm text-gray-700 mb-2">{getCustomerName(invoice.customer_id)}</p>
 
                     <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                       <div>
@@ -251,10 +331,10 @@ const OwnerInvoices = () => {
                         <p className="text-xs text-gray-500">Due Date</p>
                         <p>{formatDate(invoice.due_date)}</p>
                       </div>
-                      {batch && (
+                      {invoice.batch_id && (
                         <div className="col-span-2">
                           <p className="text-xs text-gray-500">Batch</p>
-                          <p>{batch.id.substring(0, 8)}... <span className="text-gray-500 text-xs">({formatDateTime(batch.upload_date)})</span></p>
+                          <p>{invoice.batch_id.substring(0, 8)}... <span className="text-gray-500 text-xs">({formatDateTime(invoice.batch_upload_date)})</span></p>
                         </div>
                       )}
                     </div>
@@ -277,9 +357,7 @@ const OwnerInvoices = () => {
                       <button
                         onClick={() => toggleVisibility(invoice.id, invoice.is_visible_to_customer)}
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          invoice.is_visible_to_customer 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
+                          invoice.is_visible_to_customer ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {invoice.is_visible_to_customer ? 'Visible' : 'Hidden'}
@@ -311,7 +389,6 @@ const OwnerInvoices = () => {
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Batch</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue Date</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
@@ -323,28 +400,25 @@ const OwnerInvoices = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredInvoices.map((invoice) => {
-                    const batch = getBatchForInvoice(invoice);
+                  {invoices.map((invoice) => {
                     const invoiceProofs = proofs[invoice.id] || [];
-                    
                     return (
                       <tr key={invoice.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 font-mono text-sm">{invoice.invoice_number}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            invoice.invoice_type === 'shipping' 
-                              ? 'bg-blue-100 text-blue-800' 
+                            invoice.invoice_type === 'shipping'
+                              ? 'bg-blue-100 text-blue-800'
                               : 'bg-purple-100 text-purple-800'
                           }`}>
                             {invoice.invoice_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3">{getCustomerName(invoice.customer_id)}</td>
                         <td className="px-4 py-3">
-                          {batch ? (
+                          {invoice.batch_id ? (
                             <div className="text-sm">
-                              <div>{batch.id.substring(0, 8)}...</div>
-                              <div className="text-gray-500 text-xs">{formatDateTime(batch.upload_date)}</div>
+                              <div>{invoice.batch_id.substring(0, 8)}...</div>
+                              <div className="text-gray-500 text-xs">{formatDateTime(invoice.batch_upload_date)}</div>
                             </div>
                           ) : 'N/A'}
                         </td>
@@ -370,8 +444,8 @@ const OwnerInvoices = () => {
                           <button
                             onClick={() => toggleVisibility(invoice.id, invoice.is_visible_to_customer)}
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              invoice.is_visible_to_customer 
-                                ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                              invoice.is_visible_to_customer
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
                                 : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                             }`}
                           >
@@ -388,7 +462,7 @@ const OwnerInvoices = () => {
                         </td>
                         <td className="px-4 py-3 space-x-2">
                           <button
-                            onClick={() => downloadFile(`/downloads/invoice/${invoice.id}`, `invoice_${invoice.invoice_number}.pdf` )}
+                            onClick={() => downloadFile(`/downloads/invoice/${invoice.id}`, `invoice_${invoice.invoice_number}.pdf`)}
                             className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
                           >
                             PDF
@@ -399,6 +473,26 @@ const OwnerInvoices = () => {
                   })}
                 </tbody>
               </table>
+            </div>
+
+            <div className="flex items-center justify-between mt-4 bg-white rounded-lg shadow px-4 py-3">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 rounded text-sm font-medium bg-gray-100 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {page} of {totalPages} · {totalCount} invoice{totalCount !== 1 ? 's' : ''}
+              </span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="px-3 py-1.5 rounded text-sm font-medium bg-gray-100 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
             </div>
           </>
         )}
@@ -440,9 +534,8 @@ const OwnerInvoices = () => {
                           {proof.verified ? 'Verified' : 'Pending'}
                         </span>
                       </div>
-                      
+
                       <div className="mt-3 flex flex-wrap gap-3">
-                        
                         <button
                           onClick={() => downloadFile(
                             `/payment-proofs/${proof.id}/download`,
@@ -469,7 +562,7 @@ const OwnerInvoices = () => {
                           </button>
                         )}
                       </div>
-                      
+
                       {proof.verified_at && (
                         <p className="text-xs text-gray-500 mt-2">
                           Verified on: {new Date(proof.verified_at).toLocaleString()}
