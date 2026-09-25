@@ -14,9 +14,9 @@ class InvoiceBase(BaseModel):
     status: Literal['unpaid', 'partially_paid', 'fully_paid'] = 'unpaid'
     is_visible_to_customer: bool = False
 
-    total_quantity: Optional[int] = None  # Sum of all quantities from batch rows
-    total_prep_value: Optional[Decimal] = None  # total_quantity * rate
-    discount_percentage: Optional[float] = None  # Calculated discount percentage
+    total_quantity: Optional[int] = None
+    total_prep_value: Optional[Decimal] = None
+    discount_percentage: Optional[float] = None
 
 
 class InvoiceCreate(InvoiceBase):
@@ -39,6 +39,27 @@ class InvoiceOut(InvoiceBase):
     pdf_url: Optional[str] = None
     created_by: UUID
     created_at: datetime
+
+    customer_name: Optional[str] = None
+    customer_code: Optional[str] = None
+    batch_id: Optional[UUID] = None
+    batch_upload_date: Optional[datetime] = None
     
+    class Config:
+        from_attributes = True
+
+
+class CustomerInvoiceSummaryOut(BaseModel):
+    customer_id: UUID
+    customer_name: str
+    customer_code: str
+    total_count: int
+    shipping_count: int
+    prep_count: int
+    paid_count: int
+    unpaid_count: int
+    shipping_unpaid_balance: Decimal
+    prep_unpaid_balance: Decimal
+
     class Config:
         from_attributes = True

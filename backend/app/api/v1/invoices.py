@@ -1,17 +1,19 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+﻿from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Response
 from sqlalchemy.orm import Session
+from sqlalchemy import func, case, and_
 from typing import List, Optional
 from uuid import UUID
 
 from app.core.dependencies import get_db, require_role
 from app.models.invoice import Invoice
 from app.models.user import User
-from app.schemas.invoice import InvoiceOut
+from app.schemas.invoice import InvoiceOut, CustomerInvoiceSummaryOut
 from app.services.pdf_service import PDFService
 from app.services.invoice_service import InvoiceService
 from app.services.email_service import EmailService
 from app.models.customer import Customer  
 from app.models.shipping_detail import ShippingDetail  
+from app.models.excel_batch import ExcelBatch
 from app.models.excel_batch_row import ExcelBatchRow  
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
@@ -39,8 +41,6 @@ def toggle_invoice_visibility(
     invoice.is_visible_to_customer = visible
     db.commit()
     
-    # Only notify on the Hidden -> Visible transition, so the customer
-    # doesn't get repeat emails if the owner toggles it back and forth.
     if visible and not was_visible:
         customer = db.query(Customer).filter(
             Customer.id == invoice.customer_id
@@ -77,7 +77,6 @@ def update_invoice_status(
 ):
     """Owner manually updates invoice status"""
     
-    # Validate status
     valid_statuses = ['unpaid', 'partially_paid', 'fully_paid']
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Status must be one of: {valid_statuses}")
@@ -96,26 +95,105 @@ def update_invoice_status(
     
     return invoice
 
+@router.get("/customer-summary", response_model=List[CustomerInvoiceSummaryOut])
+def get_customer_invoice_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("owner"))
+):
+    """Per-customer invoice counts/balances, computed entirely in SQL so
+    load time stays flat regardless of total invoice count. 'Paid' means
+    status is partially_paid or fully_paid. The two balance figures only
+    include status='unpaid' invoices, since partial payment amounts
+    aren't tracked separately in the schema."""
+    
+    rows = db.query(
+        Customer.id.label('customer_id'),
+        Customer.customer_name.label('customer_name'),
+        Customer.customer_code.label('customer_code'),
+        func.coalesce(func.count(Invoice.id), 0).label('total_count'),
+        func.coalesce(func.sum(case((Invoice.invoice_type == 'shipping', 1), else_=0)), 0).label('shipping_count'),
+        func.coalesce(func.sum(case((Invoice.invoice_type == 'prep', 1), else_=0)), 0).label('prep_count'),
+        func.coalesce(func.sum(case((Invoice.status != 'unpaid', 1), else_=0)), 0).label('paid_count'),
+        func.coalesce(func.sum(case((Invoice.status == 'unpaid', 1), else_=0)), 0).label('unpaid_count'),
+        func.coalesce(func.sum(case(
+            (and_(Invoice.invoice_type == 'shipping', Invoice.status == 'unpaid'), Invoice.total_amount),
+            else_=0
+        )), 0).label('shipping_unpaid_balance'),
+        func.coalesce(func.sum(case(
+            (and_(Invoice.invoice_type == 'prep', Invoice.status == 'unpaid'), Invoice.total_amount),
+            else_=0
+        )), 0).label('prep_unpaid_balance'),
+    ).select_from(Customer).outerjoin(
+        Invoice,
+        and_(Invoice.customer_id == Customer.id, Invoice.company_id == current_user.company_id)
+    ).filter(
+        Customer.company_id == current_user.company_id
+    ).group_by(
+        Customer.id, Customer.customer_name, Customer.customer_code
+    ).order_by(Customer.customer_name).all()
+    
+    return rows
+
 @router.get("/", response_model=List[InvoiceOut])
 def get_invoices(
+    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("owner")),
     customer_id: Optional[UUID] = None,
     status: Optional[str] = None,
+    invoice_type: Optional[str] = None,
+    paid: Optional[bool] = None,
     skip: int = 0,
-    limit: int = 100
+    limit: int = 50
 ):
-    """Get all invoices (owner only)"""
+    """Get invoices (owner only), paginated. Customer name/code and batch
+    info are joined in with a few targeted queries scoped to just this
+    page's invoices."""
     
     query = db.query(Invoice).filter(Invoice.company_id == current_user.company_id)
     
     if customer_id:
         query = query.filter(Invoice.customer_id == customer_id)
-    
     if status:
         query = query.filter(Invoice.status == status)
+    if invoice_type:
+        query = query.filter(Invoice.invoice_type == invoice_type)
+    if paid is True:
+        query = query.filter(Invoice.status != 'unpaid')
+    elif paid is False:
+        query = query.filter(Invoice.status == 'unpaid')
+    
+    total_count = query.count()
+    response.headers["X-Total-Count"] = str(total_count)
     
     invoices = query.order_by(Invoice.issue_date.desc()).offset(skip).limit(limit).all()
+    
+    if not invoices:
+        return invoices
+    
+    customer_ids = {inv.customer_id for inv in invoices}
+    shipping_ids = {inv.shipping_details_id for inv in invoices}
+    
+    customers = db.query(Customer).filter(Customer.id.in_(customer_ids)).all()
+    customer_map = {c.id: c for c in customers}
+    
+    shipping_details = db.query(ShippingDetail).filter(ShippingDetail.id.in_(shipping_ids)).all()
+    shipping_map = {s.id: s for s in shipping_details}
+    
+    batch_ids = {s.batch_id for s in shipping_details if s.batch_id}
+    batches = db.query(ExcelBatch).filter(ExcelBatch.id.in_(batch_ids)).all() if batch_ids else []
+    batch_map = {b.id: b for b in batches}
+    
+    for inv in invoices:
+        customer = customer_map.get(inv.customer_id)
+        inv.customer_name = customer.customer_name if customer else None
+        inv.customer_code = customer.customer_code if customer else None
+        
+        shipping_detail = shipping_map.get(inv.shipping_details_id)
+        batch = batch_map.get(shipping_detail.batch_id) if shipping_detail else None
+        inv.batch_id = batch.id if batch else None
+        inv.batch_upload_date = batch.upload_date if batch else None
+    
     return invoices
 
 @router.get("/{invoice_id}", response_model=InvoiceOut)
@@ -153,7 +231,6 @@ def regenerate_invoice_pdf(
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
     
-    # Get customer details
     customer = db.query(Customer).filter(
         Customer.id == invoice.customer_id
     ).first()
@@ -161,7 +238,6 @@ def regenerate_invoice_pdf(
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
-    # Get shipping details and batch rows
     shipping_detail = db.query(ShippingDetail).filter(
         ShippingDetail.id == invoice.shipping_details_id
     ).first()
@@ -180,7 +256,6 @@ def regenerate_invoice_pdf(
             'date': r.date.strftime('%Y-%m-%d')
         } for r in batch_rows]
     
-    # Prepare invoice data
     invoice_data = {
         'invoice_number': invoice.invoice_number,
         'invoice_type': invoice.invoice_type,
@@ -194,11 +269,9 @@ def regenerate_invoice_pdf(
         'rate': float(invoice.rate) if invoice.rate else None
     }
     
-    # Generate PDF
     pdf_service = PDFService()
     pdf_path = pdf_service.generate_invoice_pdf(invoice_data, rows if invoice.invoice_type == 'shipping' else None)
     
-    # Update invoice with PDF path
     invoice.pdf_url = pdf_path
     db.commit()
     
