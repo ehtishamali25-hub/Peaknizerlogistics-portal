@@ -18,8 +18,7 @@ from app.schemas.payment_proof import PaymentProofCreate, PaymentProofOut, Payme
 
 router = APIRouter(prefix="/payment-proofs", tags=["Payment Proofs"])
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "proofs")
+UPLOAD_DIR = "/opt/render/project/src/backend/uploads/proofs"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload", response_model=PaymentProofOut, status_code=status.HTTP_201_CREATED)
