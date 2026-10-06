@@ -1,6 +1,6 @@
-﻿from typing import Optional
+﻿from typing import Optional, List
 import random
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Form, File, UploadFile
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from app.models.registration import RegistrationRequest as RegistrationDBModel
@@ -14,12 +14,15 @@ from app.schemas.auth import LoginRequest, LoginResponse
 from app.schemas.user import UserCreate, UserOut
 from app.schemas.email_verification import SendCodeRequest, VerifyCodeRequest
 from app.services.email_service import EmailService
+from app.services.registration_document_service import RegistrationDocumentService
 from pydantic import BaseModel, EmailStr
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 class RegistrationRequestSchema(BaseModel):
+    # No longer used by /register-request (now multipart); kept in case
+    # anything else still imports it.
     customer_name: str
     email: EmailStr
     phone: str
@@ -250,39 +253,40 @@ def verify_code(
 
 @router.post("/register-request")
 def register_request(
-    request_data: RegistrationRequestSchema,
+    customer_name: str = Form(...),
+    email: EmailStr = Form(...),
+    phone: str = Form(...),
+    password: str = Form(...),
+    company_name: Optional[str] = Form(None),
+    company_address: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
+    files: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db)
 ):
-    """Submit registration request — requires the email to already be OTP-verified"""
+    """Submit a registration request (multipart/form-data). The email must
+    already be OTP-verified. Company documents are optional."""
     
-    existing_user = db.query(User).filter(User.email == request_data.email).first()
+    existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     existing_pending = db.query(RegistrationDBModel).filter(
-        RegistrationDBModel.email == request_data.email,
+        RegistrationDBModel.email == email,
         RegistrationDBModel.status == 'pending'
     ).first()
     if existing_pending:
         raise HTTPException(status_code=400, detail="Registration already submitted. Awaiting approval.")
     
     existing_approved = db.query(RegistrationDBModel).filter(
-        RegistrationDBModel.email == request_data.email,
+        RegistrationDBModel.email == email,
         RegistrationDBModel.status == 'approved'
     ).first()
     if existing_approved:
         raise HTTPException(status_code=400, detail="This email already has an approved registration")
     
-    existing_declined = db.query(RegistrationDBModel).filter(
-        RegistrationDBModel.email == request_data.email,
-        RegistrationDBModel.status == 'declined'
-    ).first()
-    if existing_declined:
-        db.delete(existing_declined)
-        db.commit()
-    
+    # Require that this email was already OTP-verified, within the 1-hour window
     verification = db.query(EmailVerification).filter(
-        EmailVerification.email == request_data.email,
+        EmailVerification.email == email,
         EmailVerification.verified == True
     ).first()
     
@@ -292,23 +296,43 @@ def register_request(
     if datetime.now() > verification.verified_at.replace(tzinfo=None) + timedelta(hours=1):
         raise HTTPException(status_code=400, detail="Verification expired. Please verify your email again.")
     
-    hashed_password = get_password_hash(request_data.password)
+    # Validate documents (count + types) before touching the database
+    files = RegistrationDocumentService.validate_files(files)
+    
+    # Replace any old declined record for this email (and its files)
+    existing_declined = db.query(RegistrationDBModel).filter(
+        RegistrationDBModel.email == email,
+        RegistrationDBModel.status == 'declined'
+    ).first()
+    if existing_declined:
+        RegistrationDocumentService.delete_files_for_registration(db, existing_declined.id)
+        db.delete(existing_declined)
+        db.commit()
+    
+    hashed_password = get_password_hash(password)
     
     registration = RegistrationDBModel(
-        customer_name=request_data.customer_name,
-        email=request_data.email,
-        phone=request_data.phone,
-        company_name=request_data.company_name,
-        company_address=request_data.company_address,
+        customer_name=customer_name,
+        email=email,
+        phone=phone,
+        company_name=company_name,
+        company_address=company_address,
         password_hash=hashed_password,
-        notes=request_data.notes,
+        notes=notes,
         status='pending',
         is_verified=True,
         verification_token=None
     )
     
     db.add(registration)
-    db.commit()
+    db.flush()  # get registration.id for the document rows
+    
+    try:
+        RegistrationDocumentService.save_files(db, registration.id, files)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     
     return {"message": "Registration submitted successfully. The owner will review your request."}
 

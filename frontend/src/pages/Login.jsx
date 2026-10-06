@@ -1,6 +1,26 @@
-﻿import { useState } from 'react';
+﻿import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+
+const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+const MAX_FILES = 10;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+const formatFileSize = (bytes) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+// FastAPI returns detail as a string for our errors and as an array for
+// validation (422) errors; always turn it into displayable text.
+const extractError = (data, fallback) => {
+  if (!data || !data.detail) return fallback;
+  if (typeof data.detail === 'string') return data.detail;
+  if (Array.isArray(data.detail)) return data.detail.map((d) => d.msg).join('; ');
+  return fallback;
+};
+
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -19,6 +39,11 @@ const Login = () => {
     notes: ''
   });
 
+  // Company documents (optional)
+  const [documents, setDocuments] = useState([]);
+  const [docError, setDocError] = useState('');
+  const fileInputRef = useRef(null);
+
   // Email OTP verification state
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
@@ -26,6 +51,7 @@ const Login = () => {
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [otpMessage, setOtpMessage] = useState({ type: '', text: '' });
+  const [submitting, setSubmitting] = useState(false);
 
   const { login } = useAuth();
 
@@ -48,8 +74,6 @@ const Login = () => {
 
   const handleRegEmailChange = (value) => {
     setRegForm({ ...regForm, email: value });
-    // If the email changes after a code was sent or verified, that
-    // verification no longer applies to the new address.
     if (otpSent || emailVerified) {
       resetOtpState();
     }
@@ -81,7 +105,7 @@ const Login = () => {
         setOtpCode('');
         setOtpMessage({ type: 'success', text: 'Code sent! Please check your email.' });
       } else {
-        setOtpMessage({ type: 'error', text: data.detail || 'Failed to send code.' });
+        setOtpMessage({ type: 'error', text: extractError(data, 'Failed to send code.') });
       }
     } catch (err) {
       setOtpMessage({ type: 'error', text: 'Network error. Please try again.' });
@@ -115,13 +139,51 @@ const Login = () => {
         setEmailVerified(true);
         setOtpMessage({ type: 'success', text: 'Email verified!' });
       } else {
-        setOtpMessage({ type: 'error', text: data.detail || 'Incorrect code.' });
+        setOtpMessage({ type: 'error', text: extractError(data, 'Incorrect code.') });
       }
     } catch (err) {
       setOtpMessage({ type: 'error', text: 'Network error. Please try again.' });
     } finally {
       setVerifyingCode(false);
     }
+  };
+
+  const handleFilesSelected = (e) => {
+    const selected = Array.from(e.target.files || []);
+    e.target.value = ''; // lets the same file be picked again later
+    if (selected.length === 0) return;
+
+    const problems = [];
+    const accepted = [];
+
+    for (const file of selected) {
+      const ext = '.' + file.name.split('.').pop().toLowerCase();
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        problems.push(`${file.name}: file type not allowed.`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        problems.push(`${file.name}: larger than 10 MB.`);
+        continue;
+      }
+      if (documents.some((d) => d.name === file.name && d.size === file.size)) {
+        continue; // already added
+      }
+      accepted.push(file);
+    }
+
+    const combined = [...documents, ...accepted];
+    if (combined.length > MAX_FILES) {
+      problems.push(`You can upload at most ${MAX_FILES} files.`);
+    }
+
+    setDocuments(combined.slice(0, MAX_FILES));
+    setDocError(problems.join(' '));
+  };
+
+  const removeDocument = (index) => {
+    setDocuments(documents.filter((_, i) => i !== index));
+    setDocError('');
   };
 
   const handleRegister = async (e) => {
@@ -144,23 +206,22 @@ const Login = () => {
       return;
     }
 
-    const requestData = {
-      customer_name: regForm.customer_name,
-      email: regForm.email,
-      phone: regForm.phone,
-      company_name: regForm.company_name || null,
-      company_address: regForm.company_address || null,
-      password: regForm.password,
-      notes: regForm.notes || null
-    };
+    const formData = new FormData();
+    formData.append('customer_name', regForm.customer_name);
+    formData.append('email', regForm.email);
+    formData.append('phone', regForm.phone);
+    formData.append('password', regForm.password);
+    if (regForm.company_name) formData.append('company_name', regForm.company_name);
+    if (regForm.company_address) formData.append('company_address', regForm.company_address);
+    if (regForm.notes) formData.append('notes', regForm.notes);
+    documents.forEach((file) => formData.append('files', file));
 
+    setSubmitting(true);
     try {
+      // No Content-Type header: the browser sets the multipart boundary itself
       const response = await fetch(`${API_URL}/auth/register-request`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
+        body: formData,
       });
 
       const data = await response.json();
@@ -177,14 +238,18 @@ const Login = () => {
           confirm_password: '',
           notes: ''
         });
+        setDocuments([]);
+        setDocError('');
         resetOtpState();
         setTimeout(() => setIsLogin(true), 3000);
       } else {
-        setError(data.detail || 'Registration failed');
+        setError(extractError(data, 'Registration failed'));
       }
     } catch (err) {
       console.error('Network error details:', err);
       setError(`Network error: ${err.message}. Please check if backend is running.`);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -359,6 +424,57 @@ const Login = () => {
 
             <div>
               <label className="block text-gray-700 text-sm font-bold mb-2">
+                Company Documents
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Optional. PDF, images, Word or Excel files. Up to {MAX_FILES} files, 10 MB each.
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept={ALLOWED_EXTENSIONS.join(',')}
+                onChange={handleFilesSelected}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-gray-300 hover:border-orange-500 text-gray-600 hover:text-orange-600 rounded-md py-3 text-sm font-medium transition-colors"
+              >
+                + Add documents
+              </button>
+
+              {docError && (
+                <p className="text-xs text-red-600 mt-2">{docError}</p>
+              )}
+
+              {documents.length > 0 && (
+                <ul className="mt-3 space-y-2">
+                  {documents.map((file, index) => (
+                    <li
+                      key={`${file.name}-${file.size}-${index}`}
+                      className="flex items-center justify-between gap-2 border border-gray-200 rounded-md px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm text-gray-800 break-all">{file.name}</p>
+                        <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeDocument(index)}
+                        className="shrink-0 text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">
                 Password *
               </label>
               <input
@@ -404,10 +520,10 @@ const Login = () => {
 
             <button
               type="submit"
-              disabled={!emailVerified}
+              disabled={!emailVerified || submitting}
               className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Account
+              {submitting ? 'Submitting...' : 'Create Account'}
             </button>
           </form>
         )}

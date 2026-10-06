@@ -1,9 +1,26 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../api/axios';
 import MainLayout from '../layouts/MainLayout';
+import { downloadFile } from '../utils/download';
+
+const DECLINE_REASONS = [
+  'Documents are not valid',
+  'Documents were not uploaded',
+  'Documents are unclear or unreadable',
+  'Business information could not be verified',
+  'Incomplete or incorrect information'
+];
+
+const formatFileSize = (bytes) => {
+  if (bytes === null || bytes === undefined) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 const OwnerRegistrations = () => {
   const [registrations, setRegistrations] = useState([]);
+  const [registrationDocs, setRegistrationDocs] = useState({});
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
@@ -15,7 +32,8 @@ const OwnerRegistrations = () => {
     prep_rate: 5.5,
     warehouse_ids: []
   });
-  const [declineReason, setDeclineReason] = useState('');
+  const [declineReasons, setDeclineReasons] = useState([]);
+  const [declineNote, setDeclineNote] = useState('');
 
   useEffect(() => {
     fetchRegistrations();
@@ -26,10 +44,29 @@ const OwnerRegistrations = () => {
     try {
       const response = await axiosInstance.get('/registrations/');
       setRegistrations(response.data);
+      await fetchDocuments(response.data);
     } catch (error) {
       console.error('Failed to fetch registrations:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // One request for every registration's documents (no per-item calls)
+  const fetchDocuments = async (regs) => {
+    if (regs.length === 0) {
+      setRegistrationDocs({});
+      return;
+    }
+    try {
+      const response = await axiosInstance.post(
+        '/registration-documents/batch',
+        regs.map((r) => r.id)
+      );
+      setRegistrationDocs(response.data);
+    } catch (error) {
+      console.error('Failed to fetch registration documents:', error);
+      setRegistrationDocs({});
     }
   };
 
@@ -39,6 +76,43 @@ const OwnerRegistrations = () => {
       setWarehouses(response.data);
     } catch (error) {
       console.error('Failed to fetch warehouses:', error);
+    }
+  };
+
+  const downloadDocument = async (doc) => {
+    await downloadFile(
+      `/registration-documents/${doc.id}/download`,
+      doc.original_filename
+    );
+  };
+
+  // PDFs and images open in a new tab; other file types are downloaded
+  const viewDocument = async (doc) => {
+    const viewable = /\.(pdf|jpe?g|png|gif)$/i.test(doc.original_filename);
+    if (!viewable) {
+      await downloadDocument(doc);
+      return;
+    }
+
+    // Open the tab immediately (inside the click) so popup blockers allow it
+    const newTab = window.open('', '_blank');
+    if (!newTab) {
+      await downloadDocument(doc);
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.get(
+        `/registration-documents/${doc.id}/download`,
+        { responseType: 'blob' }
+      );
+      const blobUrl = window.URL.createObjectURL(response.data);
+      newTab.location.href = blobUrl;
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+    } catch (error) {
+      console.error('Failed to open document:', error);
+      newTab.close();
+      alert('Could not open this document. Please try again.');
     }
   };
 
@@ -54,7 +128,8 @@ const OwnerRegistrations = () => {
 
   const handleDeclineClick = (registration) => {
     setSelectedReg(registration);
-    setDeclineReason('');
+    setDeclineReasons([]);
+    setDeclineNote('');
     setShowDeclineModal(true);
   };
 
@@ -74,16 +149,28 @@ const OwnerRegistrations = () => {
     }
   };
 
+  const toggleDeclineReason = (reason) => {
+    setDeclineReasons((prev) =>
+      prev.includes(reason) ? prev.filter((r) => r !== reason) : [...prev, reason]
+    );
+  };
+
   const handleDecline = async () => {
-    if (!declineReason) {
-      alert('Please provide a reason');
+    const note = declineNote.trim();
+
+    if (declineReasons.length === 0 && !note) {
+      alert('Please select at least one reason or add a note');
       return;
     }
 
+    // Selected reasons first, then the note, as one message
+    let reason = declineReasons.join('; ');
+    if (note) {
+      reason = reason ? `${reason}. Note: ${note}` : note;
+    }
+
     try {
-      await axiosInstance.post(`/registrations/${selectedReg.id}/decline`, {
-        reason: declineReason
-      });
+      await axiosInstance.post(`/registrations/${selectedReg.id}/decline`, { reason });
       setShowDeclineModal(false);
       fetchRegistrations();
     } catch (error) {
@@ -133,38 +220,17 @@ const OwnerRegistrations = () => {
 
         {/* Filter Buttons */}
         <div className="mb-6 flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-          <button
-            onClick={() => setFilter('pending')}
-            className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
-              filter === 'pending' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            Pending
-          </button>
-          <button
-            onClick={() => setFilter('approved')}
-            className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
-              filter === 'approved' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            Approved
-          </button>
-          <button
-            onClick={() => setFilter('declined')}
-            className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
-              filter === 'declined' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            Declined
-          </button>
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
-              filter === 'all' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            All
-          </button>
+          {['pending', 'approved', 'declined', 'all'].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded whitespace-nowrap text-sm sm:text-base ${
+                filter === f ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
         </div>
 
         {loading ? (
@@ -175,77 +241,119 @@ const OwnerRegistrations = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredRegistrations.map((reg) => (
-              <div key={reg.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
-                <div className="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                    <div>
-                      <h2 className="text-lg font-semibold">{reg.customer_name}</h2>
-                      <p className="text-sm text-gray-600">{reg.email}</p>
+            {filteredRegistrations.map((reg) => {
+              const docs = registrationDocs[reg.id] || [];
+
+              return (
+                <div key={reg.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                  <div className="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                      <div>
+                        <h2 className="text-lg font-semibold">{reg.customer_name}</h2>
+                        <p className="text-sm text-gray-600">{reg.email}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(reg.status)}`}>
+                          {reg.status}
+                        </span>
+                        
+                        {reg.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleApproveClick(reg)}
+                              className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleDeclineClick(reg)}
+                              className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700"
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(reg.status)}`}>
-                        {reg.status}
-                      </span>
-                      
-                      {reg.status === 'pending' && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleApproveClick(reg)}
-                            className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleDeclineClick(reg)}
-                            className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700"
-                          >
-                            Decline
-                          </button>
+                  </div>
+
+                  <div className="px-4 sm:px-6 py-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Phone</p>
+                        <p className="font-medium">{reg.phone}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Company</p>
+                        <p className="font-medium">{reg.company_name || '-'}</p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <p className="text-sm text-gray-500">Company Address</p>
+                        <p className="font-medium break-words">{reg.company_address || '-'}</p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <p className="text-sm text-gray-500">Notes</p>
+                        <p className="font-medium break-words">{reg.notes || '-'}</p>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <p className="text-sm text-gray-500 mb-1">
+                          Documents ({docs.length})
+                        </p>
+                        {docs.length === 0 ? (
+                          <p className="font-medium text-gray-400">No documents uploaded</p>
+                        ) : (
+                          <ul className="space-y-2">
+                            {docs.map((doc) => (
+                              <li
+                                key={doc.id}
+                                className="flex flex-wrap items-center justify-between gap-2 border border-gray-200 rounded-md px-3 py-2"
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium break-all">{doc.original_filename}</p>
+                                  <p className="text-xs text-gray-500">{formatFileSize(doc.file_size)}</p>
+                                </div>
+                                <div className="flex gap-4 shrink-0">
+                                  <button
+                                    onClick={() => viewDocument(doc)}
+                                    className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                                  >
+                                    View
+                                  </button>
+                                  <button
+                                    onClick={() => downloadDocument(doc)}
+                                    className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                                  >
+                                    Download
+                                  </button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-500">Requested On</p>
+                        <p className="font-medium">{formatDate(reg.created_at)}</p>
+                      </div>
+                      {reg.status === 'declined' && reg.rejection_reason && (
+                        <div className="sm:col-span-2">
+                          <p className="text-sm text-gray-500">Rejection Reason</p>
+                          <p className="font-medium text-red-600 break-words">{reg.rejection_reason}</p>
+                        </div>
+                      )}
+                      {reg.status === 'approved' && reg.reviewed_at && (
+                        <div className="sm:col-span-2">
+                          <p className="text-sm text-gray-500">Approved On</p>
+                          <p className="font-medium text-green-600">{formatDate(reg.reviewed_at)}</p>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
-
-                <div className="px-4 sm:px-6 py-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Phone</p>
-                      <p className="font-medium">{reg.phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Company</p>
-                      <p className="font-medium">{reg.company_name || '-'}</p>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <p className="text-sm text-gray-500">Company Address</p>
-                      <p className="font-medium break-words">{reg.company_address || '-'}</p>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <p className="text-sm text-gray-500">Notes</p>
-                      <p className="font-medium break-words">{reg.notes || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Requested On</p>
-                      <p className="font-medium">{formatDate(reg.created_at)}</p>
-                    </div>
-                    {reg.status === 'declined' && reg.rejection_reason && (
-                      <div className="sm:col-span-2">
-                        <p className="text-sm text-gray-500">Rejection Reason</p>
-                        <p className="font-medium text-red-600 break-words">{reg.rejection_reason}</p>
-                      </div>
-                    )}
-                    {reg.status === 'approved' && reg.reviewed_at && (
-                      <div className="sm:col-span-2">
-                        <p className="text-sm text-gray-500">Approved On</p>
-                        <p className="font-medium text-green-600">{formatDate(reg.reviewed_at)}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -334,20 +442,44 @@ const OwnerRegistrations = () => {
               <div className="mb-4">
                 <p className="text-sm text-gray-600">Customer: {selectedReg.customer_name}</p>
                 <p className="text-sm text-gray-600">Email: {selectedReg.email}</p>
+                <p className="text-sm text-gray-600">
+                  Documents uploaded: {(registrationDocs[selectedReg.id] || []).length}
+                </p>
               </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for Declining *
+                  Reason for declining (select all that apply)
+                </label>
+                <div className="space-y-2">
+                  {DECLINE_REASONS.map((reason) => (
+                    <label key={reason} className="flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={declineReasons.includes(reason)}
+                        onChange={() => toggleDeclineReason(reason)}
+                        className="mt-1 rounded"
+                      />
+                      <span className="text-sm text-gray-700">{reason}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Additional note
                 </label>
                 <textarea
-                  value={declineReason}
-                  onChange={(e) => setDeclineReason(e.target.value)}
+                  value={declineNote}
+                  onChange={(e) => setDeclineNote(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   rows="3"
-                  placeholder="Please provide a reason..."
-                  required
+                  placeholder="Add any details for the customer..."
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  The selected reasons and your note are sent to the customer in the decline email.
+                </p>
               </div>
 
               <div className="flex justify-end gap-2">
