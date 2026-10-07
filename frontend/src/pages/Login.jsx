@@ -266,7 +266,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 p-4">
-      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-sm sm:max-w-md border-t-4 border-orange-500 max-h-[95vh] overflow-y-auto">
+      <div className={`bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full border-t-4 border-orange-500 max-h-[95vh] overflow-y-auto ${isLogin ? 'max-w-sm sm:max-w-md' : 'max-w-sm sm:max-w-2xl'}`}>
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl font-bold text-orange-600">PEAKNIZERLOGISTICS</h1>
           <p className="text-gray-600 mt-2 text-sm sm:text-base">
@@ -322,7 +322,7 @@ const Login = () => {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleRegister} className="space-y-4 max-h-[500px] overflow-y-auto px-1">
+          <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 Customer Name *
@@ -528,24 +528,24 @@ const Login = () => {
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 Terms of Service & Policies
               </label>
-              <div className="h-40 overflow-y-auto border border-gray-300 rounded-md p-3 bg-gray-50 space-y-3">
-                {POLICY_SECTIONS.map((s) => (
-                  <div key={s.num} className={s.highlight ? 'text-red-700' : 'text-gray-700'}>
-                    <p className="text-xs font-bold">{s.num}. {s.title}</p>
-                    {s.body && <p className="text-xs leading-relaxed mt-1">{s.body}</p>}
-                    {s.list && (
-                      <ul className="list-disc list-inside text-xs leading-relaxed mt-1 space-y-1">
-                        {s.list.map((item) => <li key={item}>{item}</li>)}
-                      </ul>
-                    )}
-                    {s.contact && (
-                      <ul className="text-xs leading-relaxed mt-1 space-y-1">
-                        {s.contact.map((c) => <li key={c.value}>{c.value}</li>)}
-                      </ul>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <div className="h-64 sm:h-80 overflow-y-auto border border-gray-300 rounded-md p-4 bg-gray-50 space-y-4">
+                  {POLICY_SECTIONS.map((s) => (
+                    <div key={s.num} className={s.highlight ? 'text-red-700' : 'text-gray-700'}>
+                      <p className="text-sm font-bold">{s.num}. {s.title}</p>
+                      {s.body && <p className="text-sm leading-relaxed mt-1">{s.body}</p>}
+                      {s.list && (
+                        <ul className="list-disc list-inside text-sm leading-relaxed mt-1 space-y-1">
+                          {s.list.map((item) => <li key={item}>{item}</li>)}
+                        </ul>
+                      )}
+                      {s.contact && (
+                        <ul className="text-sm leading-relaxed mt-1 space-y-1">
+                          {s.contact.map((c) => <li key={c.value}>{c.value}</li>)}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
 
               <label className="flex items-start gap-2 mt-3 cursor-pointer">
                 <input
