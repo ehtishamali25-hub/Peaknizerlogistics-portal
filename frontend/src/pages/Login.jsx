@@ -1,5 +1,6 @@
 ﻿import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { POLICY_SECTIONS } from '../data/policyContent';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
@@ -43,6 +44,9 @@ const Login = () => {
   const [documents, setDocuments] = useState([]);
   const [docError, setDocError] = useState('');
   const fileInputRef = useRef(null);
+
+  // Terms of Service acceptance
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Email OTP verification state
   const [otpSent, setOtpSent] = useState(false);
@@ -196,6 +200,11 @@ const Login = () => {
       return;
     }
 
+    if (!acceptedTerms) {
+      setError('Please read and accept the Terms of Service & Policies before submitting.');
+      return;
+    }
+
     if (regForm.password !== regForm.confirm_password) {
       setError('Passwords do not match');
       return;
@@ -211,6 +220,7 @@ const Login = () => {
     formData.append('email', regForm.email);
     formData.append('phone', regForm.phone);
     formData.append('password', regForm.password);
+    formData.append('accepted_terms', 'true');
     if (regForm.company_name) formData.append('company_name', regForm.company_name);
     if (regForm.company_address) formData.append('company_address', regForm.company_address);
     if (regForm.notes) formData.append('notes', regForm.notes);
@@ -240,6 +250,7 @@ const Login = () => {
         });
         setDocuments([]);
         setDocError('');
+        setAcceptedTerms(false);
         resetOtpState();
         setTimeout(() => setIsLogin(true), 3000);
       } else {
@@ -512,15 +523,56 @@ const Login = () => {
               />
             </div>
 
-            {!emailVerified && (
+            {/* Terms of Service */}
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Terms of Service & Policies
+              </label>
+              <div className="h-40 overflow-y-auto border border-gray-300 rounded-md p-3 bg-gray-50 space-y-3">
+                {POLICY_SECTIONS.map((s) => (
+                  <div key={s.num} className={s.highlight ? 'text-red-700' : 'text-gray-700'}>
+                    <p className="text-xs font-bold">{s.num}. {s.title}</p>
+                    {s.body && <p className="text-xs leading-relaxed mt-1">{s.body}</p>}
+                    {s.list && (
+                      <ul className="list-disc list-inside text-xs leading-relaxed mt-1 space-y-1">
+                        {s.list.map((item) => <li key={item}>{item}</li>)}
+                      </ul>
+                    )}
+                    {s.contact && (
+                      <ul className="text-xs leading-relaxed mt-1 space-y-1">
+                        {s.contact.map((c) => <li key={c.value}>{c.value}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <label className="flex items-start gap-2 mt-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm text-gray-700">
+                  I have read and agree to the Terms of Service & Policies *
+                </span>
+              </label>
+            </div>
+
+            {(!emailVerified || !acceptedTerms) && (
               <p className="text-xs text-gray-500 text-center">
-                Please verify your email above before submitting.
+                {!emailVerified && !acceptedTerms
+                  ? 'Please verify your email and accept the terms before submitting.'
+                  : !emailVerified
+                    ? 'Please verify your email above before submitting.'
+                    : 'Please accept the Terms of Service & Policies before submitting.'}
               </p>
             )}
 
             <button
               type="submit"
-              disabled={!emailVerified || submitting}
+              disabled={!emailVerified || !acceptedTerms || submitting}
               className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Submitting...' : 'Create Account'}

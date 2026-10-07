@@ -1,9 +1,19 @@
 ﻿import { useState, useEffect } from 'react';
 import axiosInstance from '../api/axios';
 import MainLayout from '../layouts/MainLayout';
+import { downloadFile } from '../utils/download';
+
+const formatFileSize = (bytes) => {
+  if (bytes === null || bytes === undefined) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 const CustomersList = () => {
   const [customers, setCustomers] = useState([]);
+  const [customerDocs, setCustomerDocs] = useState({});
+  const [docsCustomer, setDocsCustomer] = useState(null);
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -33,11 +43,31 @@ const CustomersList = () => {
     try {
       const response = await axiosInstance.get('/customers/');
       setCustomers(response.data);
+      // Not awaited: the table shows immediately, documents fill in after
+      fetchDocuments(response.data);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
       showMessage('error', 'Failed to load customers');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // One request for every customer's registration documents
+  const fetchDocuments = async (customerList) => {
+    if (customerList.length === 0) {
+      setCustomerDocs({});
+      return;
+    }
+    try {
+      const response = await axiosInstance.post(
+        '/registration-documents/by-customers',
+        customerList.map((c) => c.id)
+      );
+      setCustomerDocs(response.data);
+    } catch (error) {
+      console.error('Failed to fetch customer documents:', error);
+      setCustomerDocs({});
     }
   };
 
@@ -47,6 +77,43 @@ const CustomersList = () => {
       setWarehouses(response.data);
     } catch (error) {
       console.error('Failed to fetch warehouses:', error);
+    }
+  };
+
+  const downloadDocument = async (doc) => {
+    await downloadFile(
+      `/registration-documents/${doc.id}/download`,
+      doc.original_filename
+    );
+  };
+
+  // PDFs and images open in a new tab; other file types are downloaded
+  const viewDocument = async (doc) => {
+    const viewable = /\.(pdf|jpe?g|png|gif)$/i.test(doc.original_filename);
+    if (!viewable) {
+      await downloadDocument(doc);
+      return;
+    }
+
+    // Open the tab immediately (inside the click) so popup blockers allow it
+    const newTab = window.open('', '_blank');
+    if (!newTab) {
+      await downloadDocument(doc);
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.get(
+        `/registration-documents/${doc.id}/download`,
+        { responseType: 'blob' }
+      );
+      const blobUrl = window.URL.createObjectURL(response.data);
+      newTab.location.href = blobUrl;
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+    } catch (error) {
+      console.error('Failed to open document:', error);
+      newTab.close();
+      alert('Could not open this document. Please try again.');
     }
   };
 
@@ -137,6 +204,23 @@ const CustomersList = () => {
       .join(', ');
   };
 
+  const renderDocsButton = (customer) => {
+    const docs = customerDocs[customer.id] || [];
+    if (docs.length === 0) {
+      return <span className="text-gray-400">None</span>;
+    }
+    return (
+      <button
+        onClick={() => setDocsCustomer(customer)}
+        className="text-blue-600 hover:text-blue-900 font-medium"
+      >
+        {docs.length} file{docs.length !== 1 ? 's' : ''}
+      </button>
+    );
+  };
+
+  const modalDocs = docsCustomer ? (customerDocs[docsCustomer.id] || []) : [];
+
   return (
     <MainLayout>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
@@ -188,6 +272,7 @@ const CustomersList = () => {
                   <p className="text-gray-600 break-words">{customer.email}</p>
                   <p className="text-gray-600">Prep Rate: <span className="font-medium">${customer.prep_rate}</span></p>
                   <p className="text-gray-600">Warehouses: <span className="font-medium">{getWarehouseNames(customer.warehouse_ids)}</span></p>
+                  <p className="text-gray-600">Documents: {renderDocsButton(customer)}</p>
                 </div>
                 <div className="flex gap-4 pt-2 border-t">
                   <button
@@ -218,6 +303,7 @@ const CustomersList = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prep Rate</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned Warehouses</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Documents</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Has Login</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
@@ -230,6 +316,7 @@ const CustomersList = () => {
                       <td className="px-6 py-4">{customer.email}</td>
                       <td className="px-6 py-4">${customer.prep_rate}</td>
                       <td className="px-6 py-4">{getWarehouseNames(customer.warehouse_ids)}</td>
+                      <td className="px-6 py-4">{renderDocsButton(customer)}</td>
                       <td className="px-6 py-4">
                         <span className="text-green-600">✓</span>
                       </td>
@@ -256,7 +343,60 @@ const CustomersList = () => {
         </>
       )}
 
-      {/* Modal */}
+      {/* Documents Modal */}
+      {docsCustomer && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start sm:items-center justify-center p-4 z-50">
+          <div className="w-full max-w-sm sm:max-w-lg p-5 border shadow-lg rounded-md bg-white my-8 sm:my-0 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold pr-4 break-words">
+                Documents - {docsCustomer.customer_name}
+              </h3>
+              <button
+                onClick={() => setDocsCustomer(null)}
+                className="text-gray-600 hover:text-gray-900 shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+
+            {modalDocs.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No documents uploaded.</p>
+            ) : (
+              <ul className="space-y-2">
+                {modalDocs.map((doc) => (
+                  <li
+                    key={doc.id}
+                    className="flex flex-wrap items-center justify-between gap-2 border border-gray-200 rounded-md px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium break-all">{doc.original_filename}</p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(doc.file_size)} · Uploaded {new Date(doc.uploaded_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-4 shrink-0">
+                      <button
+                        onClick={() => viewDocument(doc)}
+                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => downloadDocument(doc)}
+                        className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                      >
+                        Download
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-start sm:items-center justify-center p-4 z-50">
           <div className="w-full max-w-sm sm:max-w-md p-5 border shadow-lg rounded-md bg-white my-8 sm:my-0 max-h-[90vh] overflow-y-auto">

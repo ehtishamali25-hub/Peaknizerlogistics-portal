@@ -260,11 +260,15 @@ def register_request(
     company_name: Optional[str] = Form(None),
     company_address: Optional[str] = Form(None),
     notes: Optional[str] = Form(None),
+    accepted_terms: bool = Form(False),
     files: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db)
 ):
     """Submit a registration request (multipart/form-data). The email must
     already be OTP-verified. Company documents are optional."""
+    
+    if not accepted_terms:
+        raise HTTPException(status_code=400, detail="You must accept the Terms of Service & Policies to register.")
     
     existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
