@@ -174,7 +174,8 @@ def delete_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("owner"))
 ):
-    """Delete customer - owner only"""
+    """Delete customer - owner only. Also removes the customer's login,
+    registration records and documents so the same email can register again."""
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
         Customer.company_id == current_user.company_id
@@ -183,41 +184,49 @@ def delete_customer(
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
-    # Check for related records and delete them first
+    from sqlalchemy import func, or_
     from app.models.excel_batch import ExcelBatch
     from app.models.excel_batch_row import ExcelBatchRow
     from app.models.invoice import Invoice
     from app.models.product import Product
-    from app.models.user import User
     from app.models.registration import RegistrationRequest
+    from app.models.email_verification import EmailVerification
+    from app.services.registration_document_service import RegistrationDocumentService
     
-    # Get all batches for this customer
+    email_lower = customer.email.lower()
+    
+    # Batches and their rows
     batches = db.query(ExcelBatch).filter(ExcelBatch.customer_id == customer_id).all()
-    
     for batch in batches:
-        # Delete batch rows
         db.query(ExcelBatchRow).filter(ExcelBatchRow.batch_id == batch.id).delete()
-    
-    # Delete batches
     db.query(ExcelBatch).filter(ExcelBatch.customer_id == customer_id).delete()
     
-    # Delete products
+    # Products
     db.query(Product).filter(Product.customer_id == customer_id).delete()
     
-    # Delete invoices (shipping_details will cascade)
+    # Invoices (shipping_details will cascade)
     db.query(Invoice).filter(Invoice.customer_id == customer_id).delete()
     
-    # ⬇️⬇️⬇️ ADD THESE TWO LINES ⬇️⬇️⬇️
+    # Login account (matched by customer id OR email, any capitalisation)
+    db.query(User).filter(
+        or_(User.customer_id == customer_id, func.lower(User.email) == email_lower)
+    ).delete(synchronize_session=False)
     
-    # Delete user account associated with this customer
-    db.query(User).filter(User.email == customer.email).delete()
+    # Registration requests for this email, including uploaded documents
+    registrations = db.query(RegistrationRequest).filter(
+        func.lower(RegistrationRequest.email) == email_lower
+    ).all()
+    for reg in registrations:
+        RegistrationDocumentService.delete_files_for_registration(db, reg.id)
+        db.delete(reg)
     
-    # Delete any registration requests for this email
-    db.query(RegistrationRequest).filter(RegistrationRequest.email == customer.email).delete()
+    # Old email verification codes
+    db.query(EmailVerification).filter(
+        func.lower(EmailVerification.email) == email_lower
+    ).delete(synchronize_session=False)
     
-    # Finally delete the customer
+    # Finally the customer
     db.delete(customer)
     db.commit()
     
     return None
-

@@ -2,6 +2,8 @@
 import random
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Form, File, UploadFile
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 from app.models.registration import RegistrationRequest as RegistrationDBModel
 from app.models.email_verification import EmailVerification
@@ -10,6 +12,7 @@ from app.core.security import verify_password, create_access_token, oauth2_schem
 from app.core.dependencies import get_db, get_current_user, require_role
 from app.core.config import settings
 from app.models.user import User
+from app.models.customer import Customer
 from app.schemas.auth import LoginRequest, LoginResponse
 from app.schemas.user import UserCreate, UserOut
 from app.schemas.email_verification import SendCodeRequest, VerifyCodeRequest
@@ -19,6 +22,59 @@ from pydantic import BaseModel, EmailStr
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+def _find_blocking_user(db: Session, email: str):
+    """A login that really blocks this email. A customer login whose customer
+    record was deleted is a leftover and does not block."""
+    users = db.query(User).filter(func.lower(User.email) == email.lower()).all()
+    for user in users:
+        if user.role != 'customer':
+            return user
+        if user.customer_id and db.query(Customer.id).filter(Customer.id == user.customer_id).first():
+            return user
+    return None
+
+
+def _registration_block_message(db: Session, email: str):
+    """Reason this email can't register, or None. An approved registration only
+    blocks while its customer still exists."""
+    pending = db.query(RegistrationDBModel).filter(
+        func.lower(RegistrationDBModel.email) == email.lower(),
+        RegistrationDBModel.status == 'pending'
+    ).first()
+    if pending:
+        return "Registration already submitted. Awaiting approval."
+
+    approved = db.query(RegistrationDBModel).filter(
+        func.lower(RegistrationDBModel.email) == email.lower(),
+        RegistrationDBModel.status == 'approved'
+    ).first()
+    has_customer = db.query(Customer.id).filter(
+        func.lower(Customer.email) == email.lower()
+    ).first()
+    if approved and has_customer:
+        return "This email already has an approved registration"
+    return None
+
+
+def _purge_stale_records(db: Session, email: str):
+    """Remove leftovers of a deleted customer (login + old approved registration
+    with its documents). Only called after the checks above found no live account."""
+    for user in db.query(User).filter(func.lower(User.email) == email.lower()).all():
+        try:
+            with db.begin_nested():
+                db.delete(user)
+        except IntegrityError:
+            # Still referenced by other records: free the email instead
+            user.email = f"deleted_{user.id.hex[:8]}_{user.email}"
+            user.is_active = False
+
+    stale = db.query(RegistrationDBModel).filter(
+        func.lower(RegistrationDBModel.email) == email.lower(),
+        RegistrationDBModel.status == 'approved'
+    ).all()
+    for reg in stale:
+        RegistrationDocumentService.delete_files_for_registration(db, reg.id)
+        db.delete(reg)
 
 class RegistrationRequestSchema(BaseModel):
     # No longer used by /register-request (now multipart); kept in case
@@ -134,16 +190,12 @@ async def send_verification_code(
 ):
     """Send a 6-digit OTP to verify an email address before registration"""
     
-    existing_user = db.query(User).filter(User.email == request_data.email).first()
-    if existing_user:
+    if _find_blocking_user(db, request_data.email):
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    existing_registration = db.query(RegistrationDBModel).filter(
-        RegistrationDBModel.email == request_data.email,
-        RegistrationDBModel.status.in_(['approved', 'pending'])
-    ).first()
-    if existing_registration:
-        raise HTTPException(status_code=400, detail="This email already has a registration on file")
+    block_message = _registration_block_message(db, request_data.email)
+    if block_message:
+        raise HTTPException(status_code=400, detail=block_message)
     
     otp_code = f"{random.randint(0, 999999):06d}"
     expires_at = datetime.now() + timedelta(minutes=10)
@@ -270,23 +322,12 @@ def register_request(
     if not accepted_terms:
         raise HTTPException(status_code=400, detail="You must accept the Terms of Service & Policies to register.")
     
-    existing_user = db.query(User).filter(User.email == email).first()
-    if existing_user:
+    if _find_blocking_user(db, email):
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    existing_pending = db.query(RegistrationDBModel).filter(
-        RegistrationDBModel.email == email,
-        RegistrationDBModel.status == 'pending'
-    ).first()
-    if existing_pending:
-        raise HTTPException(status_code=400, detail="Registration already submitted. Awaiting approval.")
-    
-    existing_approved = db.query(RegistrationDBModel).filter(
-        RegistrationDBModel.email == email,
-        RegistrationDBModel.status == 'approved'
-    ).first()
-    if existing_approved:
-        raise HTTPException(status_code=400, detail="This email already has an approved registration")
+    block_message = _registration_block_message(db, email)
+    if block_message:
+        raise HTTPException(status_code=400, detail=block_message)
     
     # Require that this email was already OTP-verified, within the 1-hour window
     verification = db.query(EmailVerification).filter(
@@ -302,6 +343,9 @@ def register_request(
     
     # Validate documents (count + types) before touching the database
     files = RegistrationDocumentService.validate_files(files)
+    
+    # Clear leftovers from a deleted customer so this email can register again
+    _purge_stale_records(db, email)
     
     # Replace any old declined record for this email (and its files)
     existing_declined = db.query(RegistrationDBModel).filter(
@@ -339,7 +383,6 @@ def register_request(
         raise
     
     return {"message": "Registration submitted successfully. The owner will review your request."}
-
 
 @router.get("/verify-email")
 def verify_email(
