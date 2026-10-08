@@ -1,10 +1,13 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
-from typing import List
+from sqlalchemy import func, case
+from typing import List, Optional
 from uuid import UUID
+from pydantic import BaseModel
 
 from app.core.dependencies import get_db, require_role, get_current_user
 from app.models.shipping_detail import ShippingDetail
+from app.models.customer import Customer
 from app.models.user import User
 from app.schemas.shipping_detail import ShippingDetailOut
 from app.services.pdf_service import PDFService
@@ -12,20 +15,74 @@ from app.models.excel_batch_row import ExcelBatchRow
 
 router = APIRouter(prefix="/shipping-details", tags=["Shipping Details"])
 
+
+class CustomerShippingSummaryOut(BaseModel):
+    customer_id: UUID
+    customer_name: str
+    customer_code: str
+    total_count: int
+    visible_count: int
+    hidden_count: int
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/customer-summary", response_model=List[CustomerShippingSummaryOut])
+def get_customer_shipping_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("owner"))
+):
+    """Number of shipping details per customer (total / visible / hidden),
+    computed in one SQL query. Must be declared before /{shipping_detail_id}."""
+    
+    rows = db.query(
+        Customer.id.label('customer_id'),
+        Customer.customer_name.label('customer_name'),
+        Customer.customer_code.label('customer_code'),
+        func.count(ShippingDetail.id).label('total_count'),
+        func.count(case((ShippingDetail.is_visible_to_customer == True, 1))).label('visible_count'),
+        func.count(case((ShippingDetail.is_visible_to_customer == False, 1))).label('hidden_count'),
+    ).select_from(Customer).outerjoin(
+        ShippingDetail,
+        (ShippingDetail.customer_id == Customer.id) &
+        (ShippingDetail.company_id == current_user.company_id)
+    ).filter(
+        Customer.company_id == current_user.company_id
+    ).group_by(
+        Customer.id, Customer.customer_name, Customer.customer_code
+    ).order_by(Customer.customer_name).all()
+    
+    return rows
+
+
 @router.get("/", response_model=List[ShippingDetailOut])
 def get_all_shipping_details(
+    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("owner")),
+    customer_id: Optional[UUID] = None,
     skip: int = 0,
     limit: int = 100
 ):
-    """Get all shipping details - owner only"""
+    """Get shipping details - owner only. Optionally filtered by customer.
+    The total matching count is returned in the X-Total-Count header."""
     
-    shipping_details = db.query(ShippingDetail).filter(
+    query = db.query(ShippingDetail).filter(
         ShippingDetail.company_id == current_user.company_id
-    ).order_by(ShippingDetail.created_at.desc()).offset(skip).limit(limit).all()
+    )
+    
+    if customer_id:
+        query = query.filter(ShippingDetail.customer_id == customer_id)
+    
+    response.headers["X-Total-Count"] = str(query.count())
+    
+    shipping_details = query.order_by(
+        ShippingDetail.created_at.desc()
+    ).offset(skip).limit(limit).all()
     
     return shipping_details
+
 
 @router.get("/{shipping_detail_id}", response_model=ShippingDetailOut)
 def get_shipping_detail(
@@ -44,6 +101,7 @@ def get_shipping_detail(
         raise HTTPException(status_code=404, detail="Shipping details not found")
     
     return shipping
+
 
 @router.put("/{shipping_detail_id}/visibility", status_code=status.HTTP_200_OK)
 def toggle_shipping_visibility(
@@ -66,7 +124,6 @@ def toggle_shipping_visibility(
     db.commit()
     
     return {"message": f"Shipping details visibility set to {visible}", "shipping_detail_id": str(shipping_detail_id)}
-
 
 
 @router.post("/{shipping_detail_id}/regenerate-excel", response_model=dict)
