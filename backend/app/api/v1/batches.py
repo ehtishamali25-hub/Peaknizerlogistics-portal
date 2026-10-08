@@ -7,6 +7,7 @@ import shutil
 from datetime import datetime
 
 from app.core.dependencies import get_db, require_role, get_current_user
+from app.core.access import get_assigned_customer_ids
 from app.models.user import User
 from app.models.excel_batch import ExcelBatch
 from app.models.excel_batch_row import ExcelBatchRow
@@ -36,6 +37,11 @@ async def upload_excel_batch(
     
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
+    
+    # Employees can only upload for customers assigned to them
+    assigned_ids = get_assigned_customer_ids(db, current_user)
+    if assigned_ids is not None and customer_id not in assigned_ids:
+        raise HTTPException(status_code=403, detail="You are not assigned to this customer")
     
     # Validate file type
     if not file.filename.endswith(('.xlsx', '.xls')):
@@ -102,15 +108,17 @@ def get_batches(
     skip: int = 0,
     limit: int = 100
 ):
-    """Get batches - accessible by owners and employees"""
-    # Allow both owners and employees to view batches
+    """Get batches - owners see all, employees only for their assigned customers"""
     if current_user.role not in ['owner', 'employee']:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
-    # Query with joins to get related data
     query = db.query(ExcelBatch).filter(
         ExcelBatch.company_id == current_user.company_id
     )
+    
+    assigned_ids = get_assigned_customer_ids(db, current_user)
+    if assigned_ids is not None:
+        query = query.filter(ExcelBatch.customer_id.in_(assigned_ids))
     
     if customer_id:
         query = query.filter(ExcelBatch.customer_id == customer_id)
@@ -119,16 +127,13 @@ def get_batches(
     
     batches = query.order_by(ExcelBatch.upload_date.desc()).offset(skip).limit(limit).all()
     
-    # Now manually add the related data to each batch object
-    # We'll add temporary attributes that we can use in the response
+    # Add related data as temporary attributes for the response
     for batch in batches:
-        # Add customer_code as a temporary attribute
         if batch.customer_rel:
             batch.customer_code = batch.customer_rel.customer_code
         else:
             batch.customer_code = None
             
-        # Add uploader_name as a temporary attribute
         if batch.uploader_rel:
             batch.uploader_name = batch.uploader_rel.full_name
         else:
@@ -140,9 +145,9 @@ def get_batches(
 def get_batch(
     batch_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # Changed from require_role("owner")
+    current_user: User = Depends(get_current_user)
 ):
-    """Get single batch - accessible by owners and employees"""
+    """Get single batch - owners, or employees assigned to the batch's customer"""
     if current_user.role not in ['owner', 'employee']:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
@@ -154,12 +159,15 @@ def get_batch(
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
     
+    assigned_ids = get_assigned_customer_ids(db, current_user)
+    if assigned_ids is not None and batch.customer_id not in assigned_ids:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    
     # Load rows
     batch.rows = db.query(ExcelBatchRow).filter(
         ExcelBatchRow.batch_id == batch_id
     ).all()
     
-
     return batch
 
 @router.put("/{batch_id}/rows", response_model=List[ExcelBatchRowOut])

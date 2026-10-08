@@ -4,6 +4,7 @@ from typing import List
 from uuid import UUID
 
 from app.core.dependencies import get_db, require_role, get_current_user
+from app.core.access import get_assigned_customer_ids
 from app.models.customer import Customer
 from app.models.user import User
 from app.models.customer_warehouse import CustomerWarehouse
@@ -18,14 +19,17 @@ def get_customers(
     skip: int = 0,
     limit: int = 100
 ):
-    """Get all customers - accessible by owners and employees"""
-    # Allow both owners and employees to view customers
+    """Get all customers - owners see all, employees only their assigned ones"""
     if current_user.role not in ['owner', 'employee']:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
-    customers = db.query(Customer).filter(
+    query = db.query(Customer).filter(
         Customer.company_id == current_user.company_id
-    ).offset(skip).limit(limit).all()
+    )
+    assigned_ids = get_assigned_customer_ids(db, current_user)
+    if assigned_ids is not None:
+        query = query.filter(Customer.id.in_(assigned_ids))
+    customers = query.offset(skip).limit(limit).all()
     
     # Add warehouse_ids to each customer
     for customer in customers:
@@ -99,10 +103,13 @@ def get_customer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get single customer - accessible by owners and employees"""
-    # Allow both owners and employees
+    """Get single customer - owners, or employees assigned to this customer"""
     if current_user.role not in ['owner', 'employee']:
         raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    assigned_ids = get_assigned_customer_ids(db, current_user)
+    if assigned_ids is not None and customer_id not in assigned_ids:
+        raise HTTPException(status_code=404, detail="Customer not found")
     
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
