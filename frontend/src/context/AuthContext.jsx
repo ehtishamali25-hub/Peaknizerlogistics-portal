@@ -1,4 +1,4 @@
-﻿import { createContext, useState, useContext, useEffect } from 'react';
+﻿import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axiosInstance from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +11,25 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Ask the server for the customer's current business model (wholesale /
+  // dropshipping) and update the stored user if it changed.
+  const refreshBusinessModel = useCallback(async () => {
+    try {
+      const { data } = await axiosInstance.get('/auth/me');
+      const model = data.business_model || 'wholesale';
+      setUser((prev) => {
+        if (!prev || prev.role !== 'customer' || prev.business_model === model) {
+          return prev;
+        }
+        const updated = { ...prev, business_model: model };
+        localStorage.setItem('user', JSON.stringify(updated));
+        return updated;
+      });
+    } catch (e) {
+      console.error('Could not refresh business model:', e);
+    }
+  }, []);
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
@@ -19,7 +38,11 @@ export const AuthProvider = ({ children }) => {
     
     if (storedUser && token) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        if (parsedUser.role === 'customer') {
+          refreshBusinessModel();
+        }
       } catch (e) {
         console.error('Failed to parse stored user:', e);
         localStorage.removeItem('user');
@@ -27,7 +50,16 @@ export const AuthProvider = ({ children }) => {
       }
     }
     setLoading(false);
-  }, []);
+  }, [refreshBusinessModel]);
+
+  // Customers: re-check when they come back to this browser tab, so a model
+  // change made by the owner shows up without logging in again.
+  useEffect(() => {
+    if (user?.role !== 'customer') return;
+    const onFocus = () => refreshBusinessModel();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [user?.role, refreshBusinessModel]);
 
   const login = async (email, password) => {
     try {
