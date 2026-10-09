@@ -10,6 +10,30 @@ const formatFileSize = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const EMPTY_FORM = {
+  customer_name: '',
+  customer_code: '',
+  email: '',
+  prep_rate: 5.5,
+  business_model: 'wholesale',
+  warehouse_ids: [],
+  password: '',
+  confirm_password: ''
+};
+
+const ModelBadge = ({ model }) => {
+  const isDrop = model === 'dropshipping';
+  return (
+    <span
+      className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+        isDrop ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+      }`}
+    >
+      {isDrop ? 'Dropshipping' : 'Wholesale'}
+    </span>
+  );
+};
+
 const CustomersList = () => {
   const [customers, setCustomers] = useState([]);
   const [customerDocs, setCustomerDocs] = useState({});
@@ -19,15 +43,7 @@ const CustomersList = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [formData, setFormData] = useState({
-    customer_name: '',
-    customer_code: '',
-    email: '',
-    prep_rate: 5.5,
-    warehouse_ids: [],
-    password: '', 
-    confirm_password: '' 
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
   useEffect(() => {
     fetchCustomers();
@@ -144,15 +160,7 @@ const CustomersList = () => {
       
       setShowModal(false);
       setEditingCustomer(null);
-      setFormData({ 
-        customer_name: '', 
-        customer_code: '', 
-        email: '', 
-        prep_rate: 5.5,
-        warehouse_ids: [],
-        password: '',
-        confirm_password: ''
-      });
+      setFormData(EMPTY_FORM);
       fetchCustomers();
     } catch (error) {
       console.error('Failed to save customer:', error.response?.data || error);
@@ -167,6 +175,7 @@ const CustomersList = () => {
       customer_code: customer.customer_code,
       email: customer.email,
       prep_rate: customer.prep_rate,
+      business_model: customer.business_model || 'wholesale',
       warehouse_ids: customer.warehouse_ids || [],
       password: '',
       confirm_password: ''
@@ -228,15 +237,7 @@ const CustomersList = () => {
         <button
           onClick={() => {
             setEditingCustomer(null);
-            setFormData({ 
-              customer_name: '', 
-              customer_code: '', 
-              email: '', 
-              prep_rate: 5.5,
-              warehouse_ids: [],
-              password: '',
-              confirm_password: ''
-            });
+            setFormData(EMPTY_FORM);
             setShowModal(true);
           }}
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full sm:w-auto"
@@ -270,6 +271,7 @@ const CustomersList = () => {
                 </div>
                 <div className="text-sm space-y-1 mb-3">
                   <p className="text-gray-600 break-words">{customer.email}</p>
+                  <p className="text-gray-600">Model: <ModelBadge model={customer.business_model} /></p>
                   <p className="text-gray-600">Prep Rate: <span className="font-medium">${customer.prep_rate}</span></p>
                   <p className="text-gray-600">Warehouses: <span className="font-medium">{getWarehouseNames(customer.warehouse_ids)}</span></p>
                   <p className="text-gray-600">Documents: {renderDocsButton(customer)}</p>
@@ -301,6 +303,7 @@ const CustomersList = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Model</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prep Rate</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned Warehouses</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Documents</th>
@@ -314,6 +317,7 @@ const CustomersList = () => {
                       <td className="px-6 py-4">{customer.customer_name}</td>
                       <td className="px-6 py-4">{customer.customer_code}</td>
                       <td className="px-6 py-4">{customer.email}</td>
+                      <td className="px-6 py-4"><ModelBadge model={customer.business_model} /></td>
                       <td className="px-6 py-4">${customer.prep_rate}</td>
                       <td className="px-6 py-4">{getWarehouseNames(customer.warehouse_ids)}</td>
                       <td className="px-6 py-4">{renderDocsButton(customer)}</td>
@@ -482,6 +486,28 @@ const CustomersList = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   required
                 />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Business Model
+                </label>
+                <select
+                  value={formData.business_model}
+                  onChange={(e) => setFormData({...formData, business_model: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
+                >
+                  <option value="wholesale">Wholesale</option>
+                  <option value="dropshipping">Dropshipping</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Dropshipping customers get all Wholesale features plus the Dropshipping Inventory section.
+                </p>
+                {editingCustomer?.business_model === 'dropshipping' && formData.business_model === 'wholesale' && (
+                  <p className="text-xs text-amber-700 mt-1">
+                    Switching to Wholesale hides this customer's dropshipping inventory. Nothing is deleted, and it reappears if you switch back.
+                  </p>
+                )}
               </div>
 
               <div className="mb-4">
