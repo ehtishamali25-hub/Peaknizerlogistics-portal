@@ -88,6 +88,14 @@ class RegistrationRequestSchema(BaseModel):
     notes: Optional[str] = None
 
 
+def _customer_business_model(db: Session, user: User):
+    """'wholesale' / 'dropshipping' for customer logins, None for everyone else."""
+    if user.role != 'customer' or not user.customer_id:
+        return None
+    customer = db.query(Customer).filter(Customer.id == user.customer_id).first()
+    return customer.business_model if customer else 'wholesale'
+
+
 @router.post("/login", response_model=LoginResponse)
 async def login(
     login_data: LoginRequest,
@@ -121,19 +129,24 @@ async def login(
         full_name=user.full_name,
         email=user.email,
         role=user.role,
-        company_id=str(user.company_id)
+        company_id=str(user.company_id),
+        business_model=_customer_business_model(db, user)
     )
 
 
 @router.get("/me")
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     return {
         "id": str(current_user.id),
         "email": current_user.email,
         "full_name": current_user.full_name,
         "role": current_user.role,
         "company_id": str(current_user.company_id),
-        "is_active": current_user.is_active
+        "is_active": current_user.is_active,
+        "business_model": _customer_business_model(db, current_user)
     }
 
 
