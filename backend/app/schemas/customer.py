@@ -1,14 +1,17 @@
 ﻿from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from typing import Optional, List, Literal
 from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
+
+BusinessModel = Literal['wholesale', 'dropshipping']
 
 class CustomerBase(BaseModel):
     customer_name: str
     customer_code: str
     email: EmailStr
     prep_rate: Decimal = Decimal('5.5')
+    business_model: BusinessModel = 'wholesale'
     is_active: bool = True
 
 class CustomerCreate(CustomerBase):
@@ -19,6 +22,7 @@ class CustomerUpdate(BaseModel):
     customer_name: Optional[str] = None
     email: Optional[EmailStr] = None
     prep_rate: Optional[Decimal] = None
+    business_model: Optional[BusinessModel] = None
     is_active: Optional[bool] = None
     warehouse_ids: Optional[List[UUID]] = None
 
