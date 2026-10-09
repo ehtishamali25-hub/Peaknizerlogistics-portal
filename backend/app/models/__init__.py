@@ -16,6 +16,7 @@ from app.models.registration import RegistrationRequest
 from app.models.charity_donation import CharityDonation
 from app.models.email_verification import EmailVerification
 from app.models.registration_document import RegistrationDocument
+from app.models.dropshipping_entry import DropshippingEntry
 
 
 
@@ -24,5 +25,5 @@ __all__ = [
     "Company", "User", "Customer", "Warehouse", "Product", 
     "ExcelBatch", "ExcelBatchRow", "ShippingDetail", "Invoice", 
     "PaymentProof", "EmployeeCustomer", "EmployeeWarehouse", "Inventory", "CustomerWarehouse","RegistrationRequest",
-    "CharityDonation", "EmailVerification", "RegistrationDocument"
+    "CharityDonation", "EmailVerification", "RegistrationDocument", "DropshippingEntry"
 ]
