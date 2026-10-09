@@ -23,3 +23,5 @@ class LoginResponse(BaseModel):
     email: str
     role: str
     company_id: str
+    # Only set for customers: 'wholesale' or 'dropshipping'
+    business_model: Optional[str] = None
