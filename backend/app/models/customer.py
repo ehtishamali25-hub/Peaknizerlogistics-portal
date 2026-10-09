@@ -15,13 +15,13 @@ class Customer(Base):
     customer_code = Column(String(100), nullable=False)
     email = Column(String(255), nullable=False)
     prep_rate = Column(DECIMAL(10,2), nullable=False, default=5.5)
+    # 'wholesale' (default) or 'dropshipping'
+    business_model = Column(String(20), nullable=False, default='wholesale', server_default='wholesale')
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
     # Relationship to batches
     batches = relationship("ExcelBatch", back_populates="customer_rel")
-   
 
     # Add this with other relationships
     assigned_warehouses = relationship("CustomerWarehouse", back_populates="customer", cascade="all, delete-orphan")
-    
