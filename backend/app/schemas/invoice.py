@@ -21,7 +21,8 @@ class InvoiceBase(BaseModel):
 
 class InvoiceCreate(InvoiceBase):
     customer_id: UUID
-    shipping_details_id: UUID
+    # Empty for dropshipping Prep invoices (they have no shipping details)
+    shipping_details_id: Optional[UUID] = None
     invoice_number: str
     created_by: UUID
     company_id: UUID
@@ -35,7 +36,8 @@ class InvoiceOut(InvoiceBase):
     company_id: UUID
     invoice_number: str
     customer_id: UUID
-    shipping_details_id: UUID
+    # Empty for dropshipping Prep invoices (they have no shipping details)
+    shipping_details_id: Optional[UUID] = None
     pdf_url: Optional[str] = None
     created_by: UUID
     created_at: datetime
