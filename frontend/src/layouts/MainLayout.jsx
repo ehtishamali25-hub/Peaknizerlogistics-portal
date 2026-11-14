@@ -40,7 +40,13 @@ const MainLayout = ({ children }) => {
       case 'customer':
         items.push(
           { name: 'Dashboard', path: '/customer/dashboard' },
-          { name: 'Inventory', path: '/customer/inventory' },
+          { name: 'Inventory', path: '/customer/inventory' }
+        );
+        // Dropshipping customers get an extra section; wholesale menu is unchanged
+        if (user?.business_model === 'dropshipping') {
+          items.push({ name: 'Dropshipping Inventory', path: '/customer/dropshipping' });
+        }
+        items.push(
           { name: 'Shipping Invoices', path: '/customer/invoices/shipping' },
           { name: 'Prep Invoices', path: '/customer/invoices/prep' },
           { name: 'Proofs', path: '/customer/proofs' }
@@ -121,6 +127,7 @@ const MainLayout = ({ children }) => {
                 <Link
                   key={item.path}
                   to={item.path}
+                  title={item.name}
                   onClick={() => setMobileMenuOpen(false)}
                   className="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 rounded-md"
                 >
