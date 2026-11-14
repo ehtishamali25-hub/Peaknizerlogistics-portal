@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +23,29 @@ const formatEntryDate = (value) => {
   return new Date(y, m - 1, d).toLocaleDateString();
 };
 
+// "2026-11-02T12:00:00+00:00" -> "2026-11-02" (the same day the server uses for the invoice dates)
+const uploadDay = (createdAt) => (createdAt ? String(createdAt).slice(0, 10) : '');
+
+const MAX_QUANTITY = 1000000;
+
+// Whole number from 1 to 1,000,000, otherwise null
+const parseQuantity = (raw) => {
+  const text = String(raw ?? '').trim();
+  if (!/^\d+$/.test(text)) return null;
+  const n = Number(text);
+  return n >= 1 && n <= MAX_QUANTITY ? n : null;
+};
+
+// null when the rate is unknown (the server then works it out)
+const toRateCents = (rate) => {
+  if (rate === null || rate === undefined || rate === '') return null;
+  const n = Number(rate);
+  return Number.isFinite(n) ? Math.round(n * 100) : null;
+};
+
+const formatMoney = (cents) =>
+  `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 const formatCell = (value) => {
   if (value === true) return 'TRUE';
   if (value === false) return 'FALSE';
@@ -40,29 +63,41 @@ const DropshippingManage = () => {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notDropshipping, setNotDropshipping] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [message, setMessage] = useState({ type: '', text: '', linkTo: '' });
   const [savingKey, setSavingKey] = useState(null);
   const [busyFile, setBusyFile] = useState(null);
   const [preview, setPreview] = useState(null); // { entry, loading, error, data }
+  const [approving, setApproving] = useState(null); // { entry, quantity, error, submitting }
+  const submittingRef = useRef(false);
+  const messageTimer = useRef(null);
 
   useEffect(() => {
     loadPage();
   }, [customerId]);
 
-  // Close the Excel popup with the Escape key
+  useEffect(() => () => clearTimeout(messageTimer.current), []);
+
+  // Close the open popup with the Escape key (the approve dialog stays open while it is saving)
   useEffect(() => {
-    if (!preview) return undefined;
+    if (!preview && !approving) return undefined;
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') setPreview(null);
+      if (e.key !== 'Escape') return;
+      if (approving) {
+        if (!submittingRef.current) setApproving(null);
+      } else {
+        setPreview(null);
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [preview]);
+  }, [preview, approving]);
 
-  const showMessage = (type, text, clearAfterMs) => {
-    setMessage({ type, text });
+  // A new message replaces the old one, and the old one's timer must not clear the new one
+  const showMessage = (type, text, clearAfterMs, linkTo) => {
+    clearTimeout(messageTimer.current);
+    setMessage({ type, text, linkTo });
     if (clearAfterMs) {
-      setTimeout(() => setMessage({ type: '', text: '' }), clearAfterMs);
+      messageTimer.current = setTimeout(() => setMessage({ type: '', text: '' }), clearAfterMs);
     }
   };
 
@@ -73,6 +108,7 @@ const DropshippingManage = () => {
       setCustomer({
         name: customerRes.data.customer_name,
         code: customerRes.data.customer_code,
+        prepRateCents: toRateCents(customerRes.data.prep_rate),
       });
 
       if (customerRes.data.business_model !== 'dropshipping') {
@@ -199,6 +235,79 @@ const DropshippingManage = () => {
     }
   };
 
+  const openApprove = (entry) => {
+    setApproving({ entry, quantity: '', error: '', submitting: false });
+  };
+
+  const closeApprove = () => {
+    if (!submittingRef.current) setApproving(null);
+  };
+
+  const refreshEntries = async () => {
+    try {
+      const res = await axiosInstance.get(`/dropshipping-manage/customers/${customerId}/entries`);
+      setEntries(res.data);
+    } catch (error) {
+      console.error('Failed to refresh entries:', error);
+    }
+  };
+
+  const submitApprove = async (event) => {
+    event.preventDefault();
+    if (!approving || submittingRef.current) return;
+
+    const { entry } = approving;
+    const quantity = parseQuantity(approving.quantity);
+    if (quantity === null) {
+      setApproving((a) => (a ? { ...a, error: `Enter a whole number from 1 to ${MAX_QUANTITY.toLocaleString('en-US')}.` } : a));
+      return;
+    }
+
+    submittingRef.current = true;
+    setApproving((a) => (a ? { ...a, submitting: true, error: '' } : a));
+
+    try {
+      const response = await axiosInstance.post(
+        `/dropshipping-manage/entries/${entry.id}/approve`,
+        { quantity }
+      );
+      setEntries((list) => list.map((e) => (e.id === entry.id ? response.data : e)));
+      submittingRef.current = false;
+      setApproving(null);
+      const invoiceNumber = response.data.prep_invoice_number;
+      showMessage(
+        'success',
+        `${entry.entry_code} approved.${invoiceNumber ? ` Prep invoice ${invoiceNumber} was created.` : ''} It stays hidden from the customer until you make it visible on the Invoices page.`,
+        15000,
+        '/owner/invoices'
+      );
+    } catch (error) {
+      submittingRef.current = false;
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
+
+      if (status === 409) {
+        // Already approved (for example from another window): show the real state
+        setApproving(null);
+        await refreshEntries();
+        showMessage('error', `${entry.entry_code} was already approved.`, 6000);
+        return;
+      }
+
+      let text;
+      if (!error.response) {
+        text = 'Could not reach the server. Please try again.';
+      } else if (typeof detail === 'string') {
+        text = detail;
+      } else if (status === 422) {
+        text = `Enter a whole number from 1 to ${MAX_QUANTITY.toLocaleString('en-US')}.`;
+      } else {
+        text = 'Failed to approve. Please try again.';
+      }
+      setApproving((a) => (a ? { ...a, submitting: false, error: text } : a));
+    }
+  };
+
   const renderSelect = (entry, field, options) => {
     const saving = savingKey === `${entry.id}-${field}`;
     return (
@@ -224,6 +333,14 @@ const DropshippingManage = () => {
       </span>
       {isOwner && entry.prep_invoice_number && (
         <p className="text-xs text-gray-500 mt-1">{entry.prep_invoice_number}</p>
+      )}
+      {isOwner && entry.approval_status !== 'approved' && (
+        <button
+          onClick={() => openApprove(entry)}
+          className="mt-2 block px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 whitespace-nowrap"
+        >
+          Approve Inventory
+        </button>
       )}
     </div>
   );
@@ -297,6 +414,14 @@ const DropshippingManage = () => {
           message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
         }`}>
           {message.text}
+          {message.linkTo && (
+            <button
+              onClick={() => navigate(message.linkTo)}
+              className="ml-2 underline font-medium"
+            >
+              Open Invoices
+            </button>
+          )}
         </div>
       )}
 
@@ -380,6 +505,132 @@ const DropshippingManage = () => {
           </div>
         </>
       )}
+
+      {/* Approve dialog */}
+      {approving && (() => {
+        const { entry, quantity: rawQuantity, error: approveError, submitting } = approving;
+        const quantity = parseQuantity(rawQuantity);
+        const rateCents = customer?.prepRateCents ?? null;
+        const rateIsZero = rateCents !== null && rateCents <= 0;
+        const invoiceDay = uploadDay(entry.created_at);
+        const typedButInvalid = String(rawQuantity).trim() !== '' && quantity === null;
+
+        return (
+          <div
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-start justify-center p-3 sm:p-4 overflow-y-auto"
+            onClick={closeApprove}
+          >
+            <form
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="approve-title"
+              onSubmit={submitApprove}
+              className="bg-white rounded-lg shadow-xl w-full max-w-md mt-8 sm:mt-16 p-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 id="approve-title" className="text-lg font-bold">Approve Inventory</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {entry.entry_code}{customer ? ` · ${customer.name} (${customer.code})` : ''}
+              </p>
+
+              <dl className="text-sm text-gray-700 mb-4 space-y-1">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-500">Entry date</dt>
+                  <dd>{formatEntryDate(entry.entry_date)}</dd>
+                </div>
+                {invoiceDay && (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-gray-500">Uploaded on</dt>
+                    <dd>{formatEntryDate(invoiceDay)}</dd>
+                  </div>
+                )}
+              </dl>
+
+              <label htmlFor="approve-quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                Quantity (units to prep)
+              </label>
+              <input
+                id="approve-quantity"
+                type="number"
+                min="1"
+                max={MAX_QUANTITY}
+                step="1"
+                inputMode="numeric"
+                autoFocus
+                value={rawQuantity}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setApproving((a) => (a ? { ...a, quantity: value, error: '' } : a));
+                }}
+                disabled={submitting}
+                placeholder="e.g. 100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md disabled:bg-gray-100"
+              />
+              {typedButInvalid && (
+                <p className="text-xs text-red-600 mt-1">
+                  Enter a whole number from 1 to {MAX_QUANTITY.toLocaleString('en-US')}.
+                </p>
+              )}
+
+              <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
+                {rateIsZero ? (
+                  <p className="text-red-600">
+                    This customer's prep rate is $0.00. Set a prep rate for the customer first.
+                  </p>
+                ) : quantity !== null && rateCents !== null ? (
+                  <p>
+                    Prep invoice: {quantity.toLocaleString('en-US')} × {formatMoney(rateCents)} ={' '}
+                    <span className="font-semibold">{formatMoney(quantity * rateCents)}</span>
+                  </p>
+                ) : quantity !== null ? (
+                  <p className="text-gray-500">
+                    The invoice amount will be calculated from the customer's prep rate.
+                  </p>
+                ) : (
+                  <p className="text-gray-500">
+                    Enter the quantity to see the Prep invoice amount (quantity × the customer's prep rate).
+                  </p>
+                )}
+              </div>
+
+              <ul className="mt-3 text-xs text-gray-600 list-disc pl-4 space-y-1">
+                {invoiceDay && (
+                  <li>
+                    The invoice date and due date are both {formatEntryDate(invoiceDay)}, the day the customer uploaded this entry.
+                  </li>
+                )}
+                <li>The invoice stays hidden from the customer until you make it visible.</li>
+              </ul>
+
+              <p className="mt-3 text-sm font-medium text-amber-700">
+                An entry can be approved only once. This cannot be undone.
+              </p>
+
+              {approveError && (
+                <p className="mt-3 p-2 rounded bg-red-100 text-red-700 text-sm">{approveError}</p>
+              )}
+
+              <div className="flex justify-end gap-2 mt-5">
+                <button
+                  type="button"
+                  onClick={closeApprove}
+                  disabled={submitting}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || quantity === null || rateIsZero}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
+                >
+                  {submitting ? 'Approving...' : 'Approve & Create Invoice'}
+                </button>
+              </div>
+            </form>
+          </div>
+        );
+      })()}
 
       {/* Excel popup */}
       {preview && (
