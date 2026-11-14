@@ -17,6 +17,7 @@ import InventoryCustomerList from './pages/InventoryCustomerList';
 import CustomerInventoryDetail from './pages/CustomerInventoryDetail';
 import CustomerDashboard from './pages/CustomerDashboard';
 import CustomerInventory from './pages/CustomerInventory';
+import CustomerDropshipping from './pages/CustomerDropshipping';
 import CustomerShippingInvoices from './pages/CustomerShippingInvoices';
 import OwnerShippingDetails from './pages/OwnerShippingDetails';
 import CustomerPrepInvoices from './pages/CustomerPrepInvoices';
@@ -187,6 +188,17 @@ function App() {
               <ProtectedRoute allowedRoles={['customer']}>
                 <MainLayout>
                   <CustomerInventory />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/customer/dropshipping"
+            element={
+              <ProtectedRoute allowedRoles={['customer']}>
+                <MainLayout>
+                  <CustomerDropshipping />
                 </MainLayout>
               </ProtectedRoute>
             }
