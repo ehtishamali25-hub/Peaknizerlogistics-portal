@@ -1,10 +1,11 @@
 from decimal import Decimal
 from datetime import date
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, exists
 from uuid import UUID
 
 from app.models.invoice import Invoice
+from app.models.dropshipping_entry import DropshippingEntry
 from app.models.charity_donation import CharityDonation
 from app.core.config import settings
 
@@ -17,6 +18,9 @@ class CharityService:
         For each prep invoice issued on/after CHARITY_START_DATE:
             orders = invoice.total_amount / invoice.rate
         total_charity = CHARITY_RATE_PER_ORDER * SUM(orders across all such invoices)
+
+        Prep invoices created by Dropshipping "Approve Inventory" are left out
+        for now (they are not counted towards charity).
         """
         cutoff = date.fromisoformat(settings.CHARITY_START_DATE)
 
@@ -25,7 +29,8 @@ class CharityService:
             Invoice.invoice_type == 'prep',
             Invoice.issue_date >= cutoff,
             Invoice.rate.isnot(None),
-            Invoice.rate > 0
+            Invoice.rate > 0,
+            ~exists().where(DropshippingEntry.prep_invoice_id == Invoice.id)
         ).all()
 
         total_orders = Decimal('0')
