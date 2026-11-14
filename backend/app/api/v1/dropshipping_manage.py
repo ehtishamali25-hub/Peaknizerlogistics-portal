@@ -1,11 +1,13 @@
 import datetime as dt
+import logging
 import os
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any, Dict, List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.access import get_assigned_customer_ids
@@ -19,6 +21,9 @@ from app.schemas.dropshipping import (
     DropshippingStatusUpdate,
     ExcelPreviewOut,
 )
+from app.services.invoice_service import InvoiceService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/dropshipping-manage", tags=["Dropshipping (Owner / Employee)"])
 
@@ -32,6 +37,16 @@ DEFAULT_PREVIEW_ROWS = 200
 MAX_PREVIEW_ROWS = 1000
 MAX_SCAN_ROWS = 50000     # stop counting rows after this many
 MAX_PREVIEW_COLUMNS = 100
+
+DEFAULT_PREP_RATE = Decimal("5.5")            # same fallback the batch invoices use
+MAX_PREP_QUANTITY = 1_000_000
+MAX_INVOICE_AMOUNT = Decimal("99999999.99")   # invoices.total_amount is DECIMAL(10,2)
+
+
+class DropshippingApproveIn(BaseModel):
+    """Owner approves an entry. `quantity` = number of units to prep; it is
+    billed at the customer's prep rate."""
+    quantity: int = Field(..., ge=1, le=MAX_PREP_QUANTITY)
 
 
 # ---------------------------------------------------------------- access helpers
@@ -335,3 +350,108 @@ def update_entry_status(
             invoice_numbers[inv.id] = inv.invoice_number
 
     return _to_out(entry, customer, current_user, invoice_numbers)
+
+
+@router.post("/entries/{entry_id}/approve", response_model=DropshippingEntryOut)
+def approve_entry(
+    entry_id: UUID,
+    data: DropshippingApproveIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Owner only. Approves the entry and generates its single Prep invoice.
+
+    - amount = quantity x the customer's prep rate (no discount)
+    - issue date and due date = the day the customer uploaded the entry
+    - the invoice stays hidden from the customer until the owner makes it visible
+    - an entry can be approved only once
+    """
+    _require_staff(current_user)
+    if current_user.role != "owner":
+        raise HTTPException(status_code=403, detail="Only the owner can approve inventory")
+
+    entry = _get_entry_for_staff(db, current_user, entry_id)
+
+    # Lock the row, so a double click or a second owner session cannot create two invoices
+    db.refresh(entry, with_for_update=True)
+    if entry.approval_status == "approved" or entry.prep_invoice_id:
+        raise HTTPException(status_code=409, detail="This entry is already approved")
+
+    customer = db.query(Customer).filter(Customer.id == entry.customer_id).first()
+    if customer is None:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    prep_rate = Decimal(str(customer.prep_rate)) if customer.prep_rate is not None else DEFAULT_PREP_RATE
+    if prep_rate <= 0:
+        raise HTTPException(status_code=400, detail="This customer's prep rate must be greater than zero")
+
+    total_amount = (Decimal(data.quantity) * prep_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    if total_amount > MAX_INVOICE_AMOUNT:
+        raise HTTPException(status_code=400, detail="The invoice amount is too large. Please check the quantity.")
+
+    # The day the customer really uploaded the entry (not the date they typed in)
+    upload_day = entry.created_at.date()
+
+    pdf_path = None
+    try:
+        invoice_number = InvoiceService.generate_invoice_number(entry.company_id, "prep", db)
+
+        invoice = Invoice(
+            company_id=entry.company_id,
+            invoice_number=invoice_number,
+            customer_id=customer.id,
+            shipping_details_id=None,          # dropshipping has no shipping details
+            invoice_type="prep",
+            quantity=data.quantity,
+            rate=prep_rate,
+            total_amount=total_amount,
+            issue_date=upload_day,
+            due_date=upload_day,
+            status="unpaid",
+            is_visible_to_customer=False,
+            created_by=current_user.id,
+            total_quantity=data.quantity,
+            total_prep_value=total_amount,
+            discount_percentage=0.0,
+        )
+        db.add(invoice)
+        db.flush()
+
+        # Same PDF as the other Prep invoices
+        pdf_path = InvoiceService.pdf_service.generate_invoice_pdf({
+            "invoice_number": invoice_number,
+            "invoice_type": "prep",
+            "customer_name": customer.customer_name,
+            "customer_code": customer.customer_code,
+            "issue_date": upload_day.strftime("%Y-%m-%d"),
+            "due_date": upload_day.strftime("%Y-%m-%d"),
+            "status": "unpaid",
+            "total_amount": float(total_amount),
+            "quantity": data.quantity,
+            "rate": float(prep_rate),
+            "total_quantity": data.quantity,
+            "total_prep_value": float(total_amount),
+            "discount_percentage": 0.0,
+        })
+        invoice.pdf_url = pdf_path
+
+        entry.approval_status = "approved"
+        entry.prep_invoice_id = invoice.id
+        entry.approved_by = current_user.id
+        entry.approved_at = dt.datetime.now(dt.timezone.utc)
+
+        db.commit()
+    except Exception:
+        db.rollback()
+        # Do not leave an orphan PDF behind
+        if pdf_path:
+            try:
+                if os.path.exists(pdf_path):
+                    os.remove(pdf_path)
+            except OSError:
+                pass
+        logger.exception("Dropshipping approve failed for entry %s", entry_id)
+        raise HTTPException(status_code=500, detail="Failed to generate the Prep invoice. Nothing was changed.")
+
+    db.refresh(entry)
+    return _to_out(entry, customer, current_user, {entry.prep_invoice_id: invoice_number})
