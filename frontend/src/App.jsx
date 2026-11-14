@@ -15,6 +15,7 @@ import WarehouseManagement from './pages/WarehouseManagement';
 import ProductManagement from './pages/ProductManagement';
 import InventoryCustomerList from './pages/InventoryCustomerList';
 import CustomerInventoryDetail from './pages/CustomerInventoryDetail';
+import DropshippingManage from './pages/DropshippingManage';
 import CustomerDashboard from './pages/CustomerDashboard';
 import CustomerInventory from './pages/CustomerInventory';
 import CustomerDropshipping from './pages/CustomerDropshipping';
@@ -177,6 +178,17 @@ function App() {
               <ProtectedRoute allowedRoles={['owner', 'employee']}>
                 <MainLayout>
                   <CustomerInventoryDetail />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/inventory/customer/:customerId/dropshipping"
+            element={
+              <ProtectedRoute allowedRoles={['owner', 'employee']}>
+                <MainLayout>
+                  <DropshippingManage />
                 </MainLayout>
               </ProtectedRoute>
             }
