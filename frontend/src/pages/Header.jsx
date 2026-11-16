@@ -48,9 +48,10 @@ const Header = () => {
             ))}
           </nav>
 
-          <a href="https://peaknizerlogistics-portal-frontend.onrender.com/login" target="_blank" rel="noopener noreferrer" className="hidden lg:block bg-brand-navy hover:bg-brand-navy-light text-white px-6 py-2.5 rounded-md font-semibold shadow-md hover:shadow-lg transition-all duration-300">
+          {/* The portal login is on this same site, so visitors stay on peaknizerlogistics.com */}
+          <Link to="/login" className="hidden lg:block bg-brand-navy hover:bg-brand-navy-light text-white px-6 py-2.5 rounded-md font-semibold shadow-md hover:shadow-lg transition-all duration-300">
             Client portal
-          </a>
+          </Link>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 text-slate-700 hover:text-brand-navy transition-colors focus:outline-none" aria-label="Toggle menu">
             <svg className={`w-6 h-6 transition-transform ${mobileOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,9 +67,9 @@ const Header = () => {
                 {label}
               </Link>
             ))}
-            <a href="https://peaknizerlogistics-portal-frontend.onrender.com/login" target="_blank" rel="noopener noreferrer" className="block text-center bg-brand-navy hover:bg-brand-navy-light text-white font-semibold px-4 py-3 rounded-md mt-4 transition-all shadow-sm hover:shadow-md" onClick={() => setMobileOpen(false)}>
+            <Link to="/login" className="block text-center bg-brand-navy hover:bg-brand-navy-light text-white font-semibold px-4 py-3 rounded-md mt-4 transition-all shadow-sm hover:shadow-md" onClick={() => setMobileOpen(false)}>
               Client portal
-            </a>
+            </Link>
           </div>
         </div>
       </div>
