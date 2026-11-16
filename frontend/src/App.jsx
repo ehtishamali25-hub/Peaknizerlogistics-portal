@@ -31,9 +31,13 @@ import ContactPage from './pages/ContactPage';
 import OwnerRegistrations from './pages/OwnerRegistrations';
 import VerifyEmail from './pages/VerifyEmail';
 import PolicyPage from './pages/PolicyPage';
+import NotFound from './pages/NotFound';
+import RouteSeo from './seo/RouteSeo';
 function App() {
   return (
     <BrowserRouter>
+      {/* Sets the title, description and other SEO tags for every page */}
+      <RouteSeo />
       <AuthProvider>
         <Routes>
 
@@ -45,6 +49,18 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PolicyPage />} />
           <Route path="/login" element={<Login />} />
+
+          {/* Old addresses that now go to the real page */}
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="/about-us" element={<Navigate to="/about" replace />} />
+          <Route path="/index.html" element={<Navigate to="/" replace />} />
+
+          {/* TEMPORARY: these four pages are not built yet, so their links still open
+              the homepage. Remove each line when its real page is added. */}
+          <Route path="/faq" element={<Navigate to="/" replace />} />
+          <Route path="/terms" element={<Navigate to="/" replace />} />
+          <Route path="/blog" element={<Navigate to="/" replace />} />
+          <Route path="/careers" element={<Navigate to="/" replace />} />
           
           {/* Owner Routes */}
           <Route
@@ -305,8 +321,10 @@ function App() {
             
           <Route path="/verify-email" element={<VerifyEmail />} />
           
-          <Route path="*" element={<Navigate to="/" />} />
           <Route path="/unauthorized" element={<div>Unauthorized Access</div>} />
+
+          {/* Any other address: "Page not found". This must stay the LAST route. */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
