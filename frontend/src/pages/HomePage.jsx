@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import WebsiteLayout from './WebsiteLayout';
+import axiosInstance from '../api/axios';
 
 const Counter = ({ end, label }) => {
   const [value, setValue] = useState(0);
@@ -84,19 +85,53 @@ const PlatformLogo = ({ name, logo }) => {
 };
 
 const HomePage = () => {
-  const [lead, setLead] = useState({ name: '', email: '', phone: '', channel: 'Amazon seller', note: '' });
+  // "fax" is a hidden trap field: real visitors never see or fill it, spam robots do
+  const emptyLead = { name: '', email: '', phone: '', channel: 'Amazon seller', note: '', fax: '' };
+  const [lead, setLead] = useState(emptyLead);
   const [submitting, setSubmitting] = useState(false);
+  const [quoteStatus, setQuoteStatus] = useState({ type: '', message: '' });
   const heroRef = useRef(null);
 
   const handleChange = (e) => setLead({ ...lead, [e.target.name]: e.target.value });
 
+  // Sends the quote request to the backend, which emails it to info@peaknizerlogistics.com
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    setSubmitting(false);
-    alert('Thanks — we received your request and will follow up within one business day.');
-    setLead({ name: '', email: '', phone: '', channel: 'Amazon seller', note: '' });
+    setQuoteStatus({ type: '', message: '' });
+
+    const note = lead.note.trim();
+
+    try {
+      await axiosInstance.post('/contact/send', {
+        name: lead.name.trim(),
+        email: lead.email.trim(),
+        phone: lead.phone.trim(),
+        company: '',
+        service: 'Quote Request',
+        message: `Quote request from the homepage form.\nSales channel: ${lead.channel}\n\n${note || 'No extra details were added.'}`,
+        fax: lead.fax,
+      });
+
+      setQuoteStatus({ type: 'success', message: 'Thanks — we received your request and will follow up within one business day.' });
+      setLead(emptyLead);
+    } catch (error) {
+      const status = error.response?.status;
+      let message;
+      if (!error.response) {
+        message = 'We could not reach our server. Please check your connection and try again.';
+      } else if (status === 422) {
+        message = 'Please check the form. Make sure your name and email address are filled in correctly.';
+      } else if (status === 429) {
+        message = 'Too many requests were sent in a short time. Please try again in a few minutes.';
+      } else {
+        message = 'We could not send your request. Please email us at info@peaknizerlogistics.com.';
+      }
+      setQuoteStatus({ type: 'error', message });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -147,10 +182,20 @@ const HomePage = () => {
               </div>
 
               <div className="bg-white rounded-xl shadow-xl p-6 sm:p-8">
-                <h3 className="text-xl font-bold text-[#0E2A47] mb-1">Request a fulfillment quote</h3>
+                <h2 className="text-xl font-bold text-[#0E2A47] mb-1">Request a fulfillment quote</h2>
                 <p className="text-slate-500 text-sm mb-6">We'll reply with pricing within one business day.</p>
+                {quoteStatus.message && (
+                  <div
+                    role={quoteStatus.type === 'success' ? 'status' : 'alert'}
+                    className={`mb-4 p-3 rounded-md text-sm ${quoteStatus.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-700'}`}
+                  >
+                    {quoteStatus.message}
+                  </div>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Each field has an aria-label for screen readers; visitors see the placeholders */}
                   <input
+                    aria-label="Full name"
                     name="name"
                     value={lead.name}
                     onChange={handleChange}
@@ -159,6 +204,7 @@ const HomePage = () => {
                     className="w-full border border-slate-300 text-slate-900 px-4 py-3 rounded-md focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition"
                   />
                   <input
+                    aria-label="Business email"
                     name="email"
                     value={lead.email}
                     onChange={handleChange}
@@ -169,13 +215,16 @@ const HomePage = () => {
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <input
+                      aria-label="Phone number"
                       name="phone"
+                      type="tel"
                       value={lead.phone}
                       onChange={handleChange}
                       placeholder="Phone number"
                       className="border border-slate-300 text-slate-900 px-4 py-3 rounded-md focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition"
                     />
                     <select
+                      aria-label="Where you sell"
                       name="channel"
                       value={lead.channel}
                       onChange={handleChange}
@@ -188,6 +237,7 @@ const HomePage = () => {
                     </select>
                   </div>
                   <textarea
+                    aria-label="Monthly order volume and any special requirements"
                     name="note"
                     value={lead.note}
                     onChange={handleChange}
@@ -195,6 +245,10 @@ const HomePage = () => {
                     rows={3}
                     className="w-full border border-slate-300 text-slate-900 px-4 py-3 rounded-md focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition resize-none"
                   />
+                  {/* Trap for spam robots: hidden from people, must stay empty */}
+                  <div className="hidden" aria-hidden="true">
+                    <input aria-label="Fax" name="fax" type="text" value={lead.fax} onChange={handleChange} tabIndex={-1} autoComplete="off" />
+                  </div>
                   <button
                     type="submit"
                     disabled={submitting}
@@ -202,7 +256,7 @@ const HomePage = () => {
                   >
                     {submitting ? 'Sending...' : 'Request quote'}
                   </button>
-                  <p className="text-xs text-slate-400 text-center">No commitment. We respond within one business day.</p>
+                  <p className="text-xs text-slate-500 text-center">No commitment. We respond within one business day.</p>
                 </form>
               </div>
             </div>
