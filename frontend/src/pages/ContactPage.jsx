@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import WebsiteLayout from './WebsiteLayout';
+import axiosInstance from '../api/axios';
 
 const faqs = [
   { q: 'How quickly do you respond to inquiries?', a: 'We typically respond to all inquiries within 2-4 hours during business hours. For urgent matters, contact us via WhatsApp for instant messaging.' },
@@ -10,7 +11,9 @@ const faqs = [
 ];
 
 const ContactPage = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', company: '', service: 'General Inquiry', message: '' });
+  // "fax" is a hidden trap field: real visitors never see or fill it, spam robots do
+  const emptyForm = { name: '', email: '', phone: '', company: '', service: 'General Inquiry', message: '', fax: '' };
+  const [formData, setFormData] = useState(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' });
 
@@ -25,23 +28,33 @@ const ContactPage = () => {
     setSubmitStatus({ type: '', message: '' });
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/contact/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+      // Goes to the real backend (the address comes from VITE_API_URL, the same one the portal uses)
+      await axiosInstance.post('/contact/send', {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        company: formData.company.trim(),
+        service: formData.service,
+        message: formData.message.trim(),
+        fax: formData.fax,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSubmitStatus({ type: 'success', message: 'Thank you! Your message has been sent. We will contact you shortly.' });
-        setFormData({ name: '', email: '', phone: '', company: '', service: 'General Inquiry', message: '' });
-        setTimeout(() => setSubmitStatus({ type: '', message: '' }), 5000);
-      } else {
-        setSubmitStatus({ type: 'error', message: data.detail || 'Failed to send message. Please try again.' });
-      }
+      setSubmitStatus({ type: 'success', message: 'Thank you! Your message has been sent. We will contact you shortly.' });
+      setFormData(emptyForm);
+      setTimeout(() => setSubmitStatus({ type: '', message: '' }), 8000);
     } catch (error) {
-      setSubmitStatus({ type: 'error', message: 'Network error. Please check your connection and try again.' });
+      const status = error.response?.status;
+      let message;
+      if (!error.response) {
+        message = 'We could not reach our server. Please check your connection and try again.';
+      } else if (status === 422) {
+        message = 'Please check the form. Make sure the email address is correct and every required field is filled in.';
+      } else if (status === 429) {
+        message = 'Too many messages were sent in a short time. Please try again in a few minutes.';
+      } else {
+        message = 'We could not send your message. Please email us at info@peaknizerlogistics.com or message us on WhatsApp.';
+      }
+      setSubmitStatus({ type: 'error', message });
     } finally {
       setIsSubmitting(false);
     }
@@ -85,25 +98,25 @@ const ContactPage = () => {
                 <div className="space-y-4">
                   <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <h3 className="text-base font-bold text-brand-navy mb-1">Email us</h3>
-                    <a href="mailto:info@peaknizerlogistics.com" className="text-emerald-600 hover:underline break-all">info@peaknizerlogistics.com</a>
+                    <a href="mailto:info@peaknizerlogistics.com" className="text-emerald-700 hover:underline break-all">info@peaknizerlogistics.com</a>
                     <p className="text-slate-500 text-sm mt-1">Response within 2-4 hours</p>
                   </div>
 
                   <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <h3 className="text-base font-bold text-brand-navy mb-1">WhatsApp</h3>
-                    <a href="https://wa.me/15713074461" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">+1 (571) 307-4461</a>
+                    <a href="https://wa.me/15713074461" target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline">+1 (571) 307-4461</a>
                     <p className="text-slate-500 text-sm mt-1">Instant messaging, 24/7</p>
                   </div>
 
                   <div className="bg-white border border-slate-200 rounded-xl p-5">
                     <h3 className="text-base font-bold text-brand-navy mb-1">Phone</h3>
-                    <a href="tel:+15715182791" className="text-emerald-600 hover:underline">+1 (571) 518-2791</a>
+                    <a href="tel:+15713074461" className="text-emerald-700 hover:underline">+1 (571) 307-4461</a>
                     <p className="text-slate-500 text-sm mt-1">Mon–Fri, 9AM–6PM EST</p>
                   </div>
 
                   <div className="bg-white border border-slate-200 rounded-xl p-5">
-                    <h3 className="text-base font-bold text-brand-navy mb-1">Warehouse location</h3>
-                    <p className="text-slate-700">Arlington, VA<br />United States</p>
+                    <h3 className="text-base font-bold text-brand-navy mb-1">Warehouse locations</h3>
+                    <p className="text-slate-700">Arlington, VA (head office)<br />Houston, TX<br />New Jersey<br />United States</p>
                   </div>
 
                   <div className="bg-brand-navy/[0.03] border border-slate-200 rounded-xl p-5">
@@ -119,7 +132,7 @@ const ContactPage = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-600">Sunday</span>
-                        <span className="text-slate-400">Closed</span>
+                        <span className="text-slate-500">Closed</span>
                       </div>
                     </div>
                   </div>
@@ -131,7 +144,7 @@ const ContactPage = () => {
                   <h2 className="text-2xl font-bold text-brand-navy mb-6">Send a message</h2>
 
                   {submitStatus.message && (
-                    <div className={`mb-4 p-3 rounded-md text-sm ${submitStatus.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                    <div role={submitStatus.type === 'success' ? 'status' : 'alert'} className={`mb-4 p-3 rounded-md text-sm ${submitStatus.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
                       {submitStatus.message}
                     </div>
                   )}
@@ -139,29 +152,29 @@ const ContactPage = () => {
                   <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Full name *</label>
-                        <input type="text" name="name" value={formData.name} onChange={handleInputChange} required className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition" placeholder="Full name" />
+                        <label htmlFor="contact-name" className="block text-sm font-medium text-slate-700 mb-1">Full name *</label>
+                        <input id="contact-name" type="text" name="name" value={formData.name} onChange={handleInputChange} required className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition" placeholder="Full name" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
-                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition" placeholder="Business email" />
+                        <label htmlFor="contact-email" className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                        <input id="contact-email" type="email" name="email" value={formData.email} onChange={handleInputChange} required className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition" placeholder="Business email" />
                       </div>
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Phone number *</label>
-                        <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition" placeholder="Phone number" />
+                        <label htmlFor="contact-phone" className="block text-sm font-medium text-slate-700 mb-1">Phone number *</label>
+                        <input id="contact-phone" type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition" placeholder="Phone number" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Company name</label>
-                        <input type="text" name="company" value={formData.company} onChange={handleInputChange} className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition" placeholder="Company name" />
+                        <label htmlFor="contact-company" className="block text-sm font-medium text-slate-700 mb-1">Company name</label>
+                        <input id="contact-company" type="text" name="company" value={formData.company} onChange={handleInputChange} className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition" placeholder="Company name" />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Service interested in</label>
-                      <select name="service" value={formData.service} onChange={handleInputChange} className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition">
+                      <label htmlFor="contact-service" className="block text-sm font-medium text-slate-700 mb-1">Service interested in</label>
+                      <select id="contact-service" name="service" value={formData.service} onChange={handleInputChange} className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition">
                         <option>General Inquiry</option>
                         <option>FBA Prep Services</option>
                         <option>FBM Fulfillment</option>
@@ -174,15 +187,21 @@ const ContactPage = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Message *</label>
-                      <textarea name="message" value={formData.message} onChange={handleInputChange} required rows="4" className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition resize-none" placeholder="Tell us about your fulfillment needs, volume, and any specific requirements" />
+                      <label htmlFor="contact-message" className="block text-sm font-medium text-slate-700 mb-1">Message *</label>
+                      <textarea id="contact-message" name="message" value={formData.message} onChange={handleInputChange} required rows="4" className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition resize-none" placeholder="Tell us about your fulfillment needs, volume, and any specific requirements" />
+                    </div>
+
+                    {/* Trap for spam robots: hidden from people, must stay empty */}
+                    <div className="hidden" aria-hidden="true">
+                      <label htmlFor="contact-fax">Fax</label>
+                      <input type="text" id="contact-fax" name="fax" value={formData.fax} onChange={handleInputChange} tabIndex={-1} autoComplete="off" />
                     </div>
 
                     <button type="submit" disabled={isSubmitting} className="w-full bg-brand-navy hover:bg-brand-navy-light text-white font-semibold py-3 rounded-md transition-colors disabled:opacity-60">
                       {isSubmitting ? 'Sending...' : 'Send message'}
                     </button>
 
-                    <p className="text-xs text-slate-400 text-center">By submitting this form, you agree to our privacy policy and consent to being contacted.</p>
+                    <p className="text-xs text-slate-500 text-center">By submitting this form, you agree to our privacy policy and consent to being contacted.</p>
                   </form>
                 </div>
               </div>
@@ -196,7 +215,7 @@ const ContactPage = () => {
           <div className="absolute bottom-6 left-6 sm:bottom-10 sm:left-10 bg-white rounded-xl shadow-xl px-6 py-5 max-w-xs">
             <div className="text-lg font-bold text-brand-navy">Arlington, VA</div>
             <div className="text-slate-500 text-sm mt-1">Serving the East Coast and beyond</div>
-            <a href="https://maps.google.com/?q=2503D+N+Harrison+St+Arlington+VA+22207" target="_blank" rel="noopener noreferrer" className="inline-block text-emerald-600 hover:underline font-medium text-sm mt-2">
+            <a href="https://maps.google.com/?q=2503D+N+Harrison+St+Arlington+VA+22207" target="_blank" rel="noopener noreferrer" className="inline-block text-emerald-700 hover:underline font-medium text-sm mt-2">
               Open in Google Maps
             </a>
           </div>
@@ -205,7 +224,7 @@ const ContactPage = () => {
         <section className="bg-brand-navy/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-semibold text-emerald-600">FAQ</span>
+              <span className="text-sm font-semibold text-emerald-700">FAQ</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">Common questions</h2>
             </div>
             <div className="max-w-3xl space-y-4">
