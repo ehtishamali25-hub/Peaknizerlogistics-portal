@@ -18,7 +18,16 @@ const Header = () => {
     setMobileOpen(false);
   }, [location]);
 
-  const navLinks = ['Home', 'Services', 'About', 'Pricing', 'Contact', 'Privacy'];
+  // Each link goes to a real page (the address is written out, not built from the label).
+  // "Home" is "/", not "/home".
+  const navLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/services', label: 'Services' },
+    { to: '/about', label: 'About' },
+    { to: '/pricing', label: 'Pricing' },
+    { to: '/contact', label: 'Contact' },
+    { to: '/privacy', label: 'Privacy' },
+  ];
 
   return (
     <header className={`fixed w-full top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 shadow-md backdrop-blur-sm' : 'bg-white/80 backdrop-blur-sm border-b border-slate-200'}`}>
@@ -31,9 +40,9 @@ const Header = () => {
           </Link>
 
           <nav className="hidden lg:flex items-center space-x-1">
-            {navLinks.map((item) => (
-              <Link key={item} to={`/${item.toLowerCase()}`} className="group relative px-4 py-2 text-slate-700 font-medium hover:text-brand-navy transition-all duration-300">
-                {item}
+            {navLinks.map(({ to, label }) => (
+              <Link key={to} to={to} className="group relative px-4 py-2 text-slate-700 font-medium hover:text-brand-navy transition-all duration-300">
+                {label}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-emerald group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
@@ -52,9 +61,9 @@ const Header = () => {
 
         <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="bg-white border-t border-slate-200 py-4 space-y-2 px-4 shadow-lg">
-            {navLinks.map((item) => (
-              <Link key={item} to={`/${item.toLowerCase()}`} className="block px-4 py-3 text-slate-700 hover:text-brand-navy hover:bg-slate-50 rounded-lg transition-all duration-300 font-medium" onClick={() => setMobileOpen(false)}>
-                {item}
+            {navLinks.map(({ to, label }) => (
+              <Link key={to} to={to} className="block px-4 py-3 text-slate-700 hover:text-brand-navy hover:bg-slate-50 rounded-lg transition-all duration-300 font-medium" onClick={() => setMobileOpen(false)}>
+                {label}
               </Link>
             ))}
             <a href="https://peaknizerlogistics-portal-frontend.onrender.com/login" target="_blank" rel="noopener noreferrer" className="block text-center bg-brand-navy hover:bg-brand-navy-light text-white font-semibold px-4 py-3 rounded-md mt-4 transition-all shadow-sm hover:shadow-md" onClick={() => setMobileOpen(false)}>
