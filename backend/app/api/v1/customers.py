@@ -1,4 +1,7 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status
+﻿import logging
+import os
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
@@ -11,6 +14,8 @@ from app.models.customer_warehouse import CustomerWarehouse
 from app.schemas.customer import CustomerCreate, CustomerUpdate, CustomerOut
 
 router = APIRouter(prefix="/customers", tags=["Customers"])
+
+logger = logging.getLogger(__name__)
 
 @router.get("/", response_model=List[CustomerOut])
 def get_customers(
@@ -182,7 +187,8 @@ def delete_customer(
     current_user: User = Depends(require_role("owner"))
 ):
     """Delete customer - owner only. Also removes the customer's login,
-    registration records and documents so the same email can register again."""
+    registration records and documents so the same email can register again,
+    and the customer's Dropshipping entries with their uploaded files."""
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
         Customer.company_id == current_user.company_id
@@ -194,6 +200,7 @@ def delete_customer(
     from sqlalchemy import func, or_
     from app.models.excel_batch import ExcelBatch
     from app.models.excel_batch_row import ExcelBatchRow
+    from app.models.dropshipping_entry import DropshippingEntry
     from app.models.invoice import Invoice
     from app.models.product import Product
     from app.models.registration import RegistrationRequest
@@ -210,6 +217,23 @@ def delete_customer(
     
     # Products
     db.query(Product).filter(Product.customer_id == customer_id).delete()
+    
+    # Dropshipping entries. Their uploaded files are removed from the disk
+    # further down, only after the delete has been saved.
+    dropshipping_files = []
+    dropshipping_entries = db.query(DropshippingEntry).filter(
+        DropshippingEntry.customer_id == customer_id
+    ).all()
+    for entry in dropshipping_entries:
+        # Uploaded files are always saved as "<entry id>_inventory.xlsx" /
+        # "<entry id>_labels.pdf", so only files with that name are removed
+        prefix = f"{entry.id}_"
+        for path in (entry.excel_file_path, entry.labels_file_path):
+            if path and os.path.basename(path).startswith(prefix):
+                dropshipping_files.append(path)
+    db.query(DropshippingEntry).filter(
+        DropshippingEntry.customer_id == customer_id
+    ).delete(synchronize_session=False)
     
     # Invoices (shipping_details will cascade)
     db.query(Invoice).filter(Invoice.customer_id == customer_id).delete()
@@ -235,5 +259,14 @@ def delete_customer(
     # Finally the customer
     db.delete(customer)
     db.commit()
+    
+    # The customer is gone from the database, so the Dropshipping files can go too.
+    # A file that cannot be removed must not turn a successful delete into an error.
+    for path in dropshipping_files:
+        try:
+            if os.path.isfile(path):
+                os.remove(path)
+        except OSError:
+            logger.warning("Could not remove dropshipping file %s", path, exc_info=True)
     
     return None
