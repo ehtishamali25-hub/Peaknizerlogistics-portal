@@ -4,10 +4,103 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Peaknizer Logistics – 3PL Warehouse & Fulfillment</title>
+
+    <!-- Default SEO tags (homepage). src/seo/RouteSeo.jsx replaces them on every page. -->
+    <title>3PL Warehouse &amp; Prep Services in the USA | Peaknizer</title>
+    <meta name="description" content="Peaknizer Logistics is a US 3PL for product prep, warehousing and order fulfillment, serving Amazon, Walmart, eBay and Shopify sellers nationwide." />
+    <link rel="canonical" href="https://peaknizerlogistics.com/" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Link previews on Facebook, LinkedIn, WhatsApp and X -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Peaknizer Logistics" />
+    <meta property="og:title" content="3PL Warehouse &amp; Prep Services in the USA | Peaknizer" />
+    <meta property="og:description" content="Peaknizer Logistics is a US 3PL for product prep, warehousing and order fulfillment, serving Amazon, Walmart, eBay and Shopify sellers nationwide." />
+    <meta property="og:url" content="https://peaknizerlogistics.com/" />
+    <meta property="og:image" content="https://peaknizerlogistics.com/images/warehouse-wide.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="3PL Warehouse &amp; Prep Services in the USA | Peaknizer" />
+    <meta name="twitter:description" content="Peaknizer Logistics is a US 3PL for product prep, warehousing and order fulfillment, serving Amazon, Walmart, eBay and Shopify sellers nationwide." />
+    <meta name="twitter:image" content="https://peaknizerlogistics.com/images/warehouse-wide.jpg" />
+
+    <!-- Who we are, for Google and AI assistants.
+         Keep these details the same as on the website, Google Business Profile and social pages. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://peaknizerlogistics.com/#organization",
+          "name": "Peaknizer Logistics",
+          "url": "https://peaknizerlogistics.com/",
+          "logo": "https://peaknizerlogistics.com/logo.png",
+          "image": "https://peaknizerlogistics.com/images/warehouse-wide.jpg",
+          "description": "Third-party logistics (3PL) company providing product prep, warehousing and order fulfillment for ecommerce sellers across the USA. Head office in Arlington, Virginia, with warehouses in Houston, Texas and New Jersey.",
+          "email": "info@peaknizerlogistics.com",
+          "telephone": "+1-571-307-4461",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Arlington",
+            "addressRegion": "VA",
+            "addressCountry": "US"
+          },
+          "location": [
+            {
+              "@type": "Place",
+              "name": "Peaknizer Logistics head office, Arlington, VA",
+              "address": { "@type": "PostalAddress", "addressLocality": "Arlington", "addressRegion": "VA", "addressCountry": "US" }
+            },
+            {
+              "@type": "Place",
+              "name": "Peaknizer Logistics warehouse, Houston, TX",
+              "address": { "@type": "PostalAddress", "addressLocality": "Houston", "addressRegion": "TX", "addressCountry": "US" }
+            },
+            {
+              "@type": "Place",
+              "name": "Peaknizer Logistics warehouse, New Jersey",
+              "address": { "@type": "PostalAddress", "addressRegion": "NJ", "addressCountry": "US" }
+            }
+          ],
+          "areaServed": { "@type": "Country", "name": "United States" },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer service",
+            "email": "info@peaknizerlogistics.com",
+            "telephone": "+1-571-307-4461",
+            "areaServed": "US",
+            "availableLanguage": "English"
+          },
+          "sameAs": [
+            "https://www.facebook.com/profile.php?id=61594559992552",
+            "https://www.linkedin.com/company/peaknizerlogistics/",
+            "https://www.instagram.com/peaknizerlogistics_us/"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://peaknizerlogistics.com/#website",
+          "url": "https://peaknizerlogistics.com/",
+          "name": "Peaknizer Logistics",
+          "publisher": { "@id": "https://peaknizerlogistics.com/#organization" }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Readable text for crawlers that do not run JavaScript (until pre-rendering is live) -->
+    <noscript>
+      <h1>Peaknizer Logistics: 3PL warehouse and prep services in the USA</h1>
+      <p>Peaknizer Logistics is a third-party logistics (3PL) company with its head office in Arlington, Virginia,
+        and warehouses in Houston, Texas and New Jersey. We provide product prep, warehousing and order
+        fulfillment for Amazon, Walmart, eBay and Shopify sellers and small brands across the USA.</p>
+      <p><a href="/services">Services</a> | <a href="/pricing">Pricing</a> | <a href="/about">About</a> |
+        <a href="/contact">Contact and quotes</a></p>
+      <p>Email: <a href="mailto:info@peaknizerlogistics.com">info@peaknizerlogistics.com</a> |
+        Phone: <a href="tel:+15713074461">+1 (571) 307-4461</a></p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
