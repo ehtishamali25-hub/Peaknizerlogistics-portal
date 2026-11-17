@@ -11,6 +11,7 @@ import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
 import PolicyPage from './pages/PolicyPage';
+import { PRIVACY_SECTIONS, PRIVACY_LAST_UPDATED } from './data/privacyContent';
 import FaqPage from './pages/FaqPage';
 import NotFound from './pages/NotFound';
 import RouteSeo from './seo/RouteSeo';
@@ -135,7 +136,10 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
-          <Route path="/privacy" element={<PolicyPage />} />
+          <Route
+            path="/privacy"
+            element={<PolicyPage title="Privacy Policy" sections={PRIVACY_SECTIONS} lastUpdated={PRIVACY_LAST_UPDATED} />}
+          />
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/terms" element={<PolicyPage />} />
           <Route path="/login" element={<Login />} />
