@@ -6,7 +6,11 @@
 // from RouteSeo.jsx, so it stays out of Google.
 //
 // Add a page here ONLY when the page really exists on the site.
-// (/faq, /terms, /blog and /careers will be added when their pages are built.)
+// (/terms, /blog and /careers will be added when their pages are built.)
+// Every page listed here is also pre-rendered (scripts/prerender.mjs). On Render, each one
+// needs its own Rewrite rule ( /page -> /page/index.html ) above the "/*" rule.
+
+import { FAQS, answerText } from '../data/faqContent.js';
 
 export const SITE = 'https://peaknizerlogistics.com';
 export const SITE_NAME = 'Peaknizer Logistics';
@@ -37,6 +41,21 @@ export const SEO_PAGES = {
     title: 'Contact Peaknizer Logistics | Get a 3PL Quote',
     description:
       'Get a 3PL quote or ask a question. Contact Peaknizer Logistics about prep, warehousing and fulfillment for your store, anywhere in the USA.',
+  },
+  '/faq': {
+    title: '3PL FAQ: Prep, Pricing & Shipping | Peaknizer Logistics',
+    description:
+      'Answers about our 3PL services: prices, no minimum volume, same-day shipping, the marketplaces we support, onboarding, dropshipping and online tracking.',
+    // FAQ structured data for Google and AI assistants, built from the same text as the page
+    schema: {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQS.map((faq) => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: { '@type': 'Answer', text: answerText(faq) },
+      })),
+    },
   },
   '/privacy': {
     title: 'Privacy Policy | Peaknizer Logistics',
