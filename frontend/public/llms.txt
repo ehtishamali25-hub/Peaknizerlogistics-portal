@@ -1,0 +1,17 @@
+# Peaknizer Logistics
+
+> Peaknizer Logistics is a third-party logistics (3PL) company with its head office in Arlington, Virginia, and warehouses in Houston, Texas and New Jersey. It provides product prep, warehousing and order fulfillment for Amazon, Walmart, eBay and Shopify sellers and small brands across the USA.
+
+Contact: info@peaknizerlogistics.com | +1 (571) 307-4461
+
+## Main pages
+
+- [Home](https://peaknizerlogistics.com/): What we do and who we serve
+- [Services](https://peaknizerlogistics.com/services): Prep, storage and fulfillment services
+- [Pricing](https://peaknizerlogistics.com/pricing): Rates and how quotes work
+- [About](https://peaknizerlogistics.com/about): Company background and team
+- [Contact](https://peaknizerlogistics.com/contact): Request a quote or ask a question
+
+## Optional
+
+- [Privacy Policy](https://peaknizerlogistics.com/privacy)
