@@ -11,6 +11,7 @@ import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
 import PolicyPage from './pages/PolicyPage';
+import FaqPage from './pages/FaqPage';
 import NotFound from './pages/NotFound';
 import RouteSeo from './seo/RouteSeo';
 
@@ -135,6 +136,7 @@ function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PolicyPage />} />
+          <Route path="/faq" element={<FaqPage />} />
           <Route path="/login" element={<Login />} />
 
           {/* Old addresses that now go to the real page */}
@@ -142,9 +144,8 @@ function App() {
           <Route path="/about-us" element={<Navigate to="/about" replace />} />
           <Route path="/index.html" element={<Navigate to="/" replace />} />
 
-          {/* TEMPORARY: these four pages are not built yet, so their links still open
+          {/* TEMPORARY: these three pages are not built yet, so their links still open
               the homepage. Remove each line when its real page is added. */}
-          <Route path="/faq" element={<Navigate to="/" replace />} />
           <Route path="/terms" element={<Navigate to="/" replace />} />
           <Route path="/blog" element={<Navigate to="/" replace />} />
           <Route path="/careers" element={<Navigate to="/" replace />} />
