@@ -11,7 +11,14 @@ const CONTACT_ICON_PATHS = {
   ]
 };
 
-const PolicyPage = () => {
+// Shows the Terms of Service by default (/terms).
+// The Privacy Policy (/privacy) uses the same layout with its own title, text and date:
+//   <PolicyPage title="Privacy Policy" sections={PRIVACY_SECTIONS} lastUpdated={PRIVACY_LAST_UPDATED} />
+const PolicyPage = ({
+  title = 'Terms of Service & 3PL Policies',
+  sections = POLICY_SECTIONS,
+  lastUpdated = POLICY_LAST_UPDATED,
+}) => {
   return (
     <WebsiteLayout>
       <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-brand-navy/[0.03]">
@@ -19,16 +26,16 @@ const PolicyPage = () => {
 
           <div className="text-center mb-8 sm:mb-12">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-navy mb-4">
-              Terms of Service &amp; 3PL Policies
+              {title}
             </h1>
             <div className="w-20 sm:w-24 h-1 bg-brand-emerald mx-auto rounded-full" />
-            <p className="text-slate-500 mt-4 text-sm sm:text-base">Last updated: {POLICY_LAST_UPDATED}</p>
+            <p className="text-slate-500 mt-4 text-sm sm:text-base">Last updated: {lastUpdated}</p>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-5 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
 
-              {POLICY_SECTIONS.map((s) =>
+              {sections.map((s) =>
                 s.highlight ? (
                   <section key={s.num} className="border border-red-300/70 rounded-xl p-4 sm:p-6 bg-red-50">
                     <div className="flex items-center gap-3 mb-3 sm:mb-4">
