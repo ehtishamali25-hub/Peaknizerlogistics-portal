@@ -30,11 +30,21 @@ const Counter = ({ end, label }) => {
   );
 };
 
+const services = [
+  { title: 'Receiving & inspection', desc: 'Every inbound shipment is checked in, counted and inspected against your packing list on the day it arrives, so you always know exactly what you have in stock.' },
+  { title: 'Amazon FBA & Walmart WFS prep', desc: 'FNSKU labeling, poly-bagging, bundling and carton labeling done to current marketplace requirements, so your shipments are accepted on the first attempt.' },
+  { title: 'Warehousing & storage', desc: 'Climate-controlled storage in our warehouses in Virginia, Texas and New Jersey, with stock placed by how fast it sells so popular products ship faster.' },
+  { title: 'Order fulfillment', desc: 'Same-day pick, pack and ship for orders from Shopify, eBay, TikTok Shop, Walmart and Amazon (FBM), all from one shared pool of stock.' },
+  { title: 'Kitting & bundling', desc: 'We build multi-packs, sets and bundles for you, so you can sell new product combinations without packing them yourself.' },
+  { title: 'Returns', desc: 'Returned items are received, inspected and restocked when they can be sold again, and you see every return in your portal.' }
+];
+
 const steps = [
-  { num: '01', title: 'Receive', desc: 'Inventory is checked in, counted, and inspected against your packing list the same day it arrives.' },
-  { num: '02', title: 'Store', desc: 'Stock is slotted across our warehouse network based on order velocity, so fast-moving SKUs ship faster.' },
-  { num: '03', title: 'Pick & pack', desc: 'Orders are picked, packed, and quality-checked with a 99.9% accuracy rate before they leave the building.' },
-  { num: '04', title: 'Ship', desc: 'We select the fastest, most cost-effective carrier for every order and hand you tracking automatically.' }
+  { num: '01', title: 'Get a quote', desc: 'Tell us what you sell, where you sell it and roughly how many orders you ship. We reply with pricing within one business day.' },
+  { num: '02', title: 'Send your inventory', desc: 'Ship your stock to our warehouse. It is checked in, counted and inspected against your packing list the same day it arrives.' },
+  { num: '03', title: 'We prep & store', desc: 'Units are labeled, bagged or bundled to marketplace rules and stored by order velocity, so fast-moving products ship faster.' },
+  { num: '04', title: 'We pick, pack & ship', desc: 'Orders are picked, packed and quality-checked with a 99% accuracy rate, then sent with the most cost-effective carrier.' },
+  { num: '05', title: 'Track it online', desc: 'Follow your inventory, shipments and invoices in your own customer portal, without waiting for an email reply.' }
 ];
 
 const portalFeatures = [
@@ -52,13 +62,16 @@ const whyUs = [
   { title: 'A real account manager', desc: 'One point of contact who knows your account, not a rotating support queue.' }
 ];
 
+// TikTok Shop: save its logo as public/images/logos/tiktok-shop.png
+// (until then the name is shown as text)
 const platforms = [
   { name: 'Amazon', logo: '/images/logos/amazon.png' },
-  { name: 'Shopify', logo: '/images/logos/shopify.png' },
-  { name: 'Etsy', logo: '/images/logos/etsy.png' },
-  { name: 'WooCommerce', logo: '/images/logos/woocommerce.png' },
   { name: 'Walmart', logo: '/images/logos/walmart.png' },
-  { name: 'eBay', logo: '/images/logos/ebay.png' }
+  { name: 'Shopify', logo: '/images/logos/shopify.png' },
+  { name: 'eBay', logo: '/images/logos/ebay.png' },
+  { name: 'TikTok Shop', logo: '/images/logos/tiktok-shop.png' },
+  { name: 'Etsy', logo: '/images/logos/etsy.png' },
+  { name: 'WooCommerce', logo: '/images/logos/woocommerce.png' }
 ];
 
 const PlatformLogo = ({ name, logo }) => {
@@ -155,10 +168,10 @@ const HomePage = () => {
                   Third-party logistics & fulfillment
                 </span>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-5">
-                  Fulfillment infrastructure for growing e-commerce brands
+                  3PL Warehouse &amp; Prep Services Across the USA
                 </h1>
                 <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-lg mb-8">
-                  We receive, store, pick, pack, and ship your inventory from our warehouse network — so orders move faster and your team can focus on growth.
+                  Peaknizer Logistics is a third-party logistics (3PL) company based in Arlington, Virginia, with warehouses in Houston, Texas and New Jersey. We receive, prep, store and ship inventory for new, small and medium brands selling on Amazon, Walmart, Shopify, eBay and TikTok Shop.
                 </p>
                 <div className="flex flex-wrap gap-4 mb-10">
                   <Link
@@ -175,9 +188,9 @@ const HomePage = () => {
                   </Link>
                 </div>
                 <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-300">
-                  <span>2,500+ brands fulfilled</span>
-                  <span>60,000+ orders shipped monthly</span>
-                  <span>99.9% on-time rate</span>
+                  <span>1,000+ brands fulfilled</span>
+                  <span>20,000+ orders shipped monthly</span>
+                  <span>99% on-time rate</span>
                 </div>
               </div>
 
@@ -231,8 +244,12 @@ const HomePage = () => {
                       className="border border-slate-300 text-slate-900 px-4 py-3 rounded-md focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition"
                     >
                       <option>Amazon seller</option>
+                      <option>Walmart seller</option>
                       <option>Shopify store</option>
+                      <option>eBay seller</option>
+                      <option>TikTok Shop seller</option>
                       <option>Etsy or WooCommerce</option>
+                      <option>Several channels</option>
                       <option>Other</option>
                     </select>
                   </div>
@@ -267,8 +284,8 @@ const HomePage = () => {
         <section className="bg-white border-b border-slate-200 py-10 sm:py-14">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-200 max-w-3xl mx-auto">
-              <Counter end={2500} label="Brands fulfilled" />
-              <Counter end={60000} label="Orders shipped monthly" />
+              <Counter end={1000} label="Brands fulfilled" />
+              <Counter end={20000} label="Orders shipped monthly" />
               <Counter end={100000} label="Orders fulfilled to date" />
             </div>
           </div>
@@ -279,26 +296,16 @@ const HomePage = () => {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div>
-                <span className="text-sm font-semibold text-emerald-600">End-to-end fulfillment</span>
+                <span className="text-sm font-semibold text-emerald-700">Our 3PL services</span>
                 <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2 mb-5">
                   One warehouse partner, from receiving to returns
                 </h2>
                 <p className="text-slate-600 leading-relaxed mb-6">
                   Most sellers piece together receiving, storage, prep, and shipping across separate vendors. We run all of it under one roof, with one team accountable for every step — so nothing falls through the cracks between handoffs.
                 </p>
-                <ul className="space-y-3">
-                  {[
-                    'Receiving and inspection against your packing list',
-                    'Climate-controlled storage across our warehouse network',
-                    'Amazon FBA prep completed to current marketplace standards',
-                    'Same-day pick, pack, and carrier-optimized shipping'
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-3">
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                      <span className="text-slate-600">{item}</span>
-                    </li>
-                  ))}
-                </ul>
+                <Link to="/services" className="inline-block font-semibold text-emerald-700 hover:underline">
+                  See all our 3PL services and what's included
+                </Link>
               </div>
               <div className="rounded-xl overflow-hidden">
                 <img
@@ -307,6 +314,15 @@ const HomePage = () => {
                   className="w-full h-72 sm:h-96 object-cover"
                 />
               </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+              {services.map((service) => (
+                <div key={service.title} className="bg-white border border-slate-200 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-[#0E2A47] mb-2">{service.title}</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">{service.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -323,18 +339,18 @@ const HomePage = () => {
                 />
               </div>
               <div className="order-1 lg:order-2">
-                <span className="text-sm font-semibold text-emerald-600">Built for high-volume sellers</span>
+                <span className="text-sm font-semibold text-emerald-700">Who we work with</span>
                 <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2 mb-5">
-                  Fulfillment that keeps up as you scale
+                  Built for new, small and medium brands in the USA
                 </h2>
                 <p className="text-slate-600 leading-relaxed mb-6">
-                  Whether you're running a single SKU or a full multi-channel catalog across Amazon, Shopify, and Walmart, our operation is built to absorb volume spikes without missing a delivery window.
+                  Whether you're launching your first product or selling a full catalog across Amazon, Walmart, Shopify, eBay and TikTok Shop, we handle receiving, prep, storage and shipping — so you can spend your time growing the brand, and our operation absorbs volume spikes without missing a delivery window.
                 </p>
                 <ul className="space-y-3">
                   {[
-                    'FBA and WFS prep services for marketplace-managed inventory',
+                    'Amazon FBA and Walmart WFS prep for marketplace-managed inventory',
+                    'Order fulfillment for Shopify, eBay and TikTok Shop stores',
                     'Multi-channel order routing from a single stock pool',
-                    'Returns receiving, inspection, and restocking',
                     'Volume-based pricing that improves as you grow'
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-3">
@@ -357,7 +373,7 @@ const HomePage = () => {
           />
           <div className="absolute inset-0 bg-[#0E2A47]/50"></div>
           <div className="absolute bottom-6 right-6 sm:bottom-10 sm:right-10 bg-white rounded-xl shadow-xl px-6 py-5 max-w-xs">
-            <div className="text-4xl font-bold text-[#0E2A47]">99.9%</div>
+            <div className="text-4xl font-bold text-[#0E2A47]">99%</div>
             <div className="text-slate-500 text-sm mt-1">Order accuracy across every warehouse in our network</div>
           </div>
         </section>
@@ -367,7 +383,7 @@ const HomePage = () => {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div>
-                <span className="text-sm font-semibold text-emerald-600">Amazon FBA prep</span>
+                <span className="text-sm font-semibold text-emerald-700">Amazon FBA prep</span>
                 <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2 mb-5">
                   Prep done right the first time
                 </h2>
@@ -403,7 +419,7 @@ const HomePage = () => {
         <section className="bg-emerald-50/60 py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-semibold text-emerald-600">Why sellers choose us</span>
+              <span className="text-sm font-semibold text-emerald-700">Why sellers choose us</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2">
                 A fulfillment partner, not just a warehouse
               </h2>
@@ -416,6 +432,9 @@ const HomePage = () => {
                 </div>
               ))}
             </div>
+            <Link to="/pricing" className="inline-block mt-8 font-semibold text-emerald-700 hover:underline">
+              See our 3PL pricing for prep, storage and shipping
+            </Link>
           </div>
         </section>
 
@@ -437,15 +456,15 @@ const HomePage = () => {
         <section className="bg-[#0E2A47]/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-semibold text-emerald-600">How it works</span>
+              <span className="text-sm font-semibold text-emerald-700">How it works</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2">
-                From your warehouse to your customer's door
+                From your first quote to your customer's door
               </h2>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
               {steps.map((step) => (
                 <div key={step.num} className="bg-white border border-slate-200 rounded-xl p-6">
-                  <div className="text-sm font-bold text-emerald-600 mb-2">{step.num}</div>
+                  <div className="text-sm font-bold text-emerald-700 mb-2">{step.num}</div>
                   <h3 className="text-lg font-bold text-[#0E2A47] mb-2">{step.title}</h3>
                   <p className="text-slate-600 text-sm leading-relaxed">{step.desc}</p>
                 </div>
@@ -459,9 +478,9 @@ const HomePage = () => {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center mb-12">
               <div>
-                <span className="text-sm font-semibold text-emerald-600">Your account, always visible</span>
+                <span className="text-sm font-semibold text-emerald-700">Your customer portal</span>
                 <h2 className="text-3xl sm:text-4xl font-bold text-[#0E2A47] mt-2 mb-5">
-                  Track everything from your own portal
+                  Track your inventory and invoices online
                 </h2>
                 <p className="text-slate-600 leading-relaxed mb-6">
                   Every customer gets a login to our portal — not just a shared spreadsheet or a monthly email. You can check inventory, download invoices, upload payment proof, and follow every shipment without waiting on a reply from our team.
@@ -499,9 +518,11 @@ const HomePage = () => {
             <p className="text-center text-sm font-semibold text-emerald-300 uppercase tracking-wide mb-8">
               Built to support sellers on
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 max-w-4xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 max-w-5xl mx-auto">
               {platforms.map((p) => (
-                <PlatformLogo key={p.name} name={p.name} logo={p.logo} />
+                <div key={p.name} className="w-[calc(50%-0.5rem)] sm:w-40">
+                  <PlatformLogo name={p.name} logo={p.logo} />
+                </div>
               ))}
             </div>
           </div>
