@@ -1,44 +1,131 @@
-﻿import UploadBatch from './pages/UploadBatch';
-import MyBatches from './pages/MyBatches';
-import CustomersList from './pages/CustomersList';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+﻿import { Component, lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './layouts/MainLayout';
-import Login from './pages/Login';
-import OwnerDashboard from './pages/OwnerDashboard';
-import OwnerBatches from './pages/OwnerBatches';
-import OwnerInvoices from './pages/OwnerInvoices';
-import OwnerBatchDetail from './pages/OwnerBatchDetail';
-import AddEmployee from './pages/AddEmployee';
-import WarehouseManagement from './pages/WarehouseManagement';
-import ProductManagement from './pages/ProductManagement';
-import InventoryCustomerList from './pages/InventoryCustomerList';
-import CustomerInventoryDetail from './pages/CustomerInventoryDetail';
-import DropshippingManage from './pages/DropshippingManage';
-import CustomerDashboard from './pages/CustomerDashboard';
-import CustomerInventory from './pages/CustomerInventory';
-import CustomerDropshipping from './pages/CustomerDropshipping';
-import CustomerShippingInvoices from './pages/CustomerShippingInvoices';
-import OwnerShippingDetails from './pages/OwnerShippingDetails';
-import CustomerPrepInvoices from './pages/CustomerPrepInvoices';
-import CustomerProofs from './pages/CustomerProofs';
+
+// Public website pages: part of the main file, so they open instantly and can be pre-rendered
 import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
 import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
-import OwnerRegistrations from './pages/OwnerRegistrations';
-import VerifyEmail from './pages/VerifyEmail';
 import PolicyPage from './pages/PolicyPage';
 import NotFound from './pages/NotFound';
 import RouteSeo from './seo/RouteSeo';
+
+// Portal pages: each one is downloaded only when someone opens it,
+// so website visitors do not download the whole portal (report finding M5).
+const RELOAD_KEY = 'peaknizer-page-reload';
+
+function lazyPage(load) {
+  return lazy(() =>
+    load()
+      .then((module) => {
+        try { sessionStorage.removeItem(RELOAD_KEY); } catch { /* storage not available */ }
+        return module;
+      })
+      .catch((error) => {
+        // After a new deploy, a tab that was already open can ask for a page file
+        // that no longer exists. Reload once to get the new version of the site.
+        let alreadyReloaded = true;
+        try {
+          alreadyReloaded = sessionStorage.getItem(RELOAD_KEY) === '1';
+          if (!alreadyReloaded) sessionStorage.setItem(RELOAD_KEY, '1');
+        } catch { /* storage not available: do not reload */ }
+        if (!alreadyReloaded) {
+          window.location.reload();
+          return new Promise(() => {}); // the page is reloading
+        }
+        throw error;
+      })
+  );
+}
+
+const Login = lazyPage(() => import('./pages/Login'));
+const VerifyEmail = lazyPage(() => import('./pages/VerifyEmail'));
+const UploadBatch = lazyPage(() => import('./pages/UploadBatch'));
+const MyBatches = lazyPage(() => import('./pages/MyBatches'));
+const CustomersList = lazyPage(() => import('./pages/CustomersList'));
+const OwnerDashboard = lazyPage(() => import('./pages/OwnerDashboard'));
+const OwnerBatches = lazyPage(() => import('./pages/OwnerBatches'));
+const OwnerInvoices = lazyPage(() => import('./pages/OwnerInvoices'));
+const OwnerBatchDetail = lazyPage(() => import('./pages/OwnerBatchDetail'));
+const AddEmployee = lazyPage(() => import('./pages/AddEmployee'));
+const WarehouseManagement = lazyPage(() => import('./pages/WarehouseManagement'));
+const ProductManagement = lazyPage(() => import('./pages/ProductManagement'));
+const InventoryCustomerList = lazyPage(() => import('./pages/InventoryCustomerList'));
+const CustomerInventoryDetail = lazyPage(() => import('./pages/CustomerInventoryDetail'));
+const DropshippingManage = lazyPage(() => import('./pages/DropshippingManage'));
+const CustomerDashboard = lazyPage(() => import('./pages/CustomerDashboard'));
+const CustomerInventory = lazyPage(() => import('./pages/CustomerInventory'));
+const CustomerDropshipping = lazyPage(() => import('./pages/CustomerDropshipping'));
+const CustomerShippingInvoices = lazyPage(() => import('./pages/CustomerShippingInvoices'));
+const OwnerShippingDetails = lazyPage(() => import('./pages/OwnerShippingDetails'));
+const CustomerPrepInvoices = lazyPage(() => import('./pages/CustomerPrepInvoices'));
+const CustomerProofs = lazyPage(() => import('./pages/CustomerProofs'));
+const OwnerRegistrations = lazyPage(() => import('./pages/OwnerRegistrations'));
+
+// Shown while a portal page is being downloaded (usually a fraction of a second)
+const PageLoading = () => (
+  <div className="min-h-screen flex items-center justify-center text-slate-500" role="status">
+    Loading...
+  </div>
+);
+
+// If a page cannot be loaded (for example, no internet connection),
+// show a message instead of a blank screen. It clears when the address changes.
+class PageErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { failed: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.state.failed && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ failed: false });
+    }
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center" role="alert">
+          <p className="text-slate-700">This page could not be loaded. Please check your internet connection.</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="bg-[#0E2A47] hover:bg-[#123457] text-white font-semibold px-5 py-2.5 rounded-md transition-colors"
+          >
+            Reload the page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function PageBoundary({ children }) {
+  const { pathname } = useLocation();
+  return (
+    <PageErrorBoundary resetKey={pathname}>
+      <Suspense fallback={<PageLoading />}>{children}</Suspense>
+    </PageErrorBoundary>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       {/* Sets the title, description and other SEO tags for every page */}
       <RouteSeo />
       <AuthProvider>
+        <PageBoundary>
         <Routes>
 
           {/* Public Website Routes */}
@@ -326,6 +413,7 @@ function App() {
           {/* Any other address: "Page not found". This must stay the LAST route. */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </PageBoundary>
       </AuthProvider>
     </BrowserRouter>
   );
