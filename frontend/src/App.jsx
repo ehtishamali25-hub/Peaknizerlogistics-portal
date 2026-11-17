@@ -137,6 +137,7 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PolicyPage />} />
           <Route path="/faq" element={<FaqPage />} />
+          <Route path="/terms" element={<PolicyPage />} />
           <Route path="/login" element={<Login />} />
 
           {/* Old addresses that now go to the real page */}
@@ -144,9 +145,8 @@ function App() {
           <Route path="/about-us" element={<Navigate to="/about" replace />} />
           <Route path="/index.html" element={<Navigate to="/" replace />} />
 
-          {/* TEMPORARY: these three pages are not built yet, so their links still open
+          {/* TEMPORARY: these two pages are not built yet, so their links still open
               the homepage. Remove each line when its real page is added. */}
-          <Route path="/terms" element={<Navigate to="/" replace />} />
           <Route path="/blog" element={<Navigate to="/" replace />} />
           <Route path="/careers" element={<Navigate to="/" replace />} />
           
