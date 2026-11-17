@@ -16,7 +16,7 @@ export const SEO_PAGES = {
   '/': {
     title: 'US 3PL Warehouse & Prep Services | Peaknizer Logistics',
     description:
-      'Peaknizer Logistics is a US 3PL for product prep, warehousing and order fulfillment, serving Amazon, Walmart, eBay and Shopify sellers nationwide.',
+      'US 3PL for product prep, warehousing and fulfillment, serving small and growing brands on Amazon, Walmart, Shopify, eBay and TikTok Shop nationwide.',
   },
   '/services': {
     title: '3PL Prep, Storage & Fulfillment | Peaknizer Logistics',
