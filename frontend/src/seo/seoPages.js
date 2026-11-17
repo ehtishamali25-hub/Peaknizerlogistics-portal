@@ -6,7 +6,7 @@
 // from RouteSeo.jsx, so it stays out of Google.
 //
 // Add a page here ONLY when the page really exists on the site.
-// (/terms, /blog and /careers will be added when their pages are built.)
+// (/blog and /careers will be added when their pages are built.)
 // Every page listed here is also pre-rendered (scripts/prerender.mjs). On Render, each one
 // needs its own Rewrite rule ( /page -> /page/index.html ) above the "/*" rule.
 
@@ -56,6 +56,11 @@ export const SEO_PAGES = {
         acceptedAnswer: { '@type': 'Answer', text: answerText(faq) },
       })),
     },
+  },
+  '/terms': {
+    title: 'Terms of Service | Peaknizer Logistics',
+    description:
+      'The terms for using our 3PL services: receiving, prep, fulfillment, fees and payment, lost or damaged inventory, prohibited products and ending service.',
   },
   '/privacy': {
     title: 'Privacy Policy | Peaknizer Logistics',
