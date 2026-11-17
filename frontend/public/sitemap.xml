@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Lists ONLY real public pages. Never list /login or portal pages.
-     /faq, /terms, /blog and /careers are added when those pages are built.
+<!-- Lists ONLY real public pages (the same pages as src/seo/seoPages.js).
+     Never list /login or portal pages. /terms, /blog and /careers are added when those pages are built.
      Update <lastmod> to the date you last changed a page. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://peaknizerlogistics.com/</loc><lastmod>2026-11-17</lastmod></url>
@@ -8,5 +8,6 @@
   <url><loc>https://peaknizerlogistics.com/pricing</loc><lastmod>2026-11-17</lastmod></url>
   <url><loc>https://peaknizerlogistics.com/about</loc><lastmod>2026-11-17</lastmod></url>
   <url><loc>https://peaknizerlogistics.com/contact</loc><lastmod>2026-11-17</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/faq</loc><lastmod>2026-11-17</lastmod></url>
   <url><loc>https://peaknizerlogistics.com/privacy</loc><lastmod>2026-11-17</lastmod></url>
 </urlset>
