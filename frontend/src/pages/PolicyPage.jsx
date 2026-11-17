@@ -1,6 +1,6 @@
 import WebsiteLayout from './WebsiteLayout';
 import { Link } from 'react-router-dom';
-import { POLICY_SECTIONS } from '../data/policyContent';
+import { POLICY_SECTIONS, POLICY_LAST_UPDATED } from '../data/policyContent';
 
 const CONTACT_ICON_PATHS = {
   email: ['M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'],
@@ -14,15 +14,15 @@ const CONTACT_ICON_PATHS = {
 const PolicyPage = () => {
   return (
     <WebsiteLayout>
-      <main className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-brand-navy/[0.03]">
+      <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-brand-navy/[0.03]">
         <div className="max-w-4xl mx-auto">
 
           <div className="text-center mb-8 sm:mb-12">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-navy mb-4">
-              Terms of service & 3PL policies
+              Terms of Service &amp; 3PL Policies
             </h1>
             <div className="w-20 sm:w-24 h-1 bg-brand-emerald mx-auto rounded-full" />
-            <p className="text-slate-500 mt-4 text-sm sm:text-base">Last updated: {new Date().toLocaleDateString()}</p>
+            <p className="text-slate-500 mt-4 text-sm sm:text-base">Last updated: {POLICY_LAST_UPDATED}</p>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -98,7 +98,7 @@ const PolicyPage = () => {
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     </WebsiteLayout>
   );
 };
