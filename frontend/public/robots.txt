@@ -1,0 +1,8 @@
+# https://peaknizerlogistics.com/robots.txt
+# All search engines and AI assistants may read the site.
+# The login and portal pages are kept out of Google with a "noindex" tag, not here:
+# Google must be able to read a page to see its noindex tag.
+User-agent: *
+Allow: /
+
+Sitemap: https://peaknizerlogistics.com/sitemap.xml
