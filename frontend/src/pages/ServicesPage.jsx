@@ -12,8 +12,8 @@ const coreServices = [
   },
   {
     title: 'Order fulfillment',
-    desc: 'Same-day pick, pack, and ship on every order that comes in before cutoff.',
-    points: ['99.9% pick accuracy', 'Multi-channel order routing', 'Custom packaging on request']
+    desc: 'Same-day pick, pack, and ship on every order received by 2 PM.',
+    points: ['99% pick accuracy', 'Multi-channel order routing', 'Custom packaging on request']
   },
   {
     title: 'Shipping & carriers',
@@ -43,8 +43,8 @@ const workflow = [
 ];
 
 const industries = [
-  'E-commerce', 'Amazon FBA', 'Shopify', 'DTC brands', 'Health & beauty',
-  'Electronics', 'Apparel', 'Food', 'Pet supplies', 'Home goods', 'Subscription boxes', 'B2B'
+  'E-commerce', 'Amazon FBA', 'Walmart', 'Shopify', 'eBay', 'TikTok Shop', 'DTC brands', 'Health & beauty',
+  'Electronics', 'Apparel', 'Shelf-stable food', 'Pet supplies', 'Home goods', 'Subscription boxes', 'B2B'
 ];
 
 const ServicesPage = () => {
@@ -84,7 +84,7 @@ const ServicesPage = () => {
         <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-semibold text-emerald-600">Core services</span>
+              <span className="text-sm font-semibold text-emerald-700">Core services</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 Built to run your fulfillment end to end
               </h2>
@@ -163,7 +163,7 @@ const ServicesPage = () => {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center mb-12">
               <div>
-                <span className="text-sm font-semibold text-emerald-600">Your fulfillment, visible</span>
+                <span className="text-sm font-semibold text-emerald-700">Your fulfillment, visible</span>
                 <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2 mb-5">
                   Track every order from your own portal
                 </h2>
@@ -201,7 +201,7 @@ const ServicesPage = () => {
         <section className="bg-brand-navy/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-semibold text-emerald-600">How it works</span>
+              <span className="text-sm font-semibold text-emerald-700">How it works</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 A workflow built to remove guesswork
               </h2>
@@ -209,7 +209,7 @@ const ServicesPage = () => {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {workflow.map((step) => (
                 <div key={step.num} className="bg-white border border-slate-200 rounded-xl p-6">
-                  <div className="text-sm font-bold text-emerald-600 mb-2">{step.num}</div>
+                  <div className="text-sm font-bold text-emerald-700 mb-2">{step.num}</div>
                   <h3 className="text-lg font-bold text-brand-navy mb-2">{step.title}</h3>
                   <p className="text-slate-600 text-sm leading-relaxed">{step.desc}</p>
                 </div>
@@ -228,7 +228,7 @@ const ServicesPage = () => {
           <div className="absolute inset-0 bg-brand-navy/40"></div>
           <div className="absolute bottom-6 left-6 sm:bottom-10 sm:left-10 bg-white rounded-xl shadow-xl px-6 py-5 max-w-xs">
             <div className="text-3xl font-bold text-brand-navy">Same-day</div>
-            <div className="text-slate-500 text-sm mt-1">Orders placed before cutoff ship the same day</div>
+            <div className="text-slate-500 text-sm mt-1">Orders received by 2 PM ship the same day</div>
           </div>
         </section>
 
@@ -236,7 +236,7 @@ const ServicesPage = () => {
         <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-semibold text-emerald-600">Who we work with</span>
+              <span className="text-sm font-semibold text-emerald-700">Who we work with</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 Specialized workflows for every vertical
               </h2>
