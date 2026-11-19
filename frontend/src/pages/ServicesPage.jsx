@@ -134,6 +134,8 @@ const ServicesPage = () => {
           <img
             src="/images/services/fba-prep.jpg"
             alt="Staff prepping products for FBA"
+            loading="lazy"
+            decoding="async"
             className="w-full h-64 sm:h-96 object-cover"
           />
           <div className="absolute inset-0 bg-brand-navy/60 flex items-center">
@@ -179,8 +181,10 @@ const ServicesPage = () => {
               </div>
               <div className="rounded-xl overflow-hidden">
                 <img
-                  src="/images/services/portal-dashboard.png"
-                  alt="Staff reviewing the fulfillment portal on a laptop"
+                  src="/images/services/portal-dashboard.jpg"
+                  alt="Peaknizer Logistics customer portal dashboard showing inventory, invoices and shipping details"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-72 sm:h-96 object-cover"
                 />
               </div>
@@ -223,6 +227,8 @@ const ServicesPage = () => {
           <img
             src="/images/services/pick-pack.jpg"
             alt="Staff picking and packing orders"
+            loading="lazy"
+            decoding="async"
             className="w-full h-64 sm:h-96 object-cover"
           />
           <div className="absolute inset-0 bg-brand-navy/40"></div>
