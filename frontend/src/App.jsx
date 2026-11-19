@@ -13,6 +13,8 @@ import ContactPage from './pages/ContactPage';
 import PolicyPage from './pages/PolicyPage';
 import { PRIVACY_SECTIONS, PRIVACY_LAST_UPDATED } from './data/privacyContent';
 import FaqPage from './pages/FaqPage';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 import NotFound from './pages/NotFound';
 import RouteSeo from './seo/RouteSeo';
 
@@ -142,6 +144,8 @@ function App() {
           />
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/terms" element={<PolicyPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
           <Route path="/login" element={<Login />} />
 
           {/* Old addresses that now go to the real page */}
@@ -149,9 +153,8 @@ function App() {
           <Route path="/about-us" element={<Navigate to="/about" replace />} />
           <Route path="/index.html" element={<Navigate to="/" replace />} />
 
-          {/* TEMPORARY: these two pages are not built yet, so their links still open
-              the homepage. Remove each line when its real page is added. */}
-          <Route path="/blog" element={<Navigate to="/" replace />} />
+          {/* TEMPORARY: the Careers page is not built yet, so its link still opens
+              the homepage. Remove this line when the real page is added. */}
           <Route path="/careers" element={<Navigate to="/" replace />} />
           
           {/* Owner Routes */}
