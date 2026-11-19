@@ -64,17 +64,19 @@ const whyUs = [
 
 // TikTok Shop: save its logo as public/images/logos/tiktok-shop.png
 // (until then the name is shown as text)
+// width and height are each logo file's real size in pixels. They let the browser keep
+// the right space for the logo before it loads, so the page does not jump (report finding L2).
 const platforms = [
-  { name: 'Amazon', logo: '/images/logos/amazon.png' },
-  { name: 'Walmart', logo: '/images/logos/walmart.png' },
-  { name: 'Shopify', logo: '/images/logos/shopify.png' },
-  { name: 'eBay', logo: '/images/logos/ebay.png' },
-  { name: 'TikTok Shop', logo: '/images/logos/tiktok-shop.png' },
-  { name: 'Etsy', logo: '/images/logos/etsy.png' },
-  { name: 'WooCommerce', logo: '/images/logos/woocommerce.png' }
+  { name: 'Amazon', logo: '/images/logos/amazon.png', width: 180, height: 120 },
+  { name: 'Walmart', logo: '/images/logos/walmart.png', width: 214, height: 120 },
+  { name: 'Shopify', logo: '/images/logos/shopify.png', width: 383, height: 120 },
+  { name: 'eBay', logo: '/images/logos/ebay.png', width: 301, height: 120 },
+  { name: 'TikTok Shop', logo: '/images/logos/tiktok-shop.png', width: 300, height: 120 },
+  { name: 'Etsy', logo: '/images/logos/etsy.png', width: 120, height: 120 },
+  { name: 'WooCommerce', logo: '/images/logos/woocommerce.png', width: 300, height: 300 }
 ];
 
-const PlatformLogo = ({ name, logo }) => {
+const PlatformLogo = ({ name, logo, width, height }) => {
   const [failed, setFailed] = useState(false);
 
   if (failed) {
@@ -90,7 +92,11 @@ const PlatformLogo = ({ name, logo }) => {
       <img
         src={logo}
         alt={`${name} logo`}
-        className="max-h-8 sm:max-h-10 max-w-full object-contain"
+        width={width}
+        height={height}
+        loading="lazy"
+        decoding="async"
+        className="w-auto max-h-8 sm:max-h-10 max-w-full object-contain"
         onError={() => setFailed(true)}
       />
     </div>
@@ -311,6 +317,8 @@ const HomePage = () => {
                 <img
                   src="/images/warehouse-racking.jpg"
                   alt="Warehouse storage racking with inventory"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-72 sm:h-96 object-cover"
                 />
               </div>
@@ -335,6 +343,8 @@ const HomePage = () => {
                 <img
                   src="/images/warehouse-picking.jpg"
                   alt="Staff picking and packing orders in the warehouse"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-72 sm:h-96 object-cover"
                 />
               </div>
@@ -369,6 +379,8 @@ const HomePage = () => {
           <img
             src="/images/warehouse-wide.jpg"
             alt="Wide view of warehouse floor with shelving and inventory"
+            loading="lazy"
+            decoding="async"
             className="w-full h-72 sm:h-[28rem] object-cover"
           />
           <div className="absolute inset-0 bg-[#0E2A47]/50"></div>
@@ -408,6 +420,8 @@ const HomePage = () => {
                 <img
                   src="/images/warehouse-prep.jpg"
                   alt="Staff prepping and labeling products for FBA"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-72 sm:h-96 object-cover"
                 />
               </div>
@@ -443,6 +457,8 @@ const HomePage = () => {
           <img
             src="/images/warehouse-dispatch.jpg"
             alt="Packed orders staged for dispatch"
+            loading="lazy"
+            decoding="async"
             className="w-full h-64 sm:h-96 object-cover"
           />
           <div className="absolute inset-0 bg-[#0E2A47]/40"></div>
@@ -496,6 +512,8 @@ const HomePage = () => {
                 <img
                   src="/images/warehouse-office.jpg"
                   alt="Staff reviewing shipments on a laptop in the warehouse"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-72 sm:h-96 object-cover"
                 />
               </div>
@@ -521,7 +539,7 @@ const HomePage = () => {
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6 max-w-5xl mx-auto">
               {platforms.map((p) => (
                 <div key={p.name} className="w-[calc(50%-0.5rem)] sm:w-40">
-                  <PlatformLogo name={p.name} logo={p.logo} />
+                  <PlatformLogo name={p.name} logo={p.logo} width={p.width} height={p.height} />
                 </div>
               ))}
             </div>
