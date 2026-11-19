@@ -35,7 +35,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           <Link to="/" className="group relative">
             <div className="text-xl md:text-3xl font-bold text-brand-navy">
-              PEAKNIZER<span className="text-brand-emerald">LOGISTICS</span>
+              PEAKNIZER<span className="text-emerald-700">LOGISTICS</span>
             </div>
           </Link>
 
