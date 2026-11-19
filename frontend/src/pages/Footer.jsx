@@ -35,7 +35,7 @@ const Footer = () => {
           <div className="space-y-4 sm:space-y-6 text-center sm:text-left">
             <div>
               <h3 className="text-2xl sm:text-3xl font-bold text-brand-navy">
-                PEAKNIZER<span className="text-brand-emerald">LOGISTICS</span>
+                PEAKNIZER<span className="text-emerald-700">LOGISTICS</span>
               </h3>
               <div className="h-1 w-20 bg-brand-emerald mt-2 rounded-full mx-auto sm:mx-0" />
             </div>
