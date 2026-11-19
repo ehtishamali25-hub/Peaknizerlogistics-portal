@@ -1,4 +1,5 @@
 ﻿import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { POLICY_SECTIONS } from '../data/policyContent';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
@@ -265,23 +266,23 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 p-4">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-black to-gray-900 p-4">
       <div className={`bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full border-t-4 border-orange-500 max-h-[95vh] overflow-y-auto ${isLogin ? 'max-w-sm sm:max-w-md' : 'max-w-sm sm:max-w-2xl'}`}>
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-orange-600">PEAKNIZERLOGISTICS</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-orange-700">PEAKNIZERLOGISTICS</h1>
           <p className="text-gray-600 mt-2 text-sm sm:text-base">
             {isLogin ? 'Sign in to your account' : 'Create a new account'}
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+          <div role="alert" className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-sm">
+          <div role="status" className="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded mb-4 text-sm">
             {success}
           </div>
         )}
@@ -289,10 +290,12 @@ const Login = () => {
         {isLogin ? (
           <form onSubmit={handleLogin}>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="login-email" className="block text-gray-700 text-sm font-bold mb-2">
                 Email
               </label>
               <input
+                id="login-email"
+                autoComplete="username"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -302,10 +305,12 @@ const Login = () => {
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="login-password" className="block text-gray-700 text-sm font-bold mb-2">
                 Password
               </label>
               <input
+                id="login-password"
+                autoComplete="current-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -316,7 +321,7 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium"
+              className="w-full bg-orange-700 text-white py-2.5 px-4 rounded-md hover:bg-orange-800 transition duration-200 font-medium"
             >
               Sign In
             </button>
@@ -324,10 +329,12 @@ const Login = () => {
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="reg-name" className="block text-gray-700 text-sm font-bold mb-2">
                 Customer Name *
               </label>
               <input
+                id="reg-name"
+                autoComplete="name"
                 type="text"
                 value={regForm.customer_name}
                 onChange={(e) => setRegForm({...regForm, customer_name: e.target.value})}
@@ -337,11 +344,13 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="reg-email" className="block text-gray-700 text-sm font-bold mb-2">
                 Email *
               </label>
               <div className="flex gap-2">
                 <input
+                  id="reg-email"
+                  autoComplete="email"
                   type="email"
                   value={regForm.email}
                   onChange={(e) => handleRegEmailChange(e.target.value)}
@@ -362,7 +371,7 @@ const Login = () => {
               </div>
 
               {emailVerified && (
-                <p className="text-green-600 text-sm mt-2 flex items-center gap-1">
+                <p className="text-green-700 text-sm mt-2 flex items-center gap-1">
                   <span>✓</span> Email verified
                 </p>
               )}
@@ -372,6 +381,8 @@ const Login = () => {
                   <input
                     type="text"
                     inputMode="numeric"
+                    aria-label="6-digit verification code"
+                    autoComplete="one-time-code"
                     maxLength={6}
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
@@ -382,7 +393,7 @@ const Login = () => {
                     type="button"
                     onClick={handleVerifyCode}
                     disabled={verifyingCode}
-                    className="shrink-0 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium px-3 py-2 rounded-md disabled:opacity-60"
+                    className="shrink-0 bg-orange-700 hover:bg-orange-800 text-white text-sm font-medium px-3 py-2 rounded-md disabled:opacity-60"
                   >
                     {verifyingCode ? 'Verifying...' : 'Verify'}
                   </button>
@@ -390,17 +401,19 @@ const Login = () => {
               )}
 
               {otpMessage.text && (
-                <p className={`text-sm mt-2 ${otpMessage.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+                <p role={otpMessage.type === 'error' ? 'alert' : 'status'} className={`text-sm mt-2 ${otpMessage.type === 'error' ? 'text-red-600' : 'text-green-700'}`}>
                   {otpMessage.text}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="reg-phone" className="block text-gray-700 text-sm font-bold mb-2">
                 Phone *
               </label>
               <input
+                id="reg-phone"
+                autoComplete="tel"
                 type="tel"
                 value={regForm.phone}
                 onChange={(e) => setRegForm({...regForm, phone: e.target.value})}
@@ -410,10 +423,12 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="reg-company" className="block text-gray-700 text-sm font-bold mb-2">
                 Company Name
               </label>
               <input
+                id="reg-company"
+                autoComplete="organization"
                 type="text"
                 value={regForm.company_name}
                 onChange={(e) => setRegForm({...regForm, company_name: e.target.value})}
@@ -422,10 +437,12 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="reg-address" className="block text-gray-700 text-sm font-bold mb-2">
                 Company Address
               </label>
               <textarea
+                id="reg-address"
+                autoComplete="street-address"
                 value={regForm.company_address}
                 onChange={(e) => setRegForm({...regForm, company_address: e.target.value})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -434,7 +451,7 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="reg-documents" className="block text-gray-700 text-sm font-bold mb-2">
                 Company Documents
               </label>
               <p className="text-xs text-gray-500 mb-2">
@@ -442,6 +459,7 @@ const Login = () => {
               </p>
               <input
                 ref={fileInputRef}
+                id="reg-documents"
                 type="file"
                 multiple
                 accept={ALLOWED_EXTENSIONS.join(',')}
@@ -451,7 +469,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-gray-300 hover:border-orange-500 text-gray-600 hover:text-orange-600 rounded-md py-3 text-sm font-medium transition-colors"
+                className="w-full border-2 border-dashed border-gray-300 hover:border-orange-500 text-gray-600 hover:text-orange-700 rounded-md py-3 text-sm font-medium transition-colors"
               >
                 + Add documents
               </button>
@@ -485,10 +503,12 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="reg-password" className="block text-gray-700 text-sm font-bold mb-2">
                 Password *
               </label>
               <input
+                id="reg-password"
+                autoComplete="new-password"
                 type="password"
                 value={regForm.password}
                 onChange={(e) => setRegForm({...regForm, password: e.target.value})}
@@ -498,10 +518,12 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="reg-confirm-password" className="block text-gray-700 text-sm font-bold mb-2">
                 Confirm Password *
               </label>
               <input
+                id="reg-confirm-password"
+                autoComplete="new-password"
                 type="password"
                 value={regForm.confirm_password}
                 onChange={(e) => setRegForm({...regForm, confirm_password: e.target.value})}
@@ -511,10 +533,11 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label htmlFor="reg-notes" className="block text-gray-700 text-sm font-bold mb-2">
                 Notes
               </label>
               <textarea
+                id="reg-notes"
                 value={regForm.notes}
                 onChange={(e) => setRegForm({...regForm, notes: e.target.value})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -525,10 +548,15 @@ const Login = () => {
 
             {/* Terms of Service */}
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <p id="reg-terms-title" className="block text-gray-700 text-sm font-bold mb-2">
                 Terms of Service & Policies
-              </label>
-              <div className="h-64 sm:h-80 overflow-y-auto border border-gray-300 rounded-md p-4 bg-gray-50 space-y-4">
+              </p>
+              <div
+                role="region"
+                aria-labelledby="reg-terms-title"
+                tabIndex={0}
+                className="h-64 sm:h-80 overflow-y-auto border border-gray-300 rounded-md p-4 bg-gray-50 space-y-4 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
                   {POLICY_SECTIONS.map((s) => (
                     <div key={s.num} className={s.highlight ? 'text-red-700' : 'text-gray-700'}>
                       <p className="text-sm font-bold">{s.num}. {s.title}</p>
@@ -573,7 +601,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={!emailVerified || !acceptedTerms || submitting}
-              className="w-full bg-orange-600 text-white py-2.5 px-4 rounded-md hover:bg-orange-700 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-orange-700 text-white py-2.5 px-4 rounded-md hover:bg-orange-800 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Submitting...' : 'Create Account'}
             </button>
@@ -587,13 +615,17 @@ const Login = () => {
               setError('');
               setSuccess('');
             }}
-            className="text-orange-600 hover:text-orange-800 text-sm font-medium"
+            className="text-orange-700 hover:text-orange-900 text-sm font-medium"
           >
             {isLogin ? 'Need an account? Create one' : 'Already have an account? Sign in'}
           </button>
         </div>
       </div>
-    </div>
+
+      <Link to="/" className="mt-4 text-sm text-gray-200 hover:text-white hover:underline">
+        ← Back to the Peaknizer Logistics website
+      </Link>
+    </main>
   );
 };
 
