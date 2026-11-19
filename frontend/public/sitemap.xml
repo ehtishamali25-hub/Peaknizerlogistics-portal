@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Lists ONLY real public pages (the same pages as src/seo/seoPages.js).
-     Never list /login or portal pages. /blog and /careers are added when those pages are built.
+     Never list /login or portal pages. /careers is added when that page is built.
+     When you add a blog post to src/data/blogPosts.js, add its address here too.
      Update <lastmod> to the date you last changed a page. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://peaknizerlogistics.com/</loc><lastmod>2026-11-17</lastmod></url>
@@ -11,4 +12,15 @@
   <url><loc>https://peaknizerlogistics.com/faq</loc><lastmod>2026-11-17</lastmod></url>
   <url><loc>https://peaknizerlogistics.com/terms</loc><lastmod>2026-11-18</lastmod></url>
   <url><loc>https://peaknizerlogistics.com/privacy</loc><lastmod>2026-11-17</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/what-is-a-3pl</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/how-to-choose-a-3pl-warehouse</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/amazon-fba-prep-guide</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/fba-vs-fbm</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/walmart-wfs-prep-guide</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/tiktok-shop-fulfillment</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/multichannel-fulfillment</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/kitting-and-bundling</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/same-day-shipping-cutoff-times</loc><lastmod>2026-11-20</lastmod></url>
+  <url><loc>https://peaknizerlogistics.com/blog/dropshipping-from-a-us-warehouse</loc><lastmod>2026-11-20</lastmod></url>
 </urlset>
