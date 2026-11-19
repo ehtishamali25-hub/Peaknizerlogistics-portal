@@ -20,8 +20,9 @@ const team = [
 ];
 
 const facilities = [
-  { location: 'Arlington, VA', features: ['East Coast coverage', 'Dock access', 'Climate-appropriate storage'] },
-  { location: 'Houston, TX', features: ['Gulf Coast coverage', 'Dock access', 'Port proximity'] }
+  { location: 'Arlington, VA (head office)', features: ['East Coast coverage', 'Dock access', 'Climate-appropriate storage'] },
+  { location: 'Houston, TX', features: ['Gulf Coast coverage', 'Dock access', 'Port proximity'] },
+  { location: 'New Jersey', features: ['Northeast coverage'] }
 ];
 
 const AboutPage = () => {
@@ -43,10 +44,10 @@ const AboutPage = () => {
           <div ref={heroRef} className="container mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
             <span className="text-sm font-semibold text-emerald-300">About us</span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mt-3 mb-5">
-              Peaknizer Logistics
+              About Peaknizer Logistics
             </h1>
             <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-              A fulfillment partner for e-commerce brands, built around straightforward pricing, real accountability, and a portal that keeps you informed at every step.
+              A third-party logistics (3PL) company based in Arlington, Virginia, with warehouses in Houston, Texas and New Jersey. We are a fulfillment partner for new, small and medium e-commerce brands across the USA, built around straightforward pricing, real accountability, and a portal that keeps you informed at every step.
             </p>
           </div>
         </section>
@@ -56,7 +57,7 @@ const AboutPage = () => {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div>
-                <span className="text-sm font-semibold text-emerald-600">Our story</span>
+                <span className="text-sm font-semibold text-emerald-700">Our story</span>
                 <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2 mb-5">
                   Fulfillment that started with a simple frustration
                 </h2>
@@ -82,7 +83,7 @@ const AboutPage = () => {
         <section className="bg-brand-navy/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-semibold text-emerald-600">What we stand for</span>
+              <span className="text-sm font-semibold text-emerald-700">What we stand for</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 The principles behind how we run
               </h2>
@@ -118,7 +119,7 @@ const AboutPage = () => {
         <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-semibold text-emerald-600">Leadership</span>
+              <span className="text-sm font-semibold text-emerald-700">Leadership</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 The people running day-to-day operations
               </h2>
@@ -149,7 +150,7 @@ const AboutPage = () => {
                 />
               </div>
               <div className="order-1 lg:order-2">
-                <span className="text-sm font-semibold text-emerald-600">How we operate</span>
+                <span className="text-sm font-semibold text-emerald-700">How we operate</span>
                 <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2 mb-5">
                   Process over improvisation
                 </h2>
@@ -168,12 +169,12 @@ const AboutPage = () => {
         <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10 sm:mb-12">
-              <span className="text-sm font-semibold text-emerald-600">Where we operate</span>
+              <span className="text-sm font-semibold text-emerald-700">Where we operate</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 Our warehouse locations
               </h2>
             </div>
-            <div className="grid sm:grid-cols-2 gap-6 max-w-3xl">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl">
               {facilities.map((f) => (
                 <div key={f.location} className="bg-white border border-slate-200 rounded-xl p-6">
                   <h3 className="text-lg font-bold text-brand-navy mb-3">{f.location}</h3>
