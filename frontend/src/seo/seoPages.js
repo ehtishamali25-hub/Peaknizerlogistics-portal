@@ -6,11 +6,15 @@
 // from RouteSeo.jsx, so it stays out of Google.
 //
 // Add a page here ONLY when the page really exists on the site.
-// (/blog and /careers will be added when their pages are built.)
+// (/careers will be added when its page is built.)
 // Every page listed here is also pre-rendered (scripts/prerender.mjs). On Render, each one
 // needs its own Rewrite rule ( /page -> /page/index.html ) above the "/*" rule.
+//
+// Blog articles are added at the bottom of this file automatically, one for every post in
+// src/data/blogPosts.js. The Render rule /blog/:slug -> /blog/:slug/index.html covers all of them.
 
 import { FAQS, answerText } from '../data/faqContent.js';
+import { BLOG_POSTS } from '../data/blogPosts.js';
 
 export const SITE = 'https://peaknizerlogistics.com';
 export const SITE_NAME = 'Peaknizer Logistics';
@@ -67,4 +71,86 @@ export const SEO_PAGES = {
     description:
       'How Peaknizer Logistics collects, uses and protects the information you share with us on this website.',
   },
+  '/blog': {
+    title: '3PL & Ecommerce Fulfillment Blog | Peaknizer Logistics',
+    description:
+      'Guides on Amazon FBA prep, Walmart WFS, TikTok Shop, multichannel fulfillment and shipping for small and growing ecommerce brands in the USA.',
+    schema: {
+      '@context': 'https://schema.org',
+      '@type': 'Blog',
+      name: 'Peaknizer Logistics Blog',
+      url: `${SITE}/blog`,
+      publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE },
+      blogPost: BLOG_POSTS.map((post) => ({
+        '@type': 'BlogPosting',
+        headline: post.title,
+        url: `${SITE}/blog/${post.slug}`,
+        datePublished: post.date,
+        image: `${SITE}${post.image}`,
+      })),
+    },
+  },
 };
+
+// ---------------------------------------------------------------------------
+// Blog articles: /blog/<slug> for every post in blogPosts.js
+// ---------------------------------------------------------------------------
+
+// Shorter titles for Google (the full title still shows on the page).
+// A post that is not listed here uses "<its full title> | Peaknizer Logistics".
+const BLOG_SEO_TITLES = {
+  'what-is-a-3pl': 'What Is a 3PL? A Simple Guide | Peaknizer Logistics',
+  'how-to-choose-a-3pl-warehouse': 'How to Choose a 3PL Warehouse | Peaknizer Logistics',
+  'amazon-fba-prep-guide': 'Amazon FBA Prep Guide for 2026 | Peaknizer Logistics',
+  'fba-vs-fbm': 'FBA vs FBM: Which Should You Use? | Peaknizer Logistics',
+  'walmart-wfs-prep-guide': 'Walmart WFS Prep Requirements | Peaknizer Logistics',
+  'tiktok-shop-fulfillment': 'TikTok Shop Fulfillment Guide | Peaknizer Logistics',
+  'multichannel-fulfillment': 'Multichannel Fulfillment Guide | Peaknizer Logistics',
+  'kitting-and-bundling': 'Kitting & Bundling for Ecommerce | Peaknizer Logistics',
+  'same-day-shipping-cutoff-times': 'Same-Day Shipping & Cutoff Times | Peaknizer Logistics',
+  'dropshipping-from-a-us-warehouse': 'Dropshipping From a US Warehouse | Peaknizer Logistics',
+};
+
+for (const post of BLOG_POSTS) {
+  const url = `${SITE}/blog/${post.slug}`;
+  const image = `${SITE}${post.image}`;
+
+  SEO_PAGES[`/blog/${post.slug}`] = {
+    title: BLOG_SEO_TITLES[post.slug] || `${post.title} | ${SITE_NAME}`,
+    description: post.description,
+    image,
+    // Article structured data for Google and AI assistants, plus the Home > Blog > article path
+    schema: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'BlogPosting',
+          '@id': `${url}#article`,
+          headline: post.title,
+          description: post.description,
+          image: [image],
+          datePublished: post.date,
+          dateModified: post.updated || post.date,
+          articleSection: post.category,
+          inLanguage: 'en-US',
+          mainEntityOfPage: url,
+          author: { '@type': 'Organization', name: SITE_NAME, url: SITE },
+          publisher: {
+            '@type': 'Organization',
+            name: SITE_NAME,
+            url: SITE,
+            logo: { '@type': 'ImageObject', url: `${SITE}/logo.png` },
+          },
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+            { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE}/blog` },
+            { '@type': 'ListItem', position: 3, name: post.title, item: url },
+          ],
+        },
+      ],
+    },
+  };
+}
