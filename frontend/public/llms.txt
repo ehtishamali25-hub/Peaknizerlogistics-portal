@@ -18,6 +18,20 @@ Key facts:
 - [FAQ](https://peaknizerlogistics.com/faq): Answers about prices, onboarding, shipping speed, marketplaces and dropshipping
 - [About](https://peaknizerlogistics.com/about): Company background and team
 - [Contact](https://peaknizerlogistics.com/contact): Request a quote or ask a question
+- [Blog](https://peaknizerlogistics.com/blog): Guides on 3PL, Amazon FBA prep, Walmart WFS, TikTok Shop, multichannel fulfillment and shipping
+
+## Guides
+
+- [What Is a 3PL? A Simple Guide for Small Ecommerce Brands](https://peaknizerlogistics.com/blog/what-is-a-3pl): What a 3PL (third-party logistics provider) does, what it costs, and the signs that your small ecommerce brand is ready to outsource fulfillment.
+- [How to Choose a 3PL Warehouse for a Small Ecommerce Brand](https://peaknizerlogistics.com/blog/how-to-choose-a-3pl-warehouse): The questions to ask before you choose a 3PL warehouse: pricing, minimums, marketplaces, receiving speed, cutoff times, tracking and contracts.
+- [Amazon FBA Prep: What It Is and When to Outsource It](https://peaknizerlogistics.com/blog/amazon-fba-prep-guide): What Amazon FBA prep involves, why Amazon stopped offering US prep and labeling services in 2026, and when it makes sense to outsource prep to a 3PL.
+- [FBA vs FBM: Which Amazon Fulfillment Method Fits Your Business?](https://peaknizerlogistics.com/blog/fba-vs-fbm): FBA vs FBM explained for small Amazon sellers: how each works, the costs and trade-offs, and how a 3PL can support either method or both.
+- [Walmart WFS Prep: How to Get Your Inventory Accepted the First Time](https://peaknizerlogistics.com/blog/walmart-wfs-prep-guide): A practical guide to Walmart Fulfillment Services (WFS) prep: barcodes, poly-bags, sets, fragile items and how a 3PL helps avoid prep fees.
+- [TikTok Shop Fulfillment: How to Ship Fast When a Video Goes Viral](https://peaknizerlogistics.com/blog/tiktok-shop-fulfillment): How TikTok Shop sellers can keep up with sudden order spikes: shipping speed, late dispatch rate, inventory planning and when to use a 3PL.
+- [Multichannel Fulfillment for Walmart, Shopify, eBay and TikTok Shop Sellers](https://peaknizerlogistics.com/blog/multichannel-fulfillment): How to fulfill orders from Amazon, Walmart, Shopify, eBay and TikTok Shop from one stock pool, avoid overselling and keep shipping times consistent.
+- [Kitting and Bundling: How Multi-Packs Can Raise Your Average Order Value](https://peaknizerlogistics.com/blog/kitting-and-bundling): What kitting and bundling are, how multi-packs and variety packs can raise order value, and what to know before you outsource bundling to a 3PL.
+- [Same-Day Shipping and Order Cutoff Times Explained](https://peaknizerlogistics.com/blog/same-day-shipping-cutoff-times): What an order cutoff time is, how same-day shipping really works at a 3PL, and how cutoff times affect delivery promises and marketplace metrics.
+- [Dropshipping From a US Warehouse: How It Works With a 3PL](https://peaknizerlogistics.com/blog/dropshipping-from-a-us-warehouse): How dropshipping fulfillment works with a US 3PL warehouse: sending inventory, uploading orders and labels, and the benefits over shipping from overseas.
 
 ## Optional
 
