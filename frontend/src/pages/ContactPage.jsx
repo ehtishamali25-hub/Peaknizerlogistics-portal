@@ -72,7 +72,7 @@ const ContactPage = () => {
               Ready to move receiving, storage, prep, and shipping off your plate? Our team is here to help.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="https://wa.me/15713074461" target="_blank" rel="noopener noreferrer" className="bg-brand-emerald hover:bg-emerald-400 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors">
+              <a href="https://wa.me/15713074461" target="_blank" rel="noopener noreferrer" className="bg-emerald-400 hover:bg-emerald-300 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors">
                 Message us on WhatsApp
               </a>
               <Link to="/services" className="border border-white/25 hover:border-white/50 text-white font-semibold px-6 py-3 rounded-md transition-colors">
@@ -243,7 +243,7 @@ const ContactPage = () => {
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to scale?</h2>
             <p className="text-slate-300 max-w-xl mx-auto mb-8">Join the brands who trust Peaknizer with their fulfillment. Get your free quote today.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/pricing" className="bg-brand-emerald hover:bg-emerald-400 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors">
+              <Link to="/pricing" className="bg-emerald-400 hover:bg-emerald-300 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors">
                 View pricing
               </Link>
               <a href="https://wa.me/15713074461" target="_blank" rel="noopener noreferrer" className="border border-white/25 hover:border-white/50 text-white font-semibold px-6 py-3 rounded-md transition-colors">
