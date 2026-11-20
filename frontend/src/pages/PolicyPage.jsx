@@ -40,7 +40,7 @@ const PolicyPage = ({
                   <section key={s.num} className="border border-red-300/70 rounded-xl p-4 sm:p-6 bg-red-50">
                     <div className="flex items-center gap-3 mb-3 sm:mb-4">
                       <div className="w-7 h-7 sm:w-8 sm:h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                        <span className="text-red-600 font-bold text-sm sm:text-base">{s.num}</span>
+                        <span className="text-red-700 font-bold text-sm sm:text-base">{s.num}</span>
                       </div>
                       <h2 className="text-lg sm:text-xl font-semibold text-red-700">{s.title}</h2>
                     </div>
