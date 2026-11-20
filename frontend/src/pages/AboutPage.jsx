@@ -204,7 +204,7 @@ const AboutPage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/contact"
-                className="bg-brand-emerald hover:bg-emerald-400 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors"
+                className="bg-emerald-400 hover:bg-emerald-300 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors"
               >
                 Get in touch
               </Link>
