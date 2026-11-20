@@ -73,7 +73,7 @@ const ServicesPage = () => {
             </p>
             <Link
               to="/login"
-              className="inline-block bg-brand-emerald hover:bg-emerald-400 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors"
+              className="inline-block bg-emerald-400 hover:bg-emerald-300 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors"
             >
               Log in to the client portal
             </Link>
@@ -272,7 +272,7 @@ const ServicesPage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/contact"
-                className="bg-brand-emerald hover:bg-emerald-400 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors"
+                className="bg-emerald-400 hover:bg-emerald-300 text-brand-navy font-semibold px-6 py-3 rounded-md transition-colors"
               >
                 Get a free quote
               </Link>
