@@ -31,10 +31,10 @@ const Footer = () => {
   return (
     <footer className="bg-white border-t border-slate-200">
       <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 mb-10 sm:mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] gap-8 sm:gap-10 mb-10 sm:mb-12">
           <div className="space-y-4 sm:space-y-6 text-center sm:text-left">
             <div>
-              <h3 className="text-2xl sm:text-3xl font-bold text-brand-navy">
+              <h3 className="text-2xl md:text-3xl lg:text-2xl xl:text-3xl font-bold text-brand-navy whitespace-nowrap">
                 PEAKNIZER<span className="text-emerald-700">LOGISTICS</span>
               </h3>
               <div className="h-1 w-20 bg-brand-emerald mt-2 rounded-full mx-auto sm:mx-0" />
