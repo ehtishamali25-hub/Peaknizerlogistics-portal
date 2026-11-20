@@ -20,9 +20,9 @@ const team = [
 ];
 
 const facilities = [
-  { location: 'Arlington, VA (head office)', features: ['East Coast coverage', 'Dock access', 'Climate-appropriate storage'] },
-  { location: 'Houston, TX', features: ['Gulf Coast coverage', 'Dock access', 'Port proximity'] },
-  { location: 'New Jersey', features: ['Northeast coverage'] }
+  { location: 'Arlington, VA (head office)', features: ['East Coast coverage', 'Dock access', 'Climate-controlled storage'] },
+  { location: 'Houston, TX', features: ['Gulf Coast coverage', 'Dock access', 'Port proximity', 'Climate-controlled storage'] },
+  { location: 'New Jersey', features: ['Northeast coverage', 'Climate-controlled storage'] }
 ];
 
 const AboutPage = () => {
