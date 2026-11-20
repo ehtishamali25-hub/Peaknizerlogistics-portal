@@ -2,16 +2,23 @@ import WebsiteLayout from './WebsiteLayout';
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
+import axiosInstance from '../api/axios';
+
+// "fax" is a hidden trap field: real visitors never see or fill it, spam robots do
+const emptyForm = {
+  name: '',
+  email: '',
+  phone: '',
+  businessType: 'Amazon Seller',
+  message: '',
+  fax: ''
+};
 
 const PricingPage = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    businessType: 'Amazon Seller',
-    message: ''
-  });
+  const [formData, setFormData] = useState(emptyForm);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [quoteStatus, setQuoteStatus] = useState({ type: '', message: '' });
   const heroRef = useRef(null);
 
   useEffect(() => {
@@ -26,17 +33,63 @@ const PricingPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const openQuote = () => {
+    setQuoteStatus({ type: '', message: '' });
+    setShowQuoteModal(true);
+  };
+
+  const closeQuote = () => {
+    if (!submitting) setShowQuoteModal(false);
+  };
+
+  // The Escape key closes the quote window (not while it is sending)
+  useEffect(() => {
+    if (!showQuoteModal) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape' && !submitting) setShowQuoteModal(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showQuoteModal, submitting]);
+
+  // Sends the quote request to the backend, which emails it to info@peaknizerlogistics.com
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Thank you! We will contact you shortly with your free quote.');
-    setShowQuoteModal(false);
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      businessType: 'Amazon Seller',
-      message: ''
-    });
+    if (submitting) return;
+    setSubmitting(true);
+    setQuoteStatus({ type: '', message: '' });
+
+    const note = formData.message.trim();
+
+    try {
+      await axiosInstance.post('/contact/send', {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        company: '',
+        service: 'Quote Request',
+        message: `Quote request from the Pricing page.\nBusiness type: ${formData.businessType}\n\n${note || 'No extra details were added.'}`,
+        fax: formData.fax
+      });
+
+      setQuoteStatus({ type: 'success', message: 'Thank you! We received your request and will reply with your free quote within 24 hours.' });
+      setFormData(emptyForm);
+    } catch (error) {
+      const status = error.response?.status;
+      let message;
+      if (!error.response) {
+        message = 'We could not reach our server. Please check your connection and try again.';
+      } else if (status === 422) {
+        message = 'Please check the form. Make sure your name, phone and email address are filled in correctly.';
+      } else if (status === 429) {
+        message = 'Too many requests were sent in a short time. Please try again in a few minutes.';
+      } else {
+        message = 'We could not send your request. Please email us at info@peaknizerlogistics.com.';
+      }
+      setQuoteStatus({ type: 'error', message });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -51,10 +104,10 @@ const PricingPage = () => {
               Fulfillment pricing, laid out plainly
             </h1>
             <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-6">
-              Peaknizer Logistics runs FBA and FBM prep centers in Arlington, VA and Houston, TX. Rates below cover our core services — no hidden fees, no surprises after the invoice lands.
+              Peaknizer Logistics runs FBA and FBM prep centers in Arlington, VA, Houston, TX and New Jersey. Rates below cover our core services — no hidden fees, no surprises after the invoice lands.
             </p>
             <div className="inline-block bg-white/10 border border-white/20 rounded-xl px-6 py-4">
-              <p className="text-white font-semibold">Arlington, VA & Houston, TX</p>
+              <p className="text-white font-semibold">Arlington, VA · Houston, TX · New Jersey</p>
               <p className="text-slate-300 text-sm">Equipped for everything from Amazon FBA prep to Shopify fulfillment</p>
             </div>
           </div>
@@ -72,12 +125,12 @@ const PricingPage = () => {
         <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10">
-              <span className="text-sm font-semibold text-emerald-600">FBM fulfillment</span>
+              <span className="text-sm font-semibold text-emerald-700">FBM fulfillment</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2 mb-3">
                 From $3 per order
               </h2>
               <p className="text-slate-600 leading-relaxed">
-                Ideal for Shopify, Etsy, and WooCommerce sellers running their own order flow outside Amazon.
+                Ideal for Shopify, eBay, TikTok Shop, Walmart, Etsy, and WooCommerce sellers, and for Amazon sellers shipping their own orders (FBM).
               </p>
             </div>
 
@@ -97,8 +150,8 @@ const PricingPage = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="px-6 py-3 text-left text-slate-500 font-semibold text-sm">Monthly volume</th>
-                      <th className="px-6 py-3 text-right text-slate-500 font-semibold text-sm">Price per order</th>
+                      <th className="px-6 py-3 text-left text-slate-600 font-semibold text-sm">Monthly volume</th>
+                      <th className="px-6 py-3 text-right text-slate-600 font-semibold text-sm">Price per order</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -139,7 +192,7 @@ const PricingPage = () => {
         <section className="bg-brand-navy/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10">
-              <span className="text-sm font-semibold text-emerald-600">FBA prep services</span>
+              <span className="text-sm font-semibold text-emerald-700">FBA prep services</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 Amazon-compliant prep, priced by volume
               </h2>
@@ -156,9 +209,9 @@ const PricingPage = () => {
                 <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="px-6 py-3 text-left text-slate-500 font-semibold text-sm">Volume</th>
-                      <th className="px-6 py-3 text-center text-slate-500 font-semibold text-sm">Without polybag</th>
-                      <th className="px-6 py-3 text-right text-slate-500 font-semibold text-sm">With box change</th>
+                      <th className="px-6 py-3 text-left text-slate-600 font-semibold text-sm">Volume</th>
+                      <th className="px-6 py-3 text-center text-slate-600 font-semibold text-sm">Without polybag</th>
+                      <th className="px-6 py-3 text-right text-slate-600 font-semibold text-sm">With box change</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -192,7 +245,7 @@ const PricingPage = () => {
         <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10">
-              <span className="text-sm font-semibold text-emerald-600">Bundling services</span>
+              <span className="text-sm font-semibold text-emerald-700">Bundling services</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 From multi-packs to variety packs
               </h2>
@@ -248,7 +301,7 @@ const PricingPage = () => {
         <section className="bg-brand-navy/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10">
-              <span className="text-sm font-semibold text-emerald-600">Add-on services</span>
+              <span className="text-sm font-semibold text-emerald-700">Add-on services</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 Customize your prep
               </h2>
@@ -281,9 +334,9 @@ const PricingPage = () => {
                     <table className="w-full min-w-[380px]">
                       <thead className="bg-brand-navy/[0.04] border-b border-slate-200">
                         <tr>
-                          <th className="px-4 py-3 text-left text-slate-500 font-semibold text-sm">Type</th>
-                          <th className="px-4 py-3 text-left text-slate-500 font-semibold text-sm">Size</th>
-                          <th className="px-4 py-3 text-right text-slate-500 font-semibold text-sm">Price</th>
+                          <th className="px-4 py-3 text-left text-slate-600 font-semibold text-sm">Type</th>
+                          <th className="px-4 py-3 text-left text-slate-600 font-semibold text-sm">Size</th>
+                          <th className="px-4 py-3 text-right text-slate-600 font-semibold text-sm">Price</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -313,8 +366,8 @@ const PricingPage = () => {
                     <table className="w-full min-w-[300px]">
                       <thead className="bg-brand-navy/[0.04] border-b border-slate-200">
                         <tr>
-                          <th className="px-4 py-3 text-left text-slate-500 font-semibold text-sm">Type</th>
-                          <th className="px-4 py-3 text-right text-slate-500 font-semibold text-sm">Price</th>
+                          <th className="px-4 py-3 text-left text-slate-600 font-semibold text-sm">Type</th>
+                          <th className="px-4 py-3 text-right text-slate-600 font-semibold text-sm">Price</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -342,7 +395,7 @@ const PricingPage = () => {
         <section className="bg-brand-navy/[0.03] py-16 sm:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mb-10">
-              <span className="text-sm font-semibold text-emerald-600">Why sellers choose us</span>
+              <span className="text-sm font-semibold text-emerald-700">Why sellers choose us</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mt-2">
                 Pricing that scales with you
               </h2>
@@ -365,7 +418,7 @@ const PricingPage = () => {
             <div className="bg-white border border-slate-200 rounded-xl p-6 text-center">
               <p className="text-lg font-bold text-brand-navy mb-4">A good fit for</p>
               <div className="flex flex-wrap justify-center gap-3">
-                {['Amazon FBA sellers', 'Shopify & Etsy store owners', 'DTC brands scaling up', 'Retailers outsourcing logistics'].map((item) => (
+                {['Amazon FBA sellers', 'Walmart, eBay & TikTok Shop sellers', 'Shopify & Etsy store owners', 'DTC brands scaling up', 'Retailers outsourcing logistics'].map((item) => (
                   <span key={item} className="bg-emerald-50 text-brand-navy px-4 py-2 rounded-full text-sm font-medium border border-emerald-100">{item}</span>
                 ))}
               </div>
@@ -381,20 +434,20 @@ const PricingPage = () => {
             <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8 text-left">
               <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                 <p className="text-emerald-300 text-xs uppercase tracking-wide font-bold">Location</p>
-                <p className="text-white font-semibold text-sm">Arlington, VA & Houston, TX</p>
+                <p className="text-white font-semibold text-sm">Arlington, VA · Houston, TX · New Jersey</p>
               </div>
               <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                 <p className="text-emerald-300 text-xs uppercase tracking-wide font-bold">Email</p>
-                <p className="text-white font-semibold text-sm break-all">info@peaknizerlogistics.com</p>
+                <a href="mailto:info@peaknizerlogistics.com" className="text-white font-semibold text-sm break-all hover:underline">info@peaknizerlogistics.com</a>
               </div>
               <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                 <p className="text-emerald-300 text-xs uppercase tracking-wide font-bold">Call</p>
-                <p className="text-white font-semibold text-lg">+1 571-518-2791</p>
+                <a href="tel:+15713074461" className="text-white font-semibold text-lg hover:underline">+1 (571) 307-4461</a>
               </div>
             </div>
             <button
-              onClick={() => setShowQuoteModal(true)}
-              className="bg-brand-emerald hover:bg-emerald-400 text-brand-navy px-8 py-3 rounded-md font-semibold text-lg transition-colors"
+              onClick={openQuote}
+              className="bg-emerald-400 hover:bg-emerald-300 text-brand-navy px-8 py-3 rounded-md font-semibold text-lg transition-colors"
             >
               Get a free quote
             </button>
@@ -403,28 +456,48 @@ const PricingPage = () => {
 
         {/* Quote modal */}
         {showQuoteModal && (
-          <div className="fixed inset-0 bg-black/60 flex items-start sm:items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 my-8 sm:my-0">
+          <div
+            className="fixed inset-0 bg-black/60 flex items-start sm:items-center justify-center z-50 p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) closeQuote(); }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="quote-title"
+              className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 my-8 sm:my-0"
+            >
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-brand-navy">Get your free quote</h3>
+                  <h2 id="quote-title" className="text-xl font-bold text-brand-navy">Get your free quote</h2>
                   <p className="text-slate-500 text-sm">We'll respond within 24 hours</p>
                 </div>
                 <button
-                  onClick={() => setShowQuoteModal(false)}
-                  className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
+                  type="button"
+                  onClick={closeQuote}
+                  disabled={submitting}
+                  className="text-slate-500 hover:text-slate-700 text-2xl leading-none disabled:opacity-40"
                   aria-label="Close"
                 >
                   ×
                 </button>
               </div>
+              {quoteStatus.message && (
+                <div
+                  role={quoteStatus.type === 'success' ? 'status' : 'alert'}
+                  className={`mb-4 p-3 rounded-md text-sm ${quoteStatus.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-700'}`}
+                >
+                  {quoteStatus.message}
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Full name *</label>
+                    <label htmlFor="quote-name" className="block text-sm font-medium text-slate-700 mb-1">Full name *</label>
                     <input
                       type="text"
+                      id="quote-name"
                       name="name"
+                      autoFocus
                       value={formData.name}
                       onChange={handleInputChange}
                       required
@@ -433,9 +506,10 @@ const PricingPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Phone *</label>
+                    <label htmlFor="quote-phone" className="block text-sm font-medium text-slate-700 mb-1">Phone *</label>
                     <input
                       type="tel"
+                      id="quote-phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
@@ -446,9 +520,10 @@ const PricingPage = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                  <label htmlFor="quote-email" className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
                   <input
                     type="email"
+                    id="quote-email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
@@ -458,15 +533,19 @@ const PricingPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Business type</label>
+                  <label htmlFor="quote-business" className="block text-sm font-medium text-slate-700 mb-1">Business type</label>
                   <select
+                    id="quote-business"
                     name="businessType"
                     value={formData.businessType}
                     onChange={handleInputChange}
                     className="w-full border border-slate-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition"
                   >
                     <option>Amazon Seller</option>
+                    <option>Walmart Seller</option>
                     <option>Shopify Store</option>
+                    <option>eBay Seller</option>
+                    <option>TikTok Shop Seller</option>
                     <option>Etsy Seller</option>
                     <option>WooCommerce</option>
                     <option>DTC Brand</option>
@@ -474,8 +553,9 @@ const PricingPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
+                  <label htmlFor="quote-message" className="block text-sm font-medium text-slate-700 mb-1">Message</label>
                   <textarea
+                    id="quote-message"
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
@@ -484,13 +564,18 @@ const PricingPage = () => {
                     placeholder="Monthly volume and any special requirements"
                   />
                 </div>
+                {/* Trap for spam robots: hidden from people, must stay empty */}
+                <div className="hidden" aria-hidden="true">
+                  <input aria-label="Fax" name="fax" type="text" value={formData.fax} onChange={handleInputChange} tabIndex={-1} autoComplete="off" />
+                </div>
                 <button
                   type="submit"
-                  className="w-full bg-brand-navy hover:bg-brand-navy-light text-white font-semibold py-3 rounded-md transition-colors"
+                  disabled={submitting}
+                  className="w-full bg-brand-navy hover:bg-brand-navy-light text-white font-semibold py-3 rounded-md transition-colors disabled:opacity-60"
                 >
-                  Submit quote request
+                  {submitting ? 'Sending...' : 'Submit quote request'}
                 </button>
-                <p className="text-xs text-slate-400 text-center">No commitment. No spam.</p>
+                <p className="text-xs text-slate-500 text-center">No commitment. No spam.</p>
               </form>
             </div>
           </div>
