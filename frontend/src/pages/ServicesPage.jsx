@@ -6,7 +6,7 @@ import { gsap } from 'gsap';
 const coreServices = [
   {
     title: 'Warehousing & storage',
-    desc: 'Climate-appropriate storage across our warehouse network, with every unit scanned on receipt and reconciled against your records.',
+    desc: 'Climate-controlled storage across our warehouse network, with every unit scanned on receipt and reconciled against your records.',
     points: ['Real-time stock levels by warehouse', 'Low-stock alerts before you run out', 'Multi-location coverage'],
     featured: true
   },
